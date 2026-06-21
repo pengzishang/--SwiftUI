@@ -43,6 +43,13 @@ struct HTMLWebView: UIViewRepresentable {
           <style>
             body { font: -apple-system-body; color: \(textColor); background: transparent; line-height: 1.65; padding: 0; margin: 0; }
             img { max-width: 100%; height: auto; border-radius: 12px; }
+            .content img, .content-inner img {
+              display: block !important;
+              width: 100% !important;
+              height: auto !important;
+              border-radius: 12px !important;
+              margin: 14px 0 !important;
+            }
             .avatar, .author img, .meta img, .origin-source img, .source img {
               width: 32px !important;
               height: 32px !important;
