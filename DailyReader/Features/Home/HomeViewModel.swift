@@ -76,10 +76,6 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    func loadMoreIfNeeded(currentStoryID: Int) async {
-        guard currentStoryID == sections.last?.stories.last?.id else { return }
-        await loadMore()
-    }
 
     func markStoryRead(_ storyID: Int) {
         guard readStoryIDs.insert(storyID).inserted else { return }

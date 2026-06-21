@@ -36,9 +36,6 @@ struct HomeView: View {
                             } label: {
                                 StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                             }
-                            .task {
-                                await viewModel.loadMoreIfNeeded(currentStoryID: story.id)
-                            }
                         }
                     }
                 }
@@ -47,6 +44,11 @@ struct HomeView: View {
                     Task { await viewModel.loadMore() }
                 }
                 .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .id("footer-\(viewModel.sections.count)")
+                .task {
+                    await viewModel.loadMore()
+                }
             }
         }
         .navigationTitle("日报阅读器")
