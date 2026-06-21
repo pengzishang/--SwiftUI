@@ -1,0 +1,288 @@
+Command line invocation:
+    /Applications/Xcode-26.5.0.app/Contents/Developer/usr/bin/xcodebuild -project 知乎日报-SwiftUI.xcodeproj -scheme DailyReader -destination "platform=iOS Simulator,name=iPhone 17" test
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'DailyReaderUITests' in project '知乎日报-SwiftUI'
+        ➜ Explicit dependency on target 'DailyReader' in project '知乎日报-SwiftUI'
+    Target 'DailyReaderTests' in project '知乎日报-SwiftUI'
+        ➜ Explicit dependency on target 'DailyReader' in project '知乎日报-SwiftUI'
+    Target 'DailyReader' in project '知乎日报-SwiftUI' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode-26.5.0.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 42f0d710259b2f64ab2fb067eb0ee7c8
+Build description path: /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/XCBuildData/42f0d710259b2f64ab2fb067eb0ee7c8.xcbuilddata
+ClangStatCache /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-26.5.0.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk /Users/pengzishang/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.5-23F73-21837ebbc329da063fcadaf6b3048059.sdkstatcache
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI/知乎日报-SwiftUI.xcodeproj
+    /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode-26.5.0.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -o /Users/pengzishang/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.5-23F73-21837ebbc329da063fcadaf6b3048059.sdkstatcache
+
+ProcessInfoPlistFile /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/Info.plist /Users/pengzishang/Documents/知乎日报-SwiftUI/DailyReader/Resources/Info.plist (in target 'DailyReader' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    builtin-infoPlistUtility /Users/pengzishang/Documents/知乎日报-SwiftUI/DailyReader/Resources/Info.plist -producttype com.apple.product-type.application -genpkginfo /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -o /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/Info.plist
+
+CopySwiftLibs /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app (in target 'DailyReader' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/DailyReader.debug.dylib --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/Frameworks --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/SystemExtensions --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/Extensions --platform iphonesimulator --toolchain /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReader.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+ProcessInfoPlistFile /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/Info.plist /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReaderTests.build/empty-DailyReaderTests.plist (in target 'DailyReaderTests' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    builtin-infoPlistUtility /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReaderTests.build/empty-DailyReaderTests.plist -producttype com.apple.product-type.bundle.unit-test -expandbuildsettings -format binary -platform iphonesimulator -o /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/Info.plist
+
+CopySwiftLibs /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest (in target 'DailyReaderTests' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/DailyReaderTests --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/Frameworks --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/PlugIns --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/SystemExtensions --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/Extensions --platform iphonesimulator --toolchain /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/PlugIns/DailyReaderTests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode-26.5.0.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReaderTests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+CodeSign /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/DailyReader.debug.dylib (in target 'DailyReader' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/DailyReader.debug.dylib
+/Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/DailyReader.debug.dylib: replacing existing signature
+
+CodeSign /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/__preview.dylib (in target 'DailyReader' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/__preview.dylib
+/Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app/__preview.dylib: replacing existing signature
+
+CodeSign /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app (in target 'DailyReader' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app
+/Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app: replacing existing signature
+
+Validate /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app (in target 'DailyReader' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    builtin-validationUtility /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReader.app -shallow-bundle -infoplist-subpath Info.plist
+
+ProcessInfoPlistFile /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/Info.plist /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReaderUITests.build/empty-DailyReaderUITests.plist (in target 'DailyReaderUITests' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    builtin-infoPlistUtility /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReaderUITests.build/empty-DailyReaderUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReaderUITests.build/ProductTypeInfoPlistAdditions.plist -o /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/Info.plist
+
+CopySwiftLibs /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest (in target 'DailyReaderUITests' from project '知乎日报-SwiftUI')
+    cd /Users/pengzishang/Documents/知乎日报-SwiftUI
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/DailyReaderUITests --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/Frameworks --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/PlugIns --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/SystemExtensions --scan-folder /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/Extensions --platform iphonesimulator --toolchain /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Products/Debug-iphonesimulator/DailyReaderUITests-Runner.app/PlugIns/DailyReaderUITests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode-26.5.0.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode-26.5.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/pengzishang/Library/Developer/Xcode/DerivedData/知乎日报-SwiftUI-eodslysxiptxuacffaotqhxgmaok/Build/Intermediates.noindex/知乎日报-SwiftUI.build/Debug-iphonesimulator/DailyReaderUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+2026-06-21 14:42:25.367334+0800 DailyReader[49812:3163458] [] nw_protocol_instance_set_output_handler Not calling remove_input_handler on 0x10a261400:socket
+2026-06-21 14:42:25.368711+0800 DailyReader[49812:3163458] [connection] nw_connection_copy_connected_local_endpoint_block_invoke [C1] Connection has no local endpoint
+2026-06-21 14:42:25.369376+0800 DailyReader[49812:3163458] [connection] nw_connection_copy_connected_local_endpoint_block_invoke [C1] Connection has no local endpoint
+Test Suite 'All tests' started at 2026-06-21 14:42:25.463.
+Test Suite 'DailyReaderTests.xctest' started at 2026-06-21 14:42:25.463.
+Test Suite 'ArticleDetailViewModelTests' started at 2026-06-21 14:42:25.463.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testEmptyBodyStillLoadsDetailForUnavailableContentState]' started.
+2026-06-21 14:42:25.467075+0800 DailyReader[49812:3163461] [quic] quic_conn_process_inbound [C1.1.1.1:2] [-fb657db5b8f22cbf] unable to parse packet
+2026-06-21 14:42:25.471503+0800 DailyReader[49812:3163461] [quic] quic_conn_process_inbound [C1.1.1.1:2] [-fb657db5b8f22cbf] unable to parse packet
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testEmptyBodyStillLoadsDetailForUnavailableContentState]' passed (0.014 seconds).
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testInvalidShareLinkIsRejected]' started.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testInvalidShareLinkIsRejected]' passed (0.002 seconds).
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailFailureWithoutCacheShowsRetryableError]' started.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailFailureWithoutCacheShowsRetryableError]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailFallsBackToCachedDetail]' started.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailFallsBackToCachedDetail]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailFallsBackToDetailURLBeforeListURL]' started.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailFallsBackToDetailURLBeforeListURL]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailUsesDetailShareURLFirst]' started.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testLoadDetailUsesDetailShareURLFirst]' passed (0.002 seconds).
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testMissingShareLinkDoesNotProduceFallbackGarbageURL]' started.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testMissingShareLinkDoesNotProduceFallbackGarbageURL]' passed (0.002 seconds).
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testShareTitleUsesDisplayedDetailTitle]' started.
+Test Case '-[DailyReaderTests.ArticleDetailViewModelTests testShareTitleUsesDisplayedDetailTitle]' passed (0.002 seconds).
+Test Suite 'ArticleDetailViewModelTests' passed at 2026-06-21 14:42:25.498.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.031 (0.034) seconds
+Test Suite 'CacheStoreTests' started at 2026-06-21 14:42:25.531.
+Test Case '-[DailyReaderTests.CacheStoreTests testBrokenCacheFileReturnsNilInsteadOfCrashing]' started.
+Test Case '-[DailyReaderTests.CacheStoreTests testBrokenCacheFileReturnsNilInsteadOfCrashing]' passed (0.005 seconds).
+Test Case '-[DailyReaderTests.CacheStoreTests testCachePersistsAcrossStoreInstances]' started.
+Test Case '-[DailyReaderTests.CacheStoreTests testCachePersistsAcrossStoreInstances]' passed (0.013 seconds).
+Test Case '-[DailyReaderTests.CacheStoreTests testDailyListCacheKeepsMostRecentThirtyEntries]' started.
+Test Case '-[DailyReaderTests.CacheStoreTests testDailyListCacheKeepsMostRecentThirtyEntries]' passed (0.041 seconds).
+Test Case '-[DailyReaderTests.CacheStoreTests testSaveAndLoadLatestDailyResponse]' started.
+Test Case '-[DailyReaderTests.CacheStoreTests testSaveAndLoadLatestDailyResponse]' passed (0.004 seconds).
+Test Suite 'CacheStoreTests' passed at 2026-06-21 14:42:25.595.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.063 (0.064) seconds
+Test Suite 'HomeViewModelTests' started at 2026-06-21 14:42:25.595.
+Test Case '-[DailyReaderTests.HomeViewModelTests testLoadLatestShowsNetworkContent]' started.
+Test Case '-[DailyReaderTests.HomeViewModelTests testLoadLatestShowsNetworkContent]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.HomeViewModelTests testLoadMoreDeduplicatesStories]' started.
+Test Case '-[DailyReaderTests.HomeViewModelTests testLoadMoreDeduplicatesStories]' passed (0.004 seconds).
+Test Case '-[DailyReaderTests.HomeViewModelTests testLoadMoreFailureKeepsExistingStoriesAndExposesRetryState]' started.
+Test Case '-[DailyReaderTests.HomeViewModelTests testLoadMoreFailureKeepsExistingStoriesAndExposesRetryState]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.HomeViewModelTests testNetworkFailureFallsBackToCachedLatest]' started.
+Test Case '-[DailyReaderTests.HomeViewModelTests testNetworkFailureFallsBackToCachedLatest]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.HomeViewModelTests testNetworkFailureWithoutCacheShowsRetryableErrorState]' started.
+Test Case '-[DailyReaderTests.HomeViewModelTests testNetworkFailureWithoutCacheShowsRetryableErrorState]' passed (0.010 seconds).
+Test Case '-[DailyReaderTests.HomeViewModelTests testRefreshFailureKeepsLoadedHistorySections]' started.
+Test Case '-[DailyReaderTests.HomeViewModelTests testRefreshFailureKeepsLoadedHistorySections]' passed (0.004 seconds).
+Test Case '-[DailyReaderTests.HomeViewModelTests testRefreshFailureWithoutCacheKeepsVisibleContent]' started.
+Test Case '-[DailyReaderTests.HomeViewModelTests testRefreshFailureWithoutCacheKeepsVisibleContent]' passed (0.002 seconds).
+Test Suite 'HomeViewModelTests' passed at 2026-06-21 14:42:25.625.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.027 (0.030) seconds
+Test Suite 'ZhihuDailyAPITests' started at 2026-06-21 14:42:25.625.
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchBeforeUsesBeforePathAndUserAgent]' started.
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchBeforeUsesBeforePathAndUserAgent]' passed (0.016 seconds).
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchDetailParsesShareURL]' started.
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchDetailParsesShareURL]' passed (0.002 seconds).
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchLatestParsesStoriesAndTopStories]' started.
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchLatestParsesStoriesAndTopStories]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchLatestSkipsBrokenStoryInsteadOfFailingWholeResponse]' started.
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testFetchLatestSkipsBrokenStoryInsteadOfFailingWholeResponse]' passed (0.002 seconds).
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testMalformedJSONThrowsDecodeError]' started.
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testMalformedJSONThrowsDecodeError]' passed (0.003 seconds).
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testNon2xxThrowsHTTPStatus]' started.
+Test Case '-[DailyReaderTests.ZhihuDailyAPITests testNon2xxThrowsHTTPStatus]' passed (0.001 seconds).
+Test Suite 'ZhihuDailyAPITests' passed at 2026-06-21 14:42:25.655.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.027 (0.030) seconds
+Test Suite 'DailyReaderTests.xctest' passed at 2026-06-21 14:42:25.655.
+	 Executed 25 tests, with 0 failures (0 unexpected) in 0.148 (0.192) seconds
+Test Suite 'All tests' passed at 2026-06-21 14:42:25.655.
+	 Executed 25 tests, with 0 failures (0 unexpected) in 0.148 (0.193) seconds
+2026-06-21 14:42:27.771473+0800 DailyReaderUITests-Runner[50101:3163884] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'All tests' started at 2026-06-21 14:42:29.221.
+Test Suite 'DailyReaderUITests.xctest' started at 2026-06-21 14:42:29.222.
+Test Suite 'HomeFlowUITests' started at 2026-06-21 14:42:29.222.
+Test Case '-[DailyReaderUITests.HomeFlowUITests testLaunchShowsMockHomeContent]' started.
+    t =     0.01s Start Test at 2026-06-21 14:42:29.232
+    t =     0.10s Set Up
+    t =     0.11s Open com.codex.DailyReader
+    t =     0.16s     Launch com.codex.DailyReader
+2026-06-21 14:42:29.679 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-06-21 14:42:29.679 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[50101]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x109f70310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10a40c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.78s         Setting up automation session
+    t =     1.69s         Wait for com.codex.DailyReader to idle
+    t =     3.39s Waiting 5.0s for "日报阅读器" NavigationBar to exist
+    t =     4.42s     Checking `Expect predicate `existsNoRetry == 1` for object "日报阅读器" NavigationBar`
+    t =     4.42s         Checking existence of `"日报阅读器" NavigationBar`
+    t =     4.58s Waiting 5.0s for "今天，先读一篇长一点的故事" StaticText to exist
+    t =     5.67s     Checking `Expect predicate `existsNoRetry == 1` for object "今天，先读一篇长一点的故事" StaticText`
+    t =     5.67s         Checking existence of `"今天，先读一篇长一点的故事" StaticText`
+    t =     5.72s Tear Down
+Test Case '-[DailyReaderUITests.HomeFlowUITests testLaunchShowsMockHomeContent]' passed (5.998 seconds).
+Test Case '-[DailyReaderUITests.HomeFlowUITests testLoadHistoryShowsOlderStory]' started.
+    t =     0.00s Start Test at 2026-06-21 14:42:35.231
+    t =     0.03s Set Up
+    t =     0.03s Open com.codex.DailyReader
+    t =     0.03s     Launch com.codex.DailyReader
+    t =     0.03s         Terminate com.codex.DailyReader:50242
+2026-06-21 14:42:36.358 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-06-21 14:42:36.358 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.35s         Setting up automation session
+    t =     2.35s         Wait for com.codex.DailyReader to idle
+    t =     3.83s Waiting 5.0s for "加载更早日报" Button to exist
+    t =     4.86s     Checking `Expect predicate `existsNoRetry == 1` for object "加载更早日报" Button`
+    t =     4.86s         Checking existence of `"加载更早日报" Button`
+    t =     4.97s Tap "加载更早日报" Button
+    t =     4.97s     Wait for com.codex.DailyReader to idle
+    t =     4.98s     Find the "加载更早日报" Button
+    t =     5.00s     Check for interrupting elements affecting "historyPaginationFooter" Button
+    t =     5.05s     Synthesize event
+    t =     5.36s     Wait for com.codex.DailyReader to idle
+    t =     5.36s Waiting 5.0s for "昨天的好问题" StaticText to exist
+    t =     6.39s     Checking `Expect predicate `existsNoRetry == 1` for object "昨天的好问题" StaticText`
+    t =     6.39s         Checking existence of `"昨天的好问题" StaticText`
+    t =     6.48s Tear Down
+Test Case '-[DailyReaderUITests.HomeFlowUITests testLoadHistoryShowsOlderStory]' passed (6.713 seconds).
+Test Case '-[DailyReaderUITests.HomeFlowUITests testOpenArticleDetailAndReturnHome]' started.
+    t =     0.00s Start Test at 2026-06-21 14:42:41.947
+    t =     0.04s Set Up
+    t =     0.04s Open com.codex.DailyReader
+    t =     0.04s     Launch com.codex.DailyReader
+    t =     0.04s         Terminate com.codex.DailyReader:50817
+2026-06-21 14:42:43.077 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-06-21 14:42:43.077 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.35s         Setting up automation session
+    t =     2.41s         Wait for com.codex.DailyReader to idle
+    t =     4.36s Waiting 5.0s for "今天，先读一篇长一点的故事" StaticText to exist
+    t =     5.40s     Checking `Expect predicate `existsNoRetry == 1` for object "今天，先读一篇长一点的故事" StaticText`
+    t =     5.40s         Checking existence of `"今天，先读一篇长一点的故事" StaticText`
+    t =     5.93s         Capturing element debug description
+    t =     6.45s     Checking `Expect predicate `existsNoRetry == 1` for object "今天，先读一篇长一点的故事" StaticText`
+    t =     6.45s         Checking existence of `"今天，先读一篇长一点的故事" StaticText`
+    t =     6.53s         Capturing element debug description
+    t =     7.45s     Checking `Expect predicate `existsNoRetry == 1` for object "今天，先读一篇长一点的故事" StaticText`
+    t =     7.45s         Checking existence of `"今天，先读一篇长一点的故事" StaticText`
+    t =     7.61s         Capturing element debug description
+2026-06-21 14:43:11.894713+0800 DailyReaderUITests-Runner[53208:3169527] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+
+Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+
+Test Suite 'Selected tests' started at 2026-06-21 14:43:12.571.
+Test Suite 'DailyReaderUITests.xctest' started at 2026-06-21 14:43:12.572.
+Test Suite 'HomeFlowUITests' started at 2026-06-21 14:43:12.572.
+Test Case '-[DailyReaderUITests.HomeFlowUITests testShareSheetCanOpenAndDismissWithoutLeavingDetail]' started.
+    t =     0.00s Start Test at 2026-06-21 14:43:12.573
+    t =     0.02s Set Up
+    t =     0.03s Open com.codex.DailyReader
+    t =     0.03s     Launch com.codex.DailyReader
+    t =     0.03s         Terminate com.codex.DailyReader:52984
+objc[53208]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x106638310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1066d4398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+2026-06-21 14:43:13.645 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-06-21 14:43:13.645 xcodebuild[49461:3162506] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.29s         Setting up automation session
+    t =     2.29s         Wait for com.codex.DailyReader to idle
+    t =     3.90s Waiting 5.0s for "今天，先读一篇长一点的故事" StaticText to exist
+    t =     4.93s     Checking `Expect predicate `existsNoRetry == 1` for object "今天，先读一篇长一点的故事" StaticText`
+    t =     4.93s         Checking existence of `"今天，先读一篇长一点的故事" StaticText`
+    t =     5.04s Tap "今天，先读一篇长一点的故事" StaticText
+    t =     5.04s     Wait for com.codex.DailyReader to idle
+    t =     5.04s     Find the "今天，先读一篇长一点的故事" StaticText
+    t =     5.08s     Check for interrupting elements affecting "storyRow-1001" StaticText
+    t =     5.13s     Synthesize event
+    t =     5.44s     Wait for com.codex.DailyReader to idle
+    t =     6.72s Waiting 5.0s for "文章详情" NavigationBar to exist
+    t =     7.75s     Checking `Expect predicate `existsNoRetry == 1` for object "文章详情" NavigationBar`
+    t =     7.75s         Checking existence of `"文章详情" NavigationBar`
+    t =     7.84s Tap "分享" Button
+    t =     7.84s     Wait for com.codex.DailyReader to idle
+    t =     7.84s     Find the "分享" Button
+    t =     7.87s     Check for interrupting elements affecting "square.and.arrow.up" Button
+    t =     7.90s     Synthesize event
+    t =     8.20s     Wait for com.codex.DailyReader to idle
+    t =     9.07s Waiting 5.0s for "ActivityListView" Other to exist
+    t =    10.11s     Checking `Expect predicate `existsNoRetry == 1` for object "ActivityListView" Other`
+    t =    10.11s         Checking existence of `"ActivityListView" Other`
+    t =    10.16s Checking existence of `"Close" Button`
+    t =    10.22s Tap "Close" Button
+    t =    10.22s     Wait for com.codex.DailyReader to idle
+    t =    10.23s     Find the "Close" Button
+    t =    10.28s     Check for interrupting elements affecting "header.closeButton" Button
+    t =    10.33s     Synthesize event
+    t =    10.62s     Wait for com.codex.DailyReader to idle
+    t =    11.09s Waiting 5.0s for "文章详情" NavigationBar to exist
+    t =    12.13s     Checking `Expect predicate `existsNoRetry == 1` for object "文章详情" NavigationBar`
+    t =    12.13s         Checking existence of `"文章详情" NavigationBar`
+    t =    12.17s Tear Down
+Test Case '-[DailyReaderUITests.HomeFlowUITests testShareSheetCanOpenAndDismissWithoutLeavingDetail]' passed (12.394 seconds).
+Test Suite 'HomeFlowUITests' passed at 2026-06-21 14:43:24.971.
+	 Executed 1 test, with 0 failures (0 unexpected) in 12.394 (12.399) seconds
+Test Suite 'DailyReaderUITests.xctest' passed at 2026-06-21 14:43:24.978.
+	 Executed 1 test, with 0 failures (0 unexpected) in 12.394 (12.406) seconds
+Test Suite 'Selected tests' passed at 2026-06-21 14:43:24.978.
+	 Executed 1 test, with 0 failures (0 unexpected) in 12.394 (12.407) seconds
