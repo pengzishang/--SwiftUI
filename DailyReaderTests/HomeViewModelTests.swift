@@ -234,8 +234,8 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertTrue(secondViewModel.isStoryFavorited(1))
         XCTAssertTrue(secondViewModel.isStoryRead(1))
         XCTAssertEqual(secondViewModel.hiddenSections.flatMap(\.stories).map(\.id), [1])
-        XCTAssertEqual(secondViewModel.favoriteSections.flatMap(\.stories).map(\.id), [1])
-        XCTAssertEqual(secondViewModel.readSections.flatMap(\.stories).map(\.id), [1])
+        XCTAssertEqual(secondViewModel.favoriteSections.flatMap(\.stories).map(\.id), [])
+        XCTAssertEqual(secondViewModel.readSections.flatMap(\.stories).map(\.id), [])
     }
 
     func testUnfavoriteAutomaticallyUnhides() async {
@@ -266,6 +266,79 @@ final class HomeViewModelTests: XCTestCase {
         viewModel.toggleFavorite(story, date: "20260621")
         XCTAssertFalse(viewModel.isStoryFavorited(1))
         XCTAssertFalse(viewModel.isStoryHidden(1))
+    }
+
+    func testMutualExclusivityOfSections() async {
+        let hiddenKey = "DailyReader.hiddenStories"
+        let favoriteKey = "DailyReader.favoriteStories"
+        let readIDsKey = "DailyReader.readStoryIDs"
+        let readStoriesKey = "DailyReader.readStories"
+
+        UserDefaults.standard.removeObject(forKey: hiddenKey)
+        UserDefaults.standard.removeObject(forKey: favoriteKey)
+        UserDefaults.standard.removeObject(forKey: readIDsKey)
+        UserDefaults.standard.removeObject(forKey: readStoriesKey)
+
+        defer {
+            UserDefaults.standard.removeObject(forKey: hiddenKey)
+            UserDefaults.standard.removeObject(forKey: favoriteKey)
+            UserDefaults.standard.removeObject(forKey: readIDsKey)
+            UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        }
+
+        let api = MockDailyAPIClient()
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        await viewModel.load()
+
+        let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
+
+        // Initial state: story 1 is in visibleSections (日报)
+        XCTAssertTrue(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // 1. Mark Read: moves from visibleSections to readSections
+        viewModel.markStoryRead(story, date: "20260621")
+        XCTAssertFalse(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertTrue(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // 2. Favorite: moves from readSections to favoriteSections
+        viewModel.toggleFavorite(story, date: "20260621")
+        XCTAssertFalse(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertTrue(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // 3. Hide: moves from favoriteSections to hiddenSections
+        viewModel.hideStory(story, date: "20260621")
+        XCTAssertFalse(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertTrue(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // 4. Restore: moves back to favoriteSections (since it's still favorited!)
+        viewModel.restoreStory(1)
+        XCTAssertFalse(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertTrue(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // 5. Unfavorite: moves back to readSections (since it's still read!)
+        viewModel.toggleFavorite(story, date: "20260621")
+        XCTAssertFalse(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertTrue(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // 6. Unread (toggleRead): moves back to visibleSections (日报)
+        viewModel.toggleRead(story, date: "20260621")
+        XCTAssertTrue(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
     }
 
     private func temporaryRoot() -> URL {

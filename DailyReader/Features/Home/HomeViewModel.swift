@@ -72,7 +72,9 @@ final class HomeViewModel: ObservableObject {
     var visibleSections: [DailySection] {
         sections.map { section in
             var sec = section
-            sec.stories = section.stories.filter { !isStoryHidden($0.id) }
+            sec.stories = section.stories.filter { story in
+                !isStoryHidden(story.id) && !isStoryFavorited(story.id) && !isStoryRead(story.id)
+            }
             return sec
         }.filter { !$0.stories.isEmpty }
     }
@@ -87,7 +89,8 @@ final class HomeViewModel: ObservableObject {
     }
 
     var favoriteSections: [DailySection] {
-        let grouped = Dictionary(grouping: favoriteStories, by: { $0.date })
+        let visibleFavorites = favoriteStories.filter { !isStoryHidden($0.id) }
+        let grouped = Dictionary(grouping: visibleFavorites, by: { $0.date })
         return grouped.map { (date, list) in
             DailySection(date: date, stories: list.map { $0.story })
         }
@@ -96,7 +99,8 @@ final class HomeViewModel: ObservableObject {
     }
 
     var readSections: [DailySection] {
-        let grouped = Dictionary(grouping: readStories, by: { $0.date })
+        let visibleRead = readStories.filter { !isStoryHidden($0.id) && !isStoryFavorited($0.id) }
+        let grouped = Dictionary(grouping: visibleRead, by: { $0.date })
         return grouped.map { (date, list) in
             DailySection(date: date, stories: list.map { $0.story })
         }

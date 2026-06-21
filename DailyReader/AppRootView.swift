@@ -61,6 +61,12 @@ enum AppEnvironment {
     private static func makeAPIClient() -> DailyAPIClient {
         let processInfo = ProcessInfo.processInfo
         if processInfo.arguments.contains("-UITestMode") {
+            let defaults = UserDefaults.standard
+            defaults.removeObject(forKey: "DailyReader.readStoryIDs")
+            defaults.removeObject(forKey: "DailyReader.hiddenStories")
+            defaults.removeObject(forKey: "DailyReader.favoriteStories")
+            defaults.removeObject(forKey: "DailyReader.readStories")
+
             if processInfo.arguments.contains("-ResetCache") {
                 try? FileManager.default.removeItem(
                     at: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
