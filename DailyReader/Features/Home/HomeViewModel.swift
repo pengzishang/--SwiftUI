@@ -177,6 +177,7 @@ final class HomeViewModel: ObservableObject {
     func toggleFavorite(_ story: StorySummary, date: String) {
         if let index = favoriteStories.firstIndex(where: { $0.id == story.id }) {
             favoriteStories.remove(at: index)
+            restoreStory(story.id)
         } else {
             favoriteStories.append(FavoriteStory(date: date, story: story))
         }

@@ -104,15 +104,23 @@ struct ArticleDetailView: View {
                         }
                     }
 
-                    if homeViewModel.isStoryRead(viewModel.story.id) {
-                        Button(action: {
-                            homeViewModel.toggleRead(viewModel.story, date: date)
-                        }) {
-                            Label("设为未读", systemImage: "envelope.badge")
+                    if source == .read {
+                        if homeViewModel.isStoryRead(viewModel.story.id) {
+                            Button(action: {
+                                homeViewModel.toggleRead(viewModel.story, date: date)
+                            }) {
+                                Label("设为未读", systemImage: "envelope.badge")
+                            }
+                        } else {
+                            Button(action: {
+                                homeViewModel.toggleRead(viewModel.story, date: date)
+                            }) {
+                                Label("设为已读", systemImage: "checkmark.circle")
+                            }
                         }
                     } else {
                         Button(action: {
-                            homeViewModel.toggleRead(viewModel.story, date: date)
+                            homeViewModel.markStoryRead(viewModel.story, date: date)
                         }) {
                             Label("设为已读", systemImage: "checkmark.circle")
                         }

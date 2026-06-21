@@ -238,6 +238,36 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertEqual(secondViewModel.readSections.flatMap(\.stories).map(\.id), [1])
     }
 
+    func testUnfavoriteAutomaticallyUnhides() async {
+        let hiddenKey = "DailyReader.hiddenStories"
+        let favoriteKey = "DailyReader.favoriteStories"
+        UserDefaults.standard.removeObject(forKey: hiddenKey)
+        UserDefaults.standard.removeObject(forKey: favoriteKey)
+        defer {
+            UserDefaults.standard.removeObject(forKey: hiddenKey)
+            UserDefaults.standard.removeObject(forKey: favoriteKey)
+        }
+
+        let api = MockDailyAPIClient()
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        await viewModel.load()
+
+        let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
+
+        // 1. Hide
+        viewModel.hideStory(story, date: "20260621")
+        XCTAssertTrue(viewModel.isStoryHidden(1))
+
+        // 2. Favorite
+        viewModel.toggleFavorite(story, date: "20260621")
+        XCTAssertTrue(viewModel.isStoryFavorited(1))
+
+        // 3. Unfavorite (should trigger unhide)
+        viewModel.toggleFavorite(story, date: "20260621")
+        XCTAssertFalse(viewModel.isStoryFavorited(1))
+        XCTAssertFalse(viewModel.isStoryHidden(1))
+    }
+
     private func temporaryRoot() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
