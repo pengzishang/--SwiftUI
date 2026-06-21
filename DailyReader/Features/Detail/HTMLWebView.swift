@@ -44,13 +44,14 @@ struct HTMLWebView: UIViewRepresentable {
             body { font: -apple-system-body; color: \(textColor); background: transparent; line-height: 1.65; padding: 0; margin: 0; }
             img { max-width: 100%; height: auto; border-radius: 12px; }
             .avatar, .author img, .meta img, .origin-source img, .source img {
-              width: 72px !important;
-              height: 72px !important;
-              max-width: 72px !important;
-              max-height: 72px !important;
+              width: 32px !important;
+              height: 32px !important;
+              max-width: 32px !important;
+              max-height: 32px !important;
               object-fit: cover;
-              border-radius: 18px;
+              border-radius: 50% !important;
               vertical-align: middle;
+              margin-right: 8px !important;
             }
             body > img:first-child, body > p:first-child img:first-child {
               max-width: 96px !important;
@@ -58,6 +59,25 @@ struct HTMLWebView: UIViewRepresentable {
               object-fit: cover;
               border-radius: 18px;
               vertical-align: middle;
+            }
+            .meta {
+              display: inline-flex !important;
+              align-items: center !important;
+              flex-wrap: wrap !important;
+              background: rgba(120, 120, 128, 0.08) !important;
+              padding: 6px 12px !important;
+              border-radius: 20px !important;
+              margin: 10px 0 18px 0 !important;
+              border: 1px solid rgba(120, 120, 128, 0.12) !important;
+            }
+            .author {
+              font-size: 14px !important;
+              font-weight: 600 !important;
+              color: \(textColor) !important;
+            }
+            .bio {
+              font-size: 13px !important;
+              color: #8E8E93 !important;
             }
             a { color: #0A84FF; }
             a.discussion-pill {
