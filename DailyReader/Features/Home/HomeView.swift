@@ -30,12 +30,12 @@ struct HomeView: View {
                         ForEach(section.stories) { story in
                             NavigationLink {
                                 ArticleDetailView(viewModel: AppEnvironment.makeDetailViewModel(story: story))
+                                    .onAppear {
+                                        viewModel.markStoryRead(story.id)
+                                    }
                             } label: {
                                 StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                             }
-                            .simultaneousGesture(TapGesture().onEnded {
-                                viewModel.markStoryRead(story.id)
-                            })
                             .task {
                                 await viewModel.loadMoreIfNeeded(currentStoryID: story.id)
                             }

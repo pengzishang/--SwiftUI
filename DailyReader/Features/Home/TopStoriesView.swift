@@ -11,6 +11,9 @@ struct TopStoriesView: View {
                 ForEach(topStories) { story in
                     NavigationLink {
                         ArticleDetailView(viewModel: AppEnvironment.makeDetailViewModel(story: story.summary))
+                            .onAppear {
+                                markRead(story.id)
+                            }
                     } label: {
                         VStack(alignment: .leading, spacing: 10) {
                             PlaceholderImageView(urlString: story.image)
@@ -28,9 +31,6 @@ struct TopStoriesView: View {
                         .opacity(readStoryIDs.contains(story.id) ? 0.72 : 1)
                     }
                     .buttonStyle(.plain)
-                    .simultaneousGesture(TapGesture().onEnded {
-                        markRead(story.id)
-                    })
                 }
             }
         }
