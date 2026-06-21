@@ -27,6 +27,9 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var sections: [DailySection] = []
     @Published private(set) var historyLoadState: HistoryLoadState = .idle
     @Published private(set) var readStoryIDs: Set<Int>
+    @Published private(set) var hiddenStories: [HiddenStory] = []
+    @Published private(set) var favoriteStories: [FavoriteStory] = []
+    @Published private(set) var readStories: [ReadStory] = []
     @Published var bannerMessage: String?
 
     private let apiClient: DailyAPIClient
@@ -34,13 +37,74 @@ final class HomeViewModel: ObservableObject {
     private var loadedStoryIDs = Set<Int>()
     private var hasAttemptedInitialLoad = false
     private let readStoryIDsKey = "DailyReader.readStoryIDs"
+    private let hiddenStoriesKey = "DailyReader.hiddenStories"
+    private let favoriteStoriesKey = "DailyReader.favoriteStories"
+    private let readStoriesKey = "DailyReader.readStories"
 
     init(apiClient: DailyAPIClient, cacheStore: CacheStore) {
         self.apiClient = apiClient
         self.cacheStore = cacheStore
         self.readStoryIDs = Set(UserDefaults.standard.array(forKey: readStoryIDsKey) as? [Int] ?? [])
+        
+        if let data = UserDefaults.standard.data(forKey: hiddenStoriesKey),
+           let list = try? JSONDecoder().decode([HiddenStory].self, from: data) {
+            self.hiddenStories = list
+        } else {
+            self.hiddenStories = []
+        }
+
+        if let data = UserDefaults.standard.data(forKey: favoriteStoriesKey),
+           let list = try? JSONDecoder().decode([FavoriteStory].self, from: data) {
+            self.favoriteStories = list
+        } else {
+            self.favoriteStories = []
+        }
+
+        if let data = UserDefaults.standard.data(forKey: readStoriesKey),
+           let list = try? JSONDecoder().decode([ReadStory].self, from: data) {
+            self.readStories = list
+        } else {
+            self.readStories = []
+        }
     }
 
+    // MARK: - Filtered computed sections
+    var visibleSections: [DailySection] {
+        sections.map { section in
+            var sec = section
+            sec.stories = section.stories.filter { !isStoryHidden($0.id) }
+            return sec
+        }.filter { !$0.stories.isEmpty }
+    }
+
+    var hiddenSections: [DailySection] {
+        let grouped = Dictionary(grouping: hiddenStories, by: { $0.date })
+        return grouped.map { (date, list) in
+            DailySection(date: date, stories: list.map { $0.story })
+        }
+        .filter { !$0.stories.isEmpty }
+        .sorted(by: { $0.date > $1.date })
+    }
+
+    var favoriteSections: [DailySection] {
+        let grouped = Dictionary(grouping: favoriteStories, by: { $0.date })
+        return grouped.map { (date, list) in
+            DailySection(date: date, stories: list.map { $0.story })
+        }
+        .filter { !$0.stories.isEmpty }
+        .sorted(by: { $0.date > $1.date })
+    }
+
+    var readSections: [DailySection] {
+        let grouped = Dictionary(grouping: readStories, by: { $0.date })
+        return grouped.map { (date, list) in
+            DailySection(date: date, stories: list.map { $0.story })
+        }
+        .filter { !$0.stories.isEmpty }
+        .sorted(by: { $0.date > $1.date })
+    }
+
+    // MARK: - API Actions
     func load() async {
         guard !hasAttemptedInitialLoad else { return }
         hasAttemptedInitialLoad = true
@@ -76,14 +140,83 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-
+    // MARK: - Status updates & Persistence
     func markStoryRead(_ storyID: Int) {
         guard readStoryIDs.insert(storyID).inserted else { return }
         UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
     }
 
+    func markStoryRead(_ story: StorySummary, date: String) {
+        guard readStoryIDs.insert(story.id).inserted else { return }
+        UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
+        if !readStories.contains(where: { $0.id == story.id }) {
+            readStories.append(ReadStory(date: date, story: story))
+            saveReadStories()
+        }
+    }
+
     func isStoryRead(_ storyID: Int) -> Bool {
         readStoryIDs.contains(storyID)
+    }
+
+    func hideStory(_ story: StorySummary, date: String) {
+        guard !hiddenStories.contains(where: { $0.id == story.id }) else { return }
+        hiddenStories.append(HiddenStory(date: date, story: story))
+        saveHiddenStories()
+    }
+
+    func restoreStory(_ storyID: Int) {
+        hiddenStories.removeAll(where: { $0.id == storyID })
+        saveHiddenStories()
+    }
+
+    func isStoryHidden(_ storyID: Int) -> Bool {
+        hiddenStories.contains(where: { $0.id == storyID })
+    }
+
+    func toggleFavorite(_ story: StorySummary, date: String) {
+        if let index = favoriteStories.firstIndex(where: { $0.id == story.id }) {
+            favoriteStories.remove(at: index)
+        } else {
+            favoriteStories.append(FavoriteStory(date: date, story: story))
+        }
+        saveFavoriteStories()
+    }
+
+    func isStoryFavorited(_ storyID: Int) -> Bool {
+        favoriteStories.contains(where: { $0.id == storyID })
+    }
+
+    func toggleRead(_ story: StorySummary, date: String) {
+        if readStoryIDs.contains(story.id) {
+            readStoryIDs.remove(story.id)
+            readStories.removeAll(where: { $0.id == story.id })
+        } else {
+            readStoryIDs.insert(story.id)
+            if !readStories.contains(where: { $0.id == story.id }) {
+                readStories.append(ReadStory(date: date, story: story))
+            }
+        }
+        UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
+        saveReadStories()
+    }
+
+    private func saveHiddenStories() {
+        if let data = try? JSONEncoder().encode(hiddenStories) {
+            UserDefaults.standard.set(data, forKey: hiddenStoriesKey)
+        }
+    }
+
+    private func saveFavoriteStories() {
+        if let data = try? JSONEncoder().encode(favoriteStories) {
+            UserDefaults.standard.set(data, forKey: favoriteStoriesKey)
+        }
+    }
+
+    private func saveReadStories() {
+        if let data = try? JSONEncoder().encode(readStories) {
+            UserDefaults.standard.set(data, forKey: readStoriesKey)
+        }
     }
 
     var thresholdStoryID: Int? {

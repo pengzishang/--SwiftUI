@@ -17,7 +17,8 @@ final class HomeFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["分享"].exists)
+        
+        XCTAssertTrue(app.buttons["操作"].exists)
         attachScreenshot(named: "detail-success", app: app)
 
         app.navigationBars["文章详情"].buttons.firstMatch.tap()
@@ -73,6 +74,10 @@ final class HomeFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["无分享链接文章"].waitForExistence(timeout: 5))
+        
+        XCTAssertTrue(app.buttons["操作"].waitForExistence(timeout: 5))
+        app.buttons["操作"].tap()
+        XCTAssertTrue(app.buttons["分享"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.buttons["分享"].isEnabled)
         attachScreenshot(named: "detail-missing-share", app: app)
     }
@@ -92,7 +97,7 @@ final class HomeFlowUITests: XCTestCase {
 
     func testV10OutOfScopeEntriesDoNotAppear() {
         let app = launchApp(scenario: "latest_success")
-        let forbiddenTexts = ["登录", "注册", "评论", "点赞", "收藏", "搜索", "主题日报"]
+        let forbiddenTexts = ["登录", "注册", "评论", "点赞", "搜索", "主题日报"]
 
         XCTAssertTrue(app.navigationBars["日报阅读器"].waitForExistence(timeout: 5))
         for forbiddenText in forbiddenTexts {

@@ -88,21 +88,22 @@ struct HTMLWebView: UIViewRepresentable {
             }
             a { color: #0A84FF; }
             a.discussion-pill {
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              box-sizing: border-box;
-              min-height: 36px;
-              padding: 6px 16px;
-              margin-top: 8px;
-              border-radius: 999px;
-              background: rgba(10, 132, 255, 0.16);
-              color: #0A84FF;
-              font-weight: 600;
-              text-decoration: none;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              box-sizing: border-box !important;
+              width: calc(100% - 16px) !important;
+              min-height: 44px !important;
+              padding: 12px 16px !important;
+              margin: 20px 8px 8px 8px !important;
+              border-radius: 12px !important;
+              background: rgba(10, 132, 255, 0.16) !important;
+              color: #0A84FF !important;
+              font-weight: 600 !important;
+              text-decoration: none !important;
             }
             a.discussion-pill:active {
-              background: rgba(10, 132, 255, 0.26);
+              background: rgba(10, 132, 255, 0.26) !important;
             }
           </style>
         </head>

@@ -1,6 +1,17 @@
 import SwiftUI
 
+enum ArticleDetailSource {
+    case daily
+    case coldPalace
+    case favorites
+    case read
+}
+
 struct ArticleDetailView: View {
+    @ObservedObject var homeViewModel: HomeViewModel
+    let source: ArticleDetailSource
+    let date: String
+
     @StateObject private var viewModel: ArticleDetailViewModel
     @State private var isShowingShareSheet = false
     @State private var htmlContentHeight: CGFloat = 520
@@ -8,7 +19,10 @@ struct ArticleDetailView: View {
     @State private var htmlErrorMessage: String?
 
     @MainActor
-    init(story: StorySummary) {
+    init(story: StorySummary, homeViewModel: HomeViewModel, source: ArticleDetailSource, date: String) {
+        self.homeViewModel = homeViewModel
+        self.source = source
+        self.date = date
         _viewModel = StateObject(wrappedValue: AppEnvironment.makeDetailViewModel(story: story))
     }
 
@@ -68,13 +82,59 @@ struct ArticleDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    isShowingShareSheet = true
+                Menu {
+                    Button(action: {
+                        isShowingShareSheet = true
+                    }) {
+                        Label("分享", systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(viewModel.shareURL == nil)
+
+                    if homeViewModel.isStoryFavorited(viewModel.story.id) {
+                        Button(action: {
+                            homeViewModel.toggleFavorite(viewModel.story, date: date)
+                        }) {
+                            Label("取消收藏", systemImage: "star.fill")
+                        }
+                    } else {
+                        Button(action: {
+                            homeViewModel.toggleFavorite(viewModel.story, date: date)
+                        }) {
+                            Label("收藏", systemImage: "star")
+                        }
+                    }
+
+                    if homeViewModel.isStoryRead(viewModel.story.id) {
+                        Button(action: {
+                            homeViewModel.toggleRead(viewModel.story, date: date)
+                        }) {
+                            Label("设为未读", systemImage: "envelope.badge")
+                        }
+                    } else {
+                        Button(action: {
+                            homeViewModel.toggleRead(viewModel.story, date: date)
+                        }) {
+                            Label("设为已读", systemImage: "checkmark.circle")
+                        }
+                    }
+
+                    if source == .coldPalace {
+                        Button(action: {
+                            homeViewModel.restoreStory(viewModel.story.id)
+                        }) {
+                            Label("恢复到日报", systemImage: "arrow.uturn.backward")
+                        }
+                    } else {
+                        Button(action: {
+                            homeViewModel.hideStory(viewModel.story, date: date)
+                        }) {
+                            Label("不感兴趣", systemImage: "eye.slash")
+                        }
+                    }
                 } label: {
-                    Image(systemName: "square.and.arrow.up")
+                    Image(systemName: "ellipsis.circle")
                 }
-                .disabled(viewModel.shareURL == nil)
-                .accessibilityLabel("分享")
+                .accessibilityLabel("操作")
             }
         }
         .sheet(isPresented: $isShowingShareSheet) {

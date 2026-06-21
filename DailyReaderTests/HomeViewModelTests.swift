@@ -118,6 +118,126 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertTrue(secondViewModel.isStoryRead(42))
     }
 
+    func testHideAndRestoreStory() async {
+        let hiddenKey = "DailyReader.hiddenStories"
+        UserDefaults.standard.removeObject(forKey: hiddenKey)
+        defer { UserDefaults.standard.removeObject(forKey: hiddenKey) }
+
+        let api = MockDailyAPIClient()
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        await viewModel.load()
+
+        let storyToHide = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
+        
+        // Hide
+        viewModel.hideStory(storyToHide, date: "20260621")
+        
+        XCTAssertTrue(viewModel.isStoryHidden(1))
+        XCTAssertFalse(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertTrue(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertEqual(viewModel.hiddenSections.first?.date, "20260621")
+
+        // Hide the second story in the same section to verify the section disappears
+        let secondStory = StorySummary(id: 2, title: "Story 2", images: [], hint: "Hint 2", url: nil)
+        viewModel.hideStory(secondStory, date: "20260621")
+        XCTAssertTrue(viewModel.visibleSections.isEmpty) // The whole section was empty, so it's hidden!
+
+        // Restore
+        viewModel.restoreStory(1)
+        XCTAssertFalse(viewModel.isStoryHidden(1))
+        XCTAssertTrue(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+        XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+    }
+
+    func testFavoriteStoryToggle() async {
+        let favoriteKey = "DailyReader.favoriteStories"
+        UserDefaults.standard.removeObject(forKey: favoriteKey)
+        defer { UserDefaults.standard.removeObject(forKey: favoriteKey) }
+
+        let api = MockDailyAPIClient()
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        await viewModel.load()
+
+        let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
+        
+        // Favorite
+        viewModel.toggleFavorite(story, date: "20260621")
+        XCTAssertTrue(viewModel.isStoryFavorited(1))
+        XCTAssertTrue(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // Unfavorite
+        viewModel.toggleFavorite(story, date: "20260621")
+        XCTAssertFalse(viewModel.isStoryFavorited(1))
+        XCTAssertFalse(viewModel.favoriteSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+    }
+
+    func testReadStoryToggleAndSync() async {
+        let readIDsKey = "DailyReader.readStoryIDs"
+        let readStoriesKey = "DailyReader.readStories"
+        UserDefaults.standard.removeObject(forKey: readIDsKey)
+        UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        defer {
+            UserDefaults.standard.removeObject(forKey: readIDsKey)
+            UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        }
+
+        let api = MockDailyAPIClient()
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        await viewModel.load()
+
+        let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
+        
+        // Mark read via toggle
+        viewModel.toggleRead(story, date: "20260621")
+        XCTAssertTrue(viewModel.isStoryRead(1))
+        XCTAssertTrue(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // Mark unread via toggle
+        viewModel.toggleRead(story, date: "20260621")
+        XCTAssertFalse(viewModel.isStoryRead(1))
+        XCTAssertFalse(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+
+        // Mark read via detail onAppear style
+        viewModel.markStoryRead(story, date: "20260621")
+        XCTAssertTrue(viewModel.isStoryRead(1))
+        XCTAssertTrue(viewModel.readSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
+    }
+
+    func testPersistenceAcrossInstances() {
+        let hiddenKey = "DailyReader.hiddenStories"
+        let favoriteKey = "DailyReader.favoriteStories"
+        let readIDsKey = "DailyReader.readStoryIDs"
+        let readStoriesKey = "DailyReader.readStories"
+        
+        UserDefaults.standard.removeObject(forKey: hiddenKey)
+        UserDefaults.standard.removeObject(forKey: favoriteKey)
+        UserDefaults.standard.removeObject(forKey: readIDsKey)
+        UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        
+        defer {
+            UserDefaults.standard.removeObject(forKey: hiddenKey)
+            UserDefaults.standard.removeObject(forKey: favoriteKey)
+            UserDefaults.standard.removeObject(forKey: readIDsKey)
+            UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        }
+
+        let firstViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
+        
+        firstViewModel.hideStory(story, date: "20260621")
+        firstViewModel.toggleFavorite(story, date: "20260621")
+        firstViewModel.markStoryRead(story, date: "20260621")
+
+        let secondViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        
+        XCTAssertTrue(secondViewModel.isStoryHidden(1))
+        XCTAssertTrue(secondViewModel.isStoryFavorited(1))
+        XCTAssertTrue(secondViewModel.isStoryRead(1))
+        XCTAssertEqual(secondViewModel.hiddenSections.flatMap(\.stories).map(\.id), [1])
+        XCTAssertEqual(secondViewModel.favoriteSections.flatMap(\.stories).map(\.id), [1])
+        XCTAssertEqual(secondViewModel.readSections.flatMap(\.stories).map(\.id), [1])
+    }
+
     private func temporaryRoot() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     }

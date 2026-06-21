@@ -4,13 +4,14 @@ struct TopStoriesView: View {
     let topStories: [TopStory]
     let readStoryIDs: Set<Int>
     let markRead: (Int) -> Void
+    @ObservedObject var homeViewModel: HomeViewModel
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 ForEach(topStories) { story in
                     NavigationLink {
-                        ArticleDetailView(story: story.summary)
+                        ArticleDetailView(story: story.summary, homeViewModel: homeViewModel, source: .daily, date: "")
                             .onAppear {
                                 markRead(story.id)
                             }

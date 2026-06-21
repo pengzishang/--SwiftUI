@@ -2,10 +2,41 @@ import SwiftUI
 
 struct AppRootView: View {
     @StateObject private var homeViewModel = AppEnvironment.makeHomeViewModel()
+    @State private var selectedTab = 0
 
     var body: some View {
-        NavigationStack {
-            HomeView(viewModel: homeViewModel)
+        TabView(selection: $selectedTab) {
+            NavigationStack {
+                HomeView(viewModel: homeViewModel)
+            }
+            .tabItem {
+                Label("日报", systemImage: "newspaper")
+            }
+            .tag(0)
+
+            NavigationStack {
+                ColdPalaceView(viewModel: homeViewModel)
+            }
+            .tabItem {
+                Label("冷宫", systemImage: "snowflake")
+            }
+            .tag(1)
+
+            NavigationStack {
+                FavoritesView(viewModel: homeViewModel)
+            }
+            .tabItem {
+                Label("收藏", systemImage: "star")
+            }
+            .tag(2)
+
+            NavigationStack {
+                ReadStoriesView(viewModel: homeViewModel)
+            }
+            .tabItem {
+                Label("已读", systemImage: "checkmark.circle")
+            }
+            .tag(3)
         }
     }
 }

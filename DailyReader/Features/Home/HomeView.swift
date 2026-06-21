@@ -25,16 +25,23 @@ struct HomeView: View {
                 ContentUnavailableView("今日暂无内容", systemImage: "newspaper", description: Text("稍后再试，或者下拉刷新。"))
                     .listRowSeparator(.hidden)
             case .loaded:
-                ForEach(viewModel.sections) { section in
+                ForEach(viewModel.visibleSections) { section in
                     Section(header: Text(formattedDate(section.date))) {
                         ForEach(section.stories) { story in
                             NavigationLink {
-                                ArticleDetailView(story: story)
+                                ArticleDetailView(story: story, homeViewModel: viewModel, source: .daily, date: section.date)
                                     .onAppear {
-                                        viewModel.markStoryRead(story.id)
+                                        viewModel.markStoryRead(story, date: section.date)
                                     }
                             } label: {
                                 StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    viewModel.hideStory(story, date: section.date)
+                                } label: {
+                                    Label("不感兴趣", systemImage: "eye.slash")
+                                }
                             }
                             .onAppear {
                                 if story.id == viewModel.thresholdStoryID {
