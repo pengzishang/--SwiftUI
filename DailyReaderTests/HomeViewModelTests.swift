@@ -28,6 +28,44 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.phase.isCacheLoaded)
     }
 
+    func testNetworkFailureWithoutCacheShowsRetryableErrorState() async {
+        let api = MockDailyAPIClient()
+        api.latestResult = .failure(APIError.transport("offline"))
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .failed("网络不可用，请检查连接后重试"))
+        XCTAssertTrue(viewModel.sections.isEmpty)
+        XCTAssertNil(viewModel.bannerMessage)
+    }
+
+    func testRefreshFailureWithoutCacheKeepsVisibleContent() async {
+        let api = MockDailyAPIClient()
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+
+        await viewModel.load()
+        api.latestResult = .failure(APIError.transport("offline"))
+        await viewModel.refresh()
+
+        XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2])
+        XCTAssertEqual(viewModel.bannerMessage, "刷新失败，已保留上次内容")
+    }
+
+    func testRefreshFailureKeepsLoadedHistorySections() async {
+        let api = MockDailyAPIClient()
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+
+        await viewModel.load()
+        await viewModel.loadMore()
+        api.latestResult = .failure(APIError.transport("offline"))
+        await viewModel.refresh()
+
+        XCTAssertEqual(viewModel.sections.map(\.date), ["20260621", "20260620"])
+        XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2, 3])
+        XCTAssertEqual(viewModel.bannerMessage, "刷新失败，已保留上次内容")
+    }
+
     func testLoadMoreDeduplicatesStories() async {
         let api = MockDailyAPIClient()
         let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))

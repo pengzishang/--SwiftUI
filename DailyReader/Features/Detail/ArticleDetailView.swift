@@ -55,7 +55,7 @@ struct ArticleDetailView: View {
         }
         .sheet(isPresented: $isShowingShareSheet) {
             if let shareURL = viewModel.shareURL {
-                ShareSheet(items: [viewModel.story.title, shareURL])
+                ShareSheet(items: [viewModel.shareTitle, shareURL])
             }
         }
         .task {

@@ -24,6 +24,39 @@ final class CacheStoreTests: XCTestCase {
         XCTAssertEqual(cached?.value, .fixture)
     }
 
+    func testCachePersistsAcrossStoreInstances() async {
+        let writer = DiskCacheStore(rootURL: temporaryDirectory)
+        await writer.saveLatest(.fixture)
+        await writer.saveDetail(.fixture)
+
+        let reader = DiskCacheStore(rootURL: temporaryDirectory)
+        let cachedLatest = await reader.loadLatest()
+        let cachedDetail = await reader.loadDetail(id: 1)
+
+        XCTAssertEqual(cachedLatest?.value, .fixture)
+        XCTAssertEqual(cachedDetail?.value, .fixture)
+    }
+
+    func testDailyListCacheKeepsMostRecentThirtyEntries() async {
+        let store = DiskCacheStore(rootURL: temporaryDirectory)
+
+        for offset in 0..<31 {
+            await store.saveDaily(
+                DailyResponse(
+                    date: String(format: "202606%02d", offset + 1),
+                    stories: [StorySummary(id: offset, title: "日报 \(offset)")]
+                )
+            )
+        }
+
+        let cacheRoot = temporaryDirectory
+            .appendingPathComponent("DailyReaderCache", isDirectory: true)
+            .appendingPathComponent("daily", isDirectory: true)
+        let files = (try? FileManager.default.contentsOfDirectory(at: cacheRoot, includingPropertiesForKeys: nil)) ?? []
+
+        XCTAssertEqual(files.count, 30)
+    }
+
     func testBrokenCacheFileReturnsNilInsteadOfCrashing() async throws {
         let store = DiskCacheStore(rootURL: temporaryDirectory)
         let cacheFile = temporaryDirectory

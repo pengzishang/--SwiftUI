@@ -24,9 +24,29 @@ final class ArticleDetailViewModel: ObservableObject {
 
     var shareURL: URL? {
         guard case .loaded(let detail, _) = phase else {
-            return story.url.flatMap(URL.init(string:))
+            return Self.validShareURL(from: story.url)
         }
-        return (detail.shareURL ?? detail.url ?? story.url).flatMap(URL.init(string:))
+        return Self.validShareURL(from: detail.shareURL ?? detail.url ?? story.url)
+    }
+
+    var shareTitle: String {
+        guard case .loaded(let detail, _) = phase, !detail.title.isEmpty else {
+            return story.title
+        }
+        return detail.title
+    }
+
+    private static func validShareURL(from rawValue: String?) -> URL? {
+        guard
+            let rawValue,
+            let url = URL(string: rawValue),
+            let scheme = url.scheme?.lowercased(),
+            ["http", "https"].contains(scheme),
+            url.host?.isEmpty == false
+        else {
+            return nil
+        }
+        return url
     }
 
     func load() async {

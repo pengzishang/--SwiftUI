@@ -44,7 +44,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     func refresh() async {
-        await loadLatest(allowCacheFallback: !sections.isEmpty)
+        await loadLatest(allowCacheFallback: true)
     }
 
     func loadMore() async {
@@ -71,12 +71,11 @@ final class HomeViewModel: ObservableObject {
             replace(with: response, source: .network)
             bannerMessage = nil
         } catch {
-            if allowCacheFallback, let cached = await cacheStore.loadLatest() {
-                let hadVisibleContent = !sections.isEmpty
+            if allowCacheFallback, sections.isEmpty, let cached = await cacheStore.loadLatest() {
                 replace(with: cached.value, source: .cache(cached.cachedAt))
-                bannerMessage = hadVisibleContent ? "刷新失败，已保留上次内容" : "当前离线，正在显示缓存内容"
+                bannerMessage = "当前离线，正在显示缓存内容"
             } else if sections.isEmpty {
-                phase = .failed("内容加载失败，请检查网络后重试")
+                phase = .failed("网络不可用，请检查连接后重试")
             } else {
                 bannerMessage = "刷新失败，已保留上次内容"
             }
