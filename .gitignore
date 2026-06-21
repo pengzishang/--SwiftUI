@@ -1,0 +1,48 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode user data
+*.xcuserstate
+*.xcscmblueprint
+xcuserdata/
+*.moved-aside
+DerivedData/
+
+# Xcode build products
+build/
+Build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# AppCode / JetBrains
+.idea/
+
+# Archives, logs, and test results
+*.xcarchive
+*.xcresult
+*.log
+
+# Environment / secrets
+.env
+.env.*
+!.env.example

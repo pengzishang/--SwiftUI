@@ -25,19 +25,6 @@ struct HomeView: View {
                 ContentUnavailableView("今日暂无内容", systemImage: "newspaper", description: Text("稍后再试，或者下拉刷新。"))
                     .listRowSeparator(.hidden)
             case .loaded:
-                if !viewModel.topStories.isEmpty {
-                    Section {
-                        TopStoriesView(
-                            topStories: viewModel.topStories,
-                            readStoryIDs: viewModel.readStoryIDs
-                        ) { storyID in
-                            viewModel.markStoryRead(storyID)
-                        }
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                            .listRowSeparator(.hidden)
-                    }
-                }
-
                 ForEach(viewModel.sections) { section in
                     Section(header: Text(formattedDate(section.date))) {
                         ForEach(section.stories) { story in
