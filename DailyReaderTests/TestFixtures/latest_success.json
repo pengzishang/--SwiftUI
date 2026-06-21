@@ -1,0 +1,27 @@
+{
+  "date": "20260621",
+  "stories": [
+    {
+      "id": 1,
+      "title": "第一篇日报",
+      "images": [],
+      "hint": "测试",
+      "url": "https://example.com/1"
+    },
+    {
+      "id": "2",
+      "title": "第二篇日报",
+      "images": [],
+      "hint": "测试",
+      "url": "https://example.com/2"
+    }
+  ],
+  "top_stories": [
+    {
+      "id": 1,
+      "title": "顶部故事",
+      "image": null,
+      "url": "https://example.com/1"
+    }
+  ]
+}

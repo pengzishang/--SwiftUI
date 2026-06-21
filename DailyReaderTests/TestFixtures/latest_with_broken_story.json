@@ -1,0 +1,18 @@
+{
+  "date": "20260621",
+  "stories": [
+    {
+      "id": 1,
+      "title": "第一篇日报"
+    },
+    {
+      "id": 2,
+      "images": []
+    },
+    {
+      "id": "not-a-number",
+      "title": "坏 ID"
+    }
+  ],
+  "top_stories": []
+}
