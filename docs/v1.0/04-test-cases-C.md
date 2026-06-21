@@ -4,11 +4,100 @@
 
 当前仓库只有 PRD，尚无 SwiftUI 源码或 Xcode 工程。本测试用例基于 `docs/v1.0/01-product-requirements.md` 和接口文档 `docs/v1.0/03-api-document-B.md` 编写，用于指导后续开发、mock 服务、自动化测试和监工验收。
 
+测试策略采用 XCTest 体系和测试驱动开发（TDD）：
+
+- 白盒测试：由测试 agent 使用 XCTest 编写，覆盖 API 解析、ViewModel 状态机、缓存策略、分享 URL 优先级、去重逻辑；
+- 黑盒测试：由测试 agent 使用 XCUITest 编写，覆盖 App 主链路、离线/错误态、分享入口、范围外功能不可见；
+- iOS 开发 agent 必须先运行测试 agent 提供的失败测试，再实现代码让测试变绿；
+- P0 用例必须自动化优先，无法自动化的系统能力要记录手工替代方案；
+- 监控/集成 agent 每轮运行 `xcodebuild test`，监工 agent 最终独立复核测试结果。
+
 优先级：
 
 - P0：主链路或崩溃风险，必须通过；
 - P1：核心体验与异常恢复，发布前应通过；
 - P2：边界体验、兼容性、性能和回归增强。
+
+## 0.1 XCTest / XCUITest 落地规范
+
+建议测试目录：
+
+```text
+DailyReaderTests/
+├── HomeViewModelTests.swift
+├── ArticleDetailViewModelTests.swift
+├── CacheStoreTests.swift
+├── ZhihuDailyAPITests.swift
+├── SharingPolicyTests.swift
+├── MockDailyAPIClient.swift
+├── MockURLProtocol.swift
+└── TestFixtures/
+    ├── latest_success.json
+    ├── latest_empty.json
+    ├── latest_missing_fields.json
+    ├── history_success.json
+    ├── detail_success.json
+    ├── detail_empty_body.json
+    ├── detail_missing_share_url.json
+    └── malformed.json
+
+DailyReaderUITests/
+├── HomeFlowUITests.swift
+├── DetailFlowUITests.swift
+├── OfflineFlowUITests.swift
+├── SharingFlowUITests.swift
+└── ScopeBoundaryUITests.swift
+```
+
+测试命名要求：
+
+```swift
+func test对象_when条件_then结果()
+```
+
+示例：
+
+```swift
+func testLoadLatest_whenNetworkSucceeds_thenShowsStoriesAndTopStories()
+func testRefresh_whenNetworkFails_thenKeepsExistingStories()
+func testLoadDetail_whenBodyIsEmpty_thenShowsUnavailableMessage()
+func testShare_whenShareURLMissing_thenDisablesSharing()
+func testCache_whenJSONIsCorrupted_thenDoesNotCrash()
+func testHomeFlow_whenOfflineWithoutCache_thenShowsRetryError()
+```
+
+UI 测试要求：
+
+- 关键控件必须设置 `accessibilityIdentifier`；
+- UI 测试不得依赖真实外部接口，必须通过 launch argument 或环境变量切换 mock 场景；
+- 示例启动参数：
+
+```text
+-UITestMode YES
+MOCK_SCENARIO=latest_success
+MOCK_SCENARIO=offline_without_cache
+MOCK_SCENARIO=offline_with_cache
+MOCK_SCENARIO=detail_empty_body
+```
+
+建议 identifier：
+
+| 页面 | 元素 | Identifier |
+| --- | --- | --- |
+| 首页 | 根视图 | `home.screen` |
+| 首页 | 加载态 | `home.loading` |
+| 首页 | 错误态 | `home.error` |
+| 首页 | 重试按钮 | `home.retryButton` |
+| 首页 | 顶部故事列表 | `home.topStories` |
+| 首页 | 普通列表 | `home.storyList` |
+| 首页 | 离线提示 | `home.offlineBanner` |
+| 详情 | 根视图 | `detail.screen` |
+| 详情 | 加载态 | `detail.loading` |
+| 详情 | 错误态 | `detail.error` |
+| 详情 | 正文容器 | `detail.webView` |
+| 详情 | 不可用文案 | `detail.bodyUnavailable` |
+| 详情 | 分享按钮 | `detail.shareButton` |
+| 详情 | 缓存提示 | `detail.cacheBanner` |
 
 ## 1. 功能测试
 
@@ -148,11 +237,54 @@
 
 | 层级 | 覆盖内容 |
 | --- | --- |
-| 单元测试 | 接口解析、字段缺失、缓存读写、分享 URL 优先级、去重逻辑 |
-| 网络 Mock 测试 | latest、before、detail 的 200、403、500、502、超时、破损 JSON |
-| UI 自动化 | 阅读主链路、离线缓存、无缓存错误、刷新失败、分享面板 |
+| XCTest 白盒单元测试 | 接口解析、字段缺失、ViewModel 状态转换、缓存读写、分享 URL 优先级、去重逻辑 |
+| XCTest 网络 Mock 测试 | latest、before、detail 的 200、403、500、502、超时、破损 JSON |
+| XCUITest 黑盒 UI 测试 | 阅读主链路、离线缓存、无缓存错误、刷新失败、分享面板、范围外入口不可见 |
 | Snapshot | 首页、详情、错误态、空态、缓存态、深色模式、小屏 |
 | 手工测试 | 系统分享真实行为、外链跳转、弱网、WebView 深色模式、Instruments |
+
+## 8.1 TDD 执行顺序
+
+每个功能切片按以下顺序推进：
+
+1. 测试 agent 从本文件选择对应 P0/P1 用例；
+2. 测试 agent 编写 XCTest / XCUITest，确认测试因功能未实现而失败；
+3. iOS 开发 agent 实现最小功能让测试通过；
+4. 测试 agent 增加边界用例；
+5. iOS 开发 agent 重构并保持测试绿灯；
+6. 监控/集成 agent 运行完整 `xcodebuild test`；
+7. 监工 agent 在验收阶段复核测试报告和关键手工场景。
+
+P0 测试准入：
+
+| 能力 | 必须测试 |
+| --- | --- |
+| 首页加载 | `HomeViewModelTests` + `HomeFlowUITests` |
+| 顶部故事点击 | `HomeFlowUITests` |
+| 普通文章点击 | `HomeFlowUITests` |
+| 详情正常阅读 | `ArticleDetailViewModelTests` + `DetailFlowUITests` |
+| 分享 URL 选择 | `SharingPolicyTests` |
+| 无网络无缓存 | `HomeViewModelTests` + `OfflineFlowUITests` |
+| 无网络有缓存 | `CacheStoreTests` + `OfflineFlowUITests` |
+| 详情 body 为空 | `ArticleDetailViewModelTests` + `DetailFlowUITests` |
+| 缓存损坏 | `CacheStoreTests` |
+| JSON 破损 | `ZhihuDailyAPITests` |
+
+## 8.2 测试 agent 交付物
+
+测试 agent 每轮必须交付：
+
+- 新增或更新的 XCTest / XCUITest 文件列表；
+- 覆盖的测试用例编号；
+- 当前红灯/绿灯状态；
+- 无法自动化的用例及手工替代说明；
+- 对开发 agent 的失败测试复现命令。
+
+推荐复现命令：
+
+```text
+xcodebuild -project 知乎日报-SwiftUI.xcodeproj -scheme DailyReader -destination 'platform=iOS Simulator,name=iPhone 15' test
+```
 
 ## 9. 监工验收最小清单
 

@@ -45,7 +45,7 @@
 | iOS 基础设施 agent | 创建工程、模型、网络、缓存、公共 UI |
 | iOS 首页 agent | 首页、顶部故事、列表、历史加载 |
 | iOS 详情 agent | 详情页、WebView、分享 |
-| 测试/缓存 agent | Mock、缓存边界、单元测试与 UI 测试骨架 |
+| 测试/缓存 agent | 基于测试用例 C 编写 XCTest 白盒单元测试、XCUITest 黑盒 UI 测试、Mock 和缓存边界测试 |
 | 监控/集成 agent | 监控进度、检查冲突、运行构建和测试、集成改动 |
 | 监工验证 agent | 独立验收，不写业务代码 |
 
@@ -57,8 +57,27 @@
 - 接口文档：`docs/v1.0/03-api-document-B.md`
 - 测试用例：`docs/v1.0/04-test-cases-C.md`
 - 平台：iOS 17+
-- 技术：SwiftUI + MVVM + async/await + URLSession + WKWebView
+- 技术：SwiftUI + MVVM + async/await + URLSession + WKWebView + XCTest + XCUITest
 - 缓存：v1.0 建议先用 JSON 文件缓存，降低 Core Data/SwiftData 并行开发成本
+
+开发模式采用测试驱动开发（TDD）：
+
+```text
+测试 agent 根据测试用例 C 先写失败测试
+→ iOS 开发 agent 实现最小代码让测试通过
+→ 测试 agent 补充边界用例
+→ iOS 开发 agent 重构实现
+→ 监控/集成 agent 持续运行 build + test
+→ 监工 agent 最后独立验收
+```
+
+TDD 硬约束：
+
+- P0 功能必须先有 XCTest / XCUITest 覆盖，再进入“完成”状态；
+- ViewModel、网络解析、缓存策略必须有白盒单元测试；
+- 首页主链路、详情主链路、分享入口、离线错误态必须有黑盒 UI 测试；
+- 开发 agent 不能只交互式手测后声称完成；
+- 如果某个场景因系统限制无法自动化，必须在测试报告中写明原因和手工替代步骤。
 
 建议工程结构：
 
@@ -108,11 +127,20 @@ DailyReaderTests/
 ├── ArticleDetailViewModelTests.swift
 ├── CacheStoreTests.swift
 ├── ZhihuDailyAPITests.swift
-└── MockDailyAPIClient.swift
+├── MockDailyAPIClient.swift
+├── MockURLProtocol.swift
+└── TestFixtures/
+    ├── latest_success.json
+    ├── latest_empty.json
+    ├── detail_success.json
+    ├── detail_empty_body.json
+    └── malformed.json
 
 DailyReaderUITests/
 ├── HomeFlowUITests.swift
-└── DetailFlowUITests.swift
+├── DetailFlowUITests.swift
+├── OfflineFlowUITests.swift
+└── SharingFlowUITests.swift
 ```
 
 ### S = Step：步骤
@@ -144,9 +172,9 @@ v1.0 明确不做：
 
 - 登录、注册、评论、点赞、收藏同步、搜索、主题日报、推送、小组件、iPad 专属布局、横屏专属布局、官方品牌复刻。
 
-#### Step 1：创建工程骨架与基础层
+#### Step 1：创建工程骨架与测试基础设施
 
-负责人：iOS 基础设施 agent
+负责人：iOS 基础设施 agent + 测试 agent
 
 负责路径：
 
@@ -159,6 +187,9 @@ DailyReader/Networking/
 DailyReader/Storage/
 DailyReader/Shared/
 DailyReaderTests/MockDailyAPIClient.swift
+DailyReaderTests/MockURLProtocol.swift
+DailyReaderTests/TestFixtures/
+DailyReaderUITests/
 ```
 
 任务：
@@ -170,6 +201,16 @@ DailyReaderTests/MockDailyAPIClient.swift
 - 定义响应模型，字段尽量可选，解析失败可控；
 - 实现 `DiskCacheStore`；
 - 提供加载态、错误态、离线提示、占位图等公共 UI。
+- 配置 XCTest target 和 XCUITest target；
+- 准备 mock fixture、`MockURLProtocol` 和可注入依赖；
+- 为 UI 测试提供 launch argument / launch environment，用于切换 mock 场景：
+
+```text
+-UITestMode YES
+MOCK_SCENARIO=latest_success
+MOCK_SCENARIO=offline_with_cache
+MOCK_SCENARIO=detail_empty_body
+```
 
 验收：
 
@@ -178,10 +219,47 @@ DailyReaderTests/MockDailyAPIClient.swift
 - 缺字段 JSON 不崩溃；
 - 缓存读写失败不崩溃；
 - 不引入官方 Logo 和账号体系。
+- `xcodebuild test` 可运行；
+- 至少有一个失败优先的 XCTest 示例和一个 XCUITest 冒烟示例。
+
+#### Step 1.5：测试 agent 先写 P0 红灯用例
+
+负责人：测试 agent
+
+负责路径：
+
+```text
+DailyReaderTests/
+DailyReaderUITests/
+```
+
+任务：
+
+- 根据测试用例 C 抽取 P0 最小集；
+- 先写首页 ViewModel、详情 ViewModel、API 解析、缓存读写测试；
+- 再写首页主链路、详情主链路、无网络无缓存、无网络有缓存 UI 测试；
+- 所有测试先允许失败，作为开发 agent 的实现目标；
+- 每个测试名必须表达业务行为，而不是实现细节。
+
+推荐命名：
+
+```swift
+func testLoadLatest_whenNetworkSucceeds_displaysStoriesAndTopStories()
+func testRefresh_whenNetworkFails_keepsExistingStories()
+func testLoadDetail_whenBodyIsEmpty_showsUnavailableMessage()
+func testCache_whenNetworkFails_doesNotOverwriteExistingCache()
+func testHomeFlow_whenOfflineWithoutCache_showsRetryError()
+```
+
+验收：
+
+- P0 测试用例能编译运行；
+- 失败原因指向未实现功能，而不是测试工程配置错误；
+- 开发 agent 明确知道每个红灯测试对应哪个实现任务。
 
 #### Step 2：并行开发首页
 
-负责人：首页 iOS agent
+负责人：首页 iOS agent + 测试 agent
 
 负责路径：
 
@@ -192,6 +270,7 @@ DailyReaderTests/HomeViewModelTests.swift
 
 任务：
 
+- 先阅读并运行首页相关失败测试；
 - `HomeView` 与 `HomeViewModel`；
 - 今日日期；
 - 顶部故事横向卡片；
@@ -203,6 +282,8 @@ DailyReaderTests/HomeViewModelTests.swift
 - 历史加载失败保留已有列表；
 - 顶部故事为空时隐藏区域；
 - 根据 `id` 去重。
+- 每完成一个状态分支，就运行对应 XCTest；
+- 首页主路径完成后运行 `HomeFlowUITests`。
 
 验收：
 
@@ -211,10 +292,11 @@ DailyReaderTests/HomeViewModelTests.swift
 - 缺标题文章不作为正常可点击文章展示；
 - 历史加载按日期分组；
 - 深色模式下列表可读。
+- 首页相关 P0 XCTest / XCUITest 全部通过。
 
 #### Step 3：并行开发文章详情与分享
 
-负责人：详情 iOS agent
+负责人：详情 iOS agent + 测试 agent
 
 负责路径：
 
@@ -225,6 +307,7 @@ DailyReaderTests/ArticleDetailViewModelTests.swift
 
 任务：
 
+- 先阅读并运行详情、分享相关失败测试；
 - `ArticleDetailView` 与 `ArticleDetailViewModel`；
 - `WKWebView` 封装 `HTMLWebView`；
 - 展示标题、头图、HTML 正文；
@@ -233,6 +316,8 @@ DailyReaderTests/ArticleDetailViewModelTests.swift
 - `body` 为空展示“文章内容暂不可用”；
 - 分享链接缺失时禁用分享或提示“当前文章暂不可分享”；
 - 外链不破坏返回路径。
+- 详情状态机先由 XCTest 覆盖，再补 UI 流程；
+- 分享 payload 优先级用单元测试覆盖，系统分享面板用 UI/手工组合验证。
 
 验收：
 
@@ -243,8 +328,9 @@ DailyReaderTests/ArticleDetailViewModelTests.swift
 - 缺分享链接不产生错误分享；
 - WebView 失败有错误态；
 - 详情外壳深色模式可读。
+- 详情与分享相关 P0 XCTest / XCUITest 全部通过。
 
-#### Step 4：并行开发缓存与测试支撑
+#### Step 4：并行开发缓存与白盒/黑盒测试矩阵
 
 负责人：测试/缓存 agent
 
@@ -266,6 +352,8 @@ DailyReaderUITests/
 - 缓存损坏忽略并兜底；
 - 网络失败不覆盖可用缓存；
 - 构造 mock 场景。
+- 编写白盒单元测试：API decode、ViewModel 状态转换、CacheStore 读写/损坏/过期、分享 URL 优先级、历史列表去重；
+- 编写黑盒 UI 测试：首页主链路、详情主链路、无网络无缓存、无网络有缓存、刷新失败保留旧内容、分享入口。
 
 关键 mock：
 
@@ -283,6 +371,17 @@ share_url 缺失
 图片缺失或 404
 缓存 JSON 损坏
 ```
+
+测试归属：
+
+| 测试类型 | 工具 | 主要文件 | 责任 agent |
+| --- | --- | --- | --- |
+| 白盒单元测试 | XCTest | `DailyReaderTests/*Tests.swift` | 测试 agent |
+| 网络 mock 测试 | XCTest + `URLProtocol` | `ZhihuDailyAPITests.swift`、`MockURLProtocol.swift` | 测试 agent |
+| ViewModel 状态测试 | XCTest | `HomeViewModelTests.swift`、`ArticleDetailViewModelTests.swift` | 测试 agent |
+| 缓存测试 | XCTest | `CacheStoreTests.swift` | 测试 agent |
+| 黑盒 UI 测试 | XCUITest | `DailyReaderUITests/*UITests.swift` | 测试 agent |
+| 手工补充验证 | 验收报告 | 分享、外链、弱网、WebView 深色模式 | 测试 agent + 监工 agent |
 
 #### Step 5：监控与集成
 
@@ -305,6 +404,13 @@ xcodebuild -list
 xcodebuild -project 知乎日报-SwiftUI.xcodeproj -scheme DailyReader -destination 'platform=iOS Simulator,name=iPhone 15' build
 xcodebuild -project 知乎日报-SwiftUI.xcodeproj -scheme DailyReader -destination 'platform=iOS Simulator,name=iPhone 15' test
 ```
+
+TDD 监控规则：
+
+- 任一 P0 用例红灯时，对应功能不得标记完成；
+- 如果开发改动导致已通过测试回归失败，优先修复回归；
+- 允许短时间红灯开发，但提交集成前必须恢复绿灯；
+- 每个 agent 汇报时必须同时说明“新增/修复了哪些测试”。
 
 监控报告格式：
 
@@ -386,5 +492,6 @@ share_url 缺失时不得调起错误分享。
 - 无网络有缓存、无网络无缓存、接口失败、缺正文、缺分享链接均有处理；
 - 单元测试覆盖 ViewModel、API 解析、缓存损坏；
 - UI 冒烟测试覆盖阅读主链路；
+- P0 功能均遵循 TDD：先有测试，再有实现，再有绿灯结果；
 - 监工 agent 独立验证通过；
 - PRD 明确不做项没有进入产品。
