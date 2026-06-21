@@ -10,7 +10,7 @@ struct TopStoriesView: View {
             HStack(spacing: 12) {
                 ForEach(topStories) { story in
                     NavigationLink {
-                        ArticleDetailView(viewModel: AppEnvironment.makeDetailViewModel(story: story.summary))
+                        ArticleDetailView(story: story.summary)
                             .onAppear {
                                 markRead(story.id)
                             }

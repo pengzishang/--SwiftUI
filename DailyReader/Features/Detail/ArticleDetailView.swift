@@ -1,11 +1,16 @@
 import SwiftUI
 
 struct ArticleDetailView: View {
-    @ObservedObject var viewModel: ArticleDetailViewModel
+    @StateObject private var viewModel: ArticleDetailViewModel
     @State private var isShowingShareSheet = false
     @State private var htmlContentHeight: CGFloat = 520
     @State private var htmlReloadToken = 0
     @State private var htmlErrorMessage: String?
+
+    @MainActor
+    init(story: StorySummary) {
+        _viewModel = StateObject(wrappedValue: AppEnvironment.makeDetailViewModel(story: story))
+    }
 
     var body: some View {
         Group {

@@ -29,7 +29,7 @@ struct HomeView: View {
                     Section(header: Text(formattedDate(section.date))) {
                         ForEach(section.stories) { story in
                             NavigationLink {
-                                ArticleDetailView(viewModel: AppEnvironment.makeDetailViewModel(story: story))
+                                ArticleDetailView(story: story)
                                     .onAppear {
                                         viewModel.markStoryRead(story.id)
                                     }
