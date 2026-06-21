@@ -62,6 +62,38 @@ final class ZhihuDailyAPITests: XCTestCase {
         }
     }
 
+    func testBoundaryHTTPStatusesThrowHTTPStatus() async {
+        for statusCode in [403, 404, 500] {
+            let api = makeAPI(statusCode: statusCode, data: Data("{}".utf8))
+
+            do {
+                _ = try await api.fetchLatest()
+                XCTFail("Expected http status error for \(statusCode)")
+            } catch let error as APIError {
+                XCTAssertEqual(error, .httpStatus(statusCode))
+            } catch {
+                XCTFail("Unexpected error for \(statusCode): \(error)")
+            }
+        }
+    }
+
+    func testTimeoutThrowsTransportError() async {
+        let api = makeAPI(error: URLError(.timedOut))
+
+        do {
+            _ = try await api.fetchLatest()
+            XCTFail("Expected timeout transport error")
+        } catch let error as APIError {
+            if case .transport(let message) = error {
+                XCTAssertFalse(message.isEmpty)
+            } else {
+                XCTFail("Expected transport error, got \(error)")
+            }
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testMalformedJSONThrowsDecodeError() async {
         let api = makeAPI(statusCode: 200, data: Data("{ broken".utf8))
 
@@ -89,6 +121,17 @@ final class ZhihuDailyAPITests: XCTestCase {
         MockURLProtocol.handler = { request in
             capture?(request)
             return MockURLProtocol.Response(statusCode: statusCode, data: data)
+        }
+        let session = URLSession(configuration: configuration)
+        let httpClient = HTTPClient(session: session)
+        return ZhihuDailyAPI(httpClient: httpClient)
+    }
+
+    private func makeAPI(error: Error) -> ZhihuDailyAPI {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        MockURLProtocol.handler = { _ in
+            throw error
         }
         let session = URLSession(configuration: configuration)
         let httpClient = HTTPClient(session: session)

@@ -3,6 +3,9 @@ import SwiftUI
 struct ArticleDetailView: View {
     @ObservedObject var viewModel: ArticleDetailViewModel
     @State private var isShowingShareSheet = false
+    @State private var htmlContentHeight: CGFloat = 520
+    @State private var htmlReloadToken = 0
+    @State private var htmlErrorMessage: String?
 
     var body: some View {
         Group {
@@ -29,8 +32,24 @@ struct ArticleDetailView: View {
                             .lineLimit(nil)
 
                         if let body = detail.body, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            HTMLWebView(htmlBody: body, cssLinks: detail.css)
-                                .frame(minHeight: 520)
+                            if let htmlErrorMessage {
+                                ErrorStateView(message: htmlErrorMessage) {
+                                    self.htmlErrorMessage = nil
+                                    htmlReloadToken += 1
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 240)
+                            } else {
+                                HTMLWebView(
+                                    htmlBody: body,
+                                    cssLinks: detail.css,
+                                    reloadToken: htmlReloadToken,
+                                    contentHeight: $htmlContentHeight
+                                ) { message in
+                                    htmlErrorMessage = message
+                                }
+                                .frame(minHeight: htmlContentHeight)
+                                .accessibilityIdentifier("articleHTMLContent")
+                            }
                         } else {
                             ContentUnavailableView("文章内容暂不可用", systemImage: "doc.text.magnifyingglass")
                                 .frame(maxWidth: .infinity, minHeight: 240)
@@ -60,6 +79,10 @@ struct ArticleDetailView: View {
         }
         .task {
             await viewModel.load()
+        }
+        .onChange(of: viewModel.loadedDetailID) { _, _ in
+            htmlContentHeight = 520
+            htmlErrorMessage = nil
         }
     }
 }

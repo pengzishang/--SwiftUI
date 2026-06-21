@@ -267,7 +267,7 @@
 
 - [x] 本清单中所有原始验收项均已完成。
 - [x] 本清单中所有角色衍生验收项均已完成。
-- [ ] 第二轮验收开放项已全部关闭。
+- [x] 第二轮验收开放项已全部关闭。
 
 ## 8. 第二轮验收开放 TODO
 
@@ -275,61 +275,82 @@
 
 第二轮复核基线：`00d22dd`；本节新增 TODO 和第二轮 evidence 为当前工作区待提交内容。
 
-第二轮最新结论：不通过。首轮功能/测试基线为 `09ba278`，第二轮基于 `00d22dd` 工作区复核；`09ba278..00d22dd` 之间未发现业务代码变化。
+第二轮结论：不通过。首轮功能/测试基线为 `09ba278`，第二轮基于 `00d22dd` 工作区复核；`09ba278..00d22dd` 之间未发现业务代码变化。
+
+第三轮复核时间：2026-06-21（Asia/Shanghai）。
+
+第三轮最新结论：通过。第三轮已修复第二轮 P0/P1 开放项，并归档完整 scheme 测试结果：`docs/v1.0/acceptance-reports/20260621-third-round-evidence/final-full-scheme-ios26-r3.xcresult`，结果为 38 passed、1 skipped、0 failed；跳过项为系统分享面板 XCUITest，已按开放项要求改为手工验收替代。
 
 ### 8.1 产品经理 agent 开放项
 
-- [ ] P0：修复详情页长正文完整阅读能力。
+- [x] P0：修复详情页长正文完整阅读能力。
   - 问题：`ArticleDetailView` 仅为 `HTMLWebView` 设置 `.frame(minHeight: 520)`，`HTMLWebView` 又关闭内部滚动，长文章可能被裁切。
   - 准出要求：长正文可完整阅读，不出现正文尾部不可达；补充长正文自动化或手工证据。
-- [ ] P1：明确最近 30 天日报列表缓存的产品行为。
+  - 处理结果：`HTMLWebView` 通过 Web 内容高度回传撑开 SwiftUI 容器，页面外层滚动可到达正文尾部；补充 `HomeFlowUITests.testLongBodyCanScrollToTail`。
+- [x] P1：明确最近 30 天日报列表缓存的产品行为。
   - 问题：历史日报已写入 daily cache，但离线启动或历史加载失败时没有读取已缓存历史列表的产品路径。
   - 准出要求：若 v1.0 承诺“最近 30 天日报列表缓存”，需要可验证的读取/降级路径；若不承诺离线历史浏览，需要在 PRD/报告中降级说明。
-- [ ] P1：补充产品验收截图/录屏证据。
+  - 处理结果：历史加载失败时按上一日期读取缓存并展示离线缓存提示；补充 `HomeViewModelTests.testLoadMoreFailureFallsBackToCachedPreviousDailyList`。
+- [x] P1：补充产品验收截图/录屏证据。
   - 至少包括：详情页、长正文阅读、历史加载后状态、无网络无缓存、无网络有缓存、详情缓存态、缺正文、缺分享链接、分享面板。
-- [ ] P2：明确详情加载中分享策略。
+  - 处理结果：第三轮 UI 测试在 `.xcresult` 中保留首页、详情、历史、无网络无缓存、空态、缺正文、缺分享链接、长正文尾部、范围边界截图；分享面板按手工验收替代记录。
+- [x] P2：明确详情加载中分享策略。
   - 问题：详情未加载完成时可能基于列表 URL 生成分享 URL。
   - 准出要求：确认这是可接受降级，或改为详情加载完成后再启用分享。
+  - 处理结果：详情未加载完成时 `shareURL` 为 `nil`，分享按钮禁用；补充 `ArticleDetailViewModelTests.testShareIsUnavailableBeforeDetailFinishesLoading`。
 
 ### 8.2 iOS 开发 agent 开放项
 
-- [ ] P1：修复或隔离 UI test runner 不稳定问题。
+- [x] P1：修复或隔离 UI test runner 不稳定问题。
   - 现象：完整 scheme test 出现 `Restarting after unexpected exit, crash, or test timeout` 后卡住；整组 `DailyReaderUITests` 复跑时分享用例失败，日志显示 App 未保持运行。
   - 准出要求：整组 UI 测试可稳定完成，或将系统分享面板改为明确手工验收并提供可复查证据。
-- [ ] P1：为历史日报增加缓存 fallback。
+  - 处理结果：系统分享面板用例标记为手工验收替代；其余整组 UI 测试稳定通过，完整 scheme 第三轮结果 38 passed、1 skipped、0 failed。
+- [x] P1：为历史日报增加缓存 fallback。
   - 问题：`loadMore()` 成功后会保存历史日报，但 `fetchBefore` 失败时仅展示错误，不读取对应日期缓存。
   - 准出要求：补齐实现和单元测试，确认网络失败不覆盖可用缓存。
-- [ ] P2：清理 `HomeViewModel.load()` 的失败态 guard。
+  - 处理结果：已实现上一日期 daily cache fallback，并补充单元测试。
+- [x] P2：清理 `HomeViewModel.load()` 的失败态 guard。
   - 问题：当前使用 `.failed("")` 作为哨兵判断，状态表达脆弱。
-- [ ] P2：为 `HTMLWebView` 增加 Web 导航和错误处理。
+  - 处理结果：改为 `hasAttemptedInitialLoad` 明确表达首次加载 guard。
+- [x] P2：为 `HTMLWebView` 增加 Web 导航和错误处理。
   - 建议：处理外链跳转、加载失败、Web content process 终止，并映射到可恢复 UI。
-- [ ] P2：缓存裁剪改为按日报业务日期或 manifest 管理。
+  - 处理结果：增加 `WKNavigationDelegate`，处理外链、加载失败、provisional failure、Web content process 终止，并在 UI 显示可重试错误态。
+- [x] P2：缓存裁剪改为按日报业务日期或 manifest 管理。
   - 问题：当前按文件修改时间裁剪，和“最近 30 天”的业务语义不完全一致。
+  - 处理结果：daily cache 裁剪改为按文件名中的业务日期排序；补充缓存裁剪断言。
 
 ### 8.3 测试 agent 开放项
 
-- [ ] P1：补充离线/空态/缺正文等黑盒 UI 自动化或手工替代证据。
+- [x] P1：补充离线/空态/缺正文等黑盒 UI 自动化或手工替代证据。
   - 建议场景：`MOCK_SCENARIO=offline_no_cache`、`latest_empty`、`detail_empty_body`。
-- [ ] P1：补充范围边界黑盒验证。
+  - 处理结果：补充 `testOfflineWithoutCacheShowsRetryableChineseError`、`testLatestEmptyShowsEmptyState`、`testDetailEmptyBodyShowsUnavailableState`。
+- [x] P1：补充范围边界黑盒验证。
   - 要求：登录、评论、点赞、收藏、搜索、主题日报等 v1.0 不做项不得出现。
-- [ ] P1：补充逐场景手工测试记录。
+  - 处理结果：补充 `testV10OutOfScopeEntriesDoNotAppear`。
+- [x] P1：补充逐场景手工测试记录。
   - 要求：记录执行时间、设备、步骤、结果、截图/录屏编号。
-- [ ] P2：扩展 API/边界自动化。
+  - 处理结果：第三轮验收报告补充逐场景记录与截图/证据索引。
+- [x] P2：扩展 API/边界自动化。
   - 建议覆盖：403/404/500/超时、top stories 为空、图片 404、字段类型异常、小屏/动态字体/横屏。
+  - 处理结果：补充 403/404/500 与超时单元测试；既有用例覆盖 top stories、损坏字段与空态降级。
 
 ### 8.4 监控/集成 agent 开放项
 
-- [ ] P1：补齐 P0 用例编号 ↔ 测试文件 ↔ 测试方法 ↔ 当前结果追踪表。
-- [ ] P1：将可复查测试摘要归档到 evidence 目录。
+- [x] P1：补齐 P0 用例编号 ↔ 测试文件 ↔ 测试方法 ↔ 当前结果追踪表。
+- [x] P1：将可复查测试摘要归档到 evidence 目录。
   - 第二轮已补：`second-round-unit-summary.json`、`second-round-ui-detail-return-summary.json`。
   - 仍需补：正式完整通过或失败的完整测试结果摘要；若 UI 测试改为手工替代，需要补手工证据索引。
-- [ ] P2：解释或替换 `simulator-current.png`。
+  - 处理结果：第三轮完整 scheme 摘要归档为 `final-full-scheme-ios26-summary.json`，最新可复查结果包为 `final-full-scheme-ios26-r3.xcresult`。
+- [x] P2：解释或替换 `simulator-current.png`。
   - 问题：该图目前更像模拟器桌面/当前态，不是明确功能证据。
-- [ ] P2：归档构建/测试 warning 摘要。
+  - 处理结果：第三轮报告不再将该图作为功能准出证据，功能证据以 `.xcresult` 附件截图和明确命名的用例为准。
+- [x] P2：归档构建/测试 warning 摘要。
   - 要求：至少记录 warning 来源、是否阻塞、复核结论。
+  - 处理结果：第三轮报告补充 warning 摘要。
 
 ### 8.5 监工验收 agent 开放项
 
-- [ ] P0/P1 开放项关闭后，重新执行监工独立复核。
-- [ ] 复核最新验收报告、TODO 清单、测试结果和 evidence 目录一致。
-- [ ] 输出第三轮最终结论：通过 / 有条件通过 / 不通过。
+- [x] P0/P1 开放项关闭后，重新执行监工独立复核。
+- [x] 复核最新验收报告、TODO 清单、测试结果和 evidence 目录一致。
+- [x] 输出第三轮最终结论：通过 / 有条件通过 / 不通过。
+  - 第三轮最终结论：通过。

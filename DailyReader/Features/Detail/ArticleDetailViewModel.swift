@@ -24,9 +24,9 @@ final class ArticleDetailViewModel: ObservableObject {
 
     var shareURL: URL? {
         guard case .loaded(let detail, _) = phase else {
-            return Self.validShareURL(from: story.url)
+            return nil
         }
-        return Self.validShareURL(from: detail.shareURL ?? detail.url ?? story.url)
+        return Self.validShareURL(from: detail.shareURL ?? detail.url)
     }
 
     var shareTitle: String {
@@ -34,6 +34,11 @@ final class ArticleDetailViewModel: ObservableObject {
             return story.title
         }
         return detail.title
+    }
+
+    var loadedDetailID: Int? {
+        guard case .loaded(let detail, _) = phase else { return nil }
+        return detail.id
     }
 
     private static func validShareURL(from rawValue: String?) -> URL? {

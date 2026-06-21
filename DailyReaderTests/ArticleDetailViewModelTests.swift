@@ -16,6 +16,16 @@ final class ArticleDetailViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.shareTitle, "第一篇日报")
     }
 
+    func testShareIsUnavailableBeforeDetailFinishesLoading() {
+        let viewModel = ArticleDetailViewModel(
+            story: StorySummary(id: 1, title: "列表标题", url: "https://example.com/list"),
+            apiClient: MockDailyAPIClient(),
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        )
+
+        XCTAssertNil(viewModel.shareURL)
+    }
+
     func testLoadDetailFallsBackToDetailURLBeforeListURL() async {
         let api = MockDailyAPIClient()
         api.detailResult = .success(

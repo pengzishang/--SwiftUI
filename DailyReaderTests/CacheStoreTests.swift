@@ -55,6 +55,10 @@ final class CacheStoreTests: XCTestCase {
         let files = (try? FileManager.default.contentsOfDirectory(at: cacheRoot, includingPropertiesForKeys: nil)) ?? []
 
         XCTAssertEqual(files.count, 30)
+        let prunedOldestDaily = await store.loadDaily(date: "20260601")
+        let retainedNewestDaily = await store.loadDaily(date: "20260631")
+        XCTAssertNil(prunedOldestDaily)
+        XCTAssertNotNil(retainedNewestDaily)
     }
 
     func testBrokenCacheFileReturnsNilInsteadOfCrashing() async throws {

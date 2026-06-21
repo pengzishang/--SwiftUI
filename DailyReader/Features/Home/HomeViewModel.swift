@@ -31,6 +31,7 @@ final class HomeViewModel: ObservableObject {
     private let apiClient: DailyAPIClient
     private let cacheStore: CacheStore
     private var loadedStoryIDs = Set<Int>()
+    private var hasAttemptedInitialLoad = false
 
     init(apiClient: DailyAPIClient, cacheStore: CacheStore) {
         self.apiClient = apiClient
@@ -38,7 +39,8 @@ final class HomeViewModel: ObservableObject {
     }
 
     func load() async {
-        guard phase == .idle || phase == .failed("") else { return }
+        guard !hasAttemptedInitialLoad else { return }
+        hasAttemptedInitialLoad = true
         phase = .loading
         await loadLatest(allowCacheFallback: true)
     }
@@ -58,9 +60,16 @@ final class HomeViewModel: ObservableObject {
             historyLoadState = .idle
             bannerMessage = nil
         } catch {
-            let message = "加载历史失败，已保留当前内容"
-            historyLoadState = .failed(message)
-            bannerMessage = message
+            if let fallbackDate = Self.previousDateString(before: oldestDate),
+               let cached = await cacheStore.loadDaily(date: fallbackDate) {
+                append(response: cached.value)
+                historyLoadState = .idle
+                bannerMessage = "当前离线，正在显示缓存内容"
+            } else {
+                let message = "加载历史失败，已保留当前内容"
+                historyLoadState = .failed(message)
+                bannerMessage = message
+            }
         }
     }
 
@@ -103,5 +112,21 @@ final class HomeViewModel: ObservableObject {
             loadedStoryIDs.insert(story.id)
             return true
         }
+    }
+
+    private static func previousDateString(before dateString: String) -> String? {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyyMMdd"
+
+        guard
+            let date = formatter.date(from: dateString),
+            let previousDate = formatter.calendar.date(byAdding: .day, value: -1, to: date)
+        else {
+            return nil
+        }
+        return formatter.string(from: previousDate)
     }
 }

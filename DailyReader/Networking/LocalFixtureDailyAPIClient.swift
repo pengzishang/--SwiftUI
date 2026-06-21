@@ -39,6 +39,26 @@ final class LocalFixtureDailyAPIClient: DailyAPIClient {
         if scenario == "detail_empty_body" {
             return ArticleDetail(id: id, title: "文章内容暂不可用", body: "", shareURL: nil)
         }
+        if scenario == "detail_missing_share" {
+            return ArticleDetail(
+                id: id,
+                title: "无分享链接文章",
+                body: "<p>这篇文章用于验证缺失分享链接时不会分享错误内容。</p>",
+                shareURL: nil,
+                url: nil
+            )
+        }
+        if scenario == "detail_long_body" {
+            let paragraphs = (1...40)
+                .map { "<p>长正文段落 \($0)：用于验证详情页可以从头到尾完整滚动阅读。</p>" }
+                .joined()
+            return ArticleDetail(
+                id: id,
+                title: "长正文阅读验证",
+                body: "\(paragraphs)<p>长正文结尾标记</p>",
+                shareURL: "https://example.com/story/\(id)"
+            )
+        }
         return ArticleDetail(
             id: id,
             title: "今天，先读一篇长一点的故事",

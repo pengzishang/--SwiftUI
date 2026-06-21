@@ -90,6 +90,22 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.bannerMessage, "加载历史失败，已保留当前内容")
     }
 
+    func testLoadMoreFailureFallsBackToCachedPreviousDailyList() async {
+        let store = DiskCacheStore(rootURL: temporaryRoot())
+        await store.saveDaily(.historyFixture)
+        let api = MockDailyAPIClient()
+        api.beforeResult = .failure(APIError.transport("offline"))
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: store)
+
+        await viewModel.load()
+        await viewModel.loadMore()
+
+        XCTAssertEqual(viewModel.sections.map(\.date), ["20260621", "20260620"])
+        XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2, 3])
+        XCTAssertEqual(viewModel.historyLoadState, .idle)
+        XCTAssertEqual(viewModel.bannerMessage, "当前离线，正在显示缓存内容")
+    }
+
     private func temporaryRoot() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     }

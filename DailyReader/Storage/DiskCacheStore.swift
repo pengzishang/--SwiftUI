@@ -85,13 +85,11 @@ actor DiskCacheStore: CacheStore {
         do {
             let urls = try fileManager.contentsOfDirectory(
                 at: dailyRootURL,
-                includingPropertiesForKeys: [.contentModificationDateKey],
+                includingPropertiesForKeys: nil,
                 options: [.skipsHiddenFiles]
             )
             let sorted = urls.sorted { lhs, rhs in
-                let lhsDate = (try? lhs.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-                let rhsDate = (try? rhs.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
-                return lhsDate > rhsDate
+                businessDate(from: lhs) > businessDate(from: rhs)
             }
             for url in sorted.dropFirst(CachePolicy.retainedDailyListCount) {
                 try? fileManager.removeItem(at: url)
@@ -99,6 +97,10 @@ actor DiskCacheStore: CacheStore {
         } catch {
             return
         }
+    }
+
+    private func businessDate(from url: URL) -> String {
+        url.deletingPathExtension().lastPathComponent
     }
 }
 

@@ -30,6 +30,13 @@ enum AppEnvironment {
     private static func makeAPIClient() -> DailyAPIClient {
         let processInfo = ProcessInfo.processInfo
         if processInfo.arguments.contains("-UITestMode") {
+            if processInfo.arguments.contains("-ResetCache") {
+                try? FileManager.default.removeItem(
+                    at: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+                        .first!
+                        .appendingPathComponent("DailyReaderCache", isDirectory: true)
+                )
+            }
             let scenario = processInfo.environment["MOCK_SCENARIO"] ?? "latest_success"
             return LocalFixtureDailyAPIClient(scenario: scenario)
         }
