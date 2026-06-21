@@ -19,7 +19,7 @@ struct ArticleDetailView: View {
                         if let bannerMessage = viewModel.bannerMessage {
                             OfflineBanner(message: bannerMessage)
                         }
-                        if let image = detail.image {
+                        if let image = detail.image ?? detail.images.first {
                             PlaceholderImageView(urlString: image)
                                 .frame(height: 220)
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))

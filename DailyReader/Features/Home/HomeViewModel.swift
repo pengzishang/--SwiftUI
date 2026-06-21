@@ -14,13 +14,19 @@ enum HomePhase: Equatable {
     case failed(String)
 }
 
+enum HistoryLoadState: Equatable {
+    case idle
+    case loading
+    case failed(String)
+}
+
 @MainActor
 final class HomeViewModel: ObservableObject {
     @Published private(set) var phase: HomePhase = .idle
     @Published private(set) var topStories: [TopStory] = []
     @Published private(set) var sections: [DailySection] = []
+    @Published private(set) var historyLoadState: HistoryLoadState = .idle
     @Published var bannerMessage: String?
-    @Published var isLoadingMore = false
 
     private let apiClient: DailyAPIClient
     private let cacheStore: CacheStore
@@ -42,16 +48,19 @@ final class HomeViewModel: ObservableObject {
     }
 
     func loadMore() async {
-        guard !isLoadingMore, let oldestDate = sections.last?.date else { return }
-        isLoadingMore = true
-        defer { isLoadingMore = false }
+        guard historyLoadState != .loading, let oldestDate = sections.last?.date else { return }
+        historyLoadState = .loading
 
         do {
             let response = try await apiClient.fetchBefore(date: oldestDate)
             await cacheStore.saveDaily(response)
             append(response: response)
+            historyLoadState = .idle
+            bannerMessage = nil
         } catch {
-            bannerMessage = "加载历史失败，已保留当前内容"
+            let message = "加载历史失败，已保留当前内容"
+            historyLoadState = .failed(message)
+            bannerMessage = message
         }
     }
 
@@ -80,6 +89,7 @@ final class HomeViewModel: ObservableObject {
         let filteredStories = uniqueStories(from: response.stories)
         sections = filteredStories.isEmpty ? [] : [DailySection(date: response.date, stories: filteredStories)]
         phase = filteredStories.isEmpty && topStories.isEmpty ? .empty : .loaded(source)
+        historyLoadState = .idle
     }
 
     private func append(response: DailyResponse) {

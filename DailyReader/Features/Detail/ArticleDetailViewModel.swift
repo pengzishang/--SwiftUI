@@ -26,7 +26,7 @@ final class ArticleDetailViewModel: ObservableObject {
         guard case .loaded(let detail, _) = phase else {
             return story.url.flatMap(URL.init(string:))
         }
-        return (detail.shareURL ?? story.url).flatMap(URL.init(string:))
+        return (detail.shareURL ?? detail.url ?? story.url).flatMap(URL.init(string:))
     }
 
     func load() async {

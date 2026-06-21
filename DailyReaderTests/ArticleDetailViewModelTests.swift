@@ -15,6 +15,28 @@ final class ArticleDetailViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.shareURL?.absoluteString, "https://example.com/1")
     }
 
+    func testLoadDetailFallsBackToDetailURLBeforeListURL() async {
+        let api = MockDailyAPIClient()
+        api.detailResult = .success(
+            ArticleDetail(
+                id: 1,
+                title: "第一篇日报",
+                body: "<p>正文</p>",
+                shareURL: nil,
+                url: "https://daily.example.com/detail-url"
+            )
+        )
+        let viewModel = ArticleDetailViewModel(
+            story: StorySummary(id: 1, title: "列表标题", url: "https://example.com/list"),
+            apiClient: api,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        )
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.shareURL?.absoluteString, "https://daily.example.com/detail-url")
+    }
+
     func testLoadDetailFallsBackToCachedDetail() async {
         let store = DiskCacheStore(rootURL: temporaryRoot())
         await store.saveDetail(.fixture)

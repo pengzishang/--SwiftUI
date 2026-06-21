@@ -3,7 +3,11 @@
   "title": "第一篇日报",
   "body": "<p>正文</p>",
   "image": null,
+  "images": [
+    "https://example.com/image.jpg"
+  ],
   "share_url": "https://example.com/1",
+  "url": "https://daily.example.com/1",
   "css": [],
   "js": []
 }

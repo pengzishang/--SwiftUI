@@ -17,6 +17,19 @@ final class ZhihuDailyAPITests: XCTestCase {
         XCTAssertEqual(response.topStories.first?.title, "顶部故事")
     }
 
+    func testFetchBeforeUsesBeforePathAndUserAgent() async throws {
+        var capturedRequest: URLRequest?
+        let api = makeAPI(statusCode: 200, data: fixtureData("latest_success")) { request in
+            capturedRequest = request
+        }
+
+        _ = try await api.fetchBefore(date: "20260621")
+
+        XCTAssertEqual(capturedRequest?.url?.path, "/api/4/news/before/20260621")
+        XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "Accept"), "application/json")
+        XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "User-Agent"), "DailyReaderSwiftUI/1.0")
+    }
+
     func testFetchLatestSkipsBrokenStoryInsteadOfFailingWholeResponse() async throws {
         let api = makeAPI(json: "latest_with_broken_story")
 
@@ -32,6 +45,8 @@ final class ZhihuDailyAPITests: XCTestCase {
 
         XCTAssertEqual(detail.id, 1)
         XCTAssertEqual(detail.shareURL, "https://example.com/1")
+        XCTAssertEqual(detail.url, "https://daily.example.com/1")
+        XCTAssertEqual(detail.images, ["https://example.com/image.jpg"])
     }
 
     func testNon2xxThrowsHTTPStatus() async {
@@ -65,10 +80,15 @@ final class ZhihuDailyAPITests: XCTestCase {
     }
 
     private func makeAPI(statusCode: Int, data: Data) -> ZhihuDailyAPI {
+        makeAPI(statusCode: statusCode, data: data, capture: nil)
+    }
+
+    private func makeAPI(statusCode: Int, data: Data, capture: ((URLRequest) -> Void)?) -> ZhihuDailyAPI {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]
-        MockURLProtocol.handler = { _ in
-            MockURLProtocol.Response(statusCode: statusCode, data: data)
+        MockURLProtocol.handler = { request in
+            capture?(request)
+            return MockURLProtocol.Response(statusCode: statusCode, data: data)
         }
         let session = URLSession(configuration: configuration)
         let httpClient = HTTPClient(session: session)

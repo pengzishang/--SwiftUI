@@ -25,6 +25,12 @@ struct HomeView: View {
                 ContentUnavailableView("今日暂无内容", systemImage: "newspaper", description: Text("稍后再试，或者下拉刷新。"))
                     .listRowSeparator(.hidden)
             case .loaded:
+                HomeStatusHeaderView(
+                    date: viewModel.sections.first?.date,
+                    source: viewModel.loadedContentSource
+                )
+                .listRowSeparator(.hidden)
+
                 if !viewModel.topStories.isEmpty {
                     Section {
                         TopStoriesView(topStories: viewModel.topStories)
@@ -45,19 +51,10 @@ struct HomeView: View {
                     }
                 }
 
-                Button {
+                HistoryPaginationFooter(state: viewModel.historyLoadState) {
                     Task { await viewModel.loadMore() }
-                } label: {
-                    HStack {
-                        Spacer()
-                        if viewModel.isLoadingMore {
-                            ProgressView()
-                        } else {
-                            Text("加载更早日报")
-                        }
-                        Spacer()
-                    }
                 }
+                .listRowSeparator(.hidden)
             }
         }
         .navigationTitle("日报阅读器")
@@ -75,5 +72,100 @@ struct HomeView: View {
         let month = date.dropFirst(4).prefix(2)
         let day = date.suffix(2)
         return "\(year)年\(month)月\(day)日"
+    }
+}
+
+private extension HomeViewModel {
+    var loadedContentSource: ContentSource? {
+        if case .loaded(let source) = phase {
+            return source
+        }
+        return nil
+    }
+}
+
+private struct HomeStatusHeaderView: View {
+    let date: String?
+    let source: ContentSource?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(dateLabel)
+                .font(.title2.bold())
+                .foregroundStyle(.primary)
+            HStack(spacing: 8) {
+                Label(sourceLabel, systemImage: sourceIcon)
+                    .font(.caption)
+                    .foregroundStyle(sourceColor)
+                Spacer()
+            }
+        }
+        .padding(.vertical, 8)
+        .accessibilityIdentifier("homeStatusHeader")
+    }
+
+    private var dateLabel: String {
+        guard let date, date.count == 8 else { return "今日日报" }
+        let month = date.dropFirst(4).prefix(2)
+        let day = date.suffix(2)
+        return "\(month)月\(day)日 · 今日日报"
+    }
+
+    private var sourceLabel: String {
+        guard let source else { return "正在准备内容" }
+        switch source {
+        case .network:
+            return "实时内容"
+        case .cache(let cachedAt):
+            if let cachedAt {
+                return "缓存内容 · \(cachedAt.formatted(date: .omitted, time: .shortened))"
+            }
+            return "缓存内容"
+        }
+    }
+
+    private var sourceIcon: String {
+        source?.isCache == true ? "externaldrive" : "bolt.horizontal.circle"
+    }
+
+    private var sourceColor: Color {
+        source?.isCache == true ? .orange : .secondary
+    }
+}
+
+private struct HistoryPaginationFooter: View {
+    let state: HistoryLoadState
+    let loadMore: () -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            switch state {
+            case .idle:
+                Button(action: loadMore) {
+                    Label("加载更早日报", systemImage: "clock.arrow.circlepath")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            case .loading:
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text("正在加载更早日报")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+            case .failed(let message):
+                VStack(spacing: 8) {
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    Button("重试加载历史", action: loadMore)
+                        .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.vertical, 12)
+        .accessibilityIdentifier("historyPaginationFooter")
     }
 }

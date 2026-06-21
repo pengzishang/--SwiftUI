@@ -36,6 +36,20 @@ final class HomeViewModelTests: XCTestCase {
         await viewModel.loadMore()
 
         XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2, 3])
+        XCTAssertEqual(viewModel.historyLoadState, .idle)
+    }
+
+    func testLoadMoreFailureKeepsExistingStoriesAndExposesRetryState() async {
+        let api = MockDailyAPIClient()
+        api.beforeResult = .failure(APIError.httpStatus(502))
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+
+        await viewModel.load()
+        await viewModel.loadMore()
+
+        XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2])
+        XCTAssertEqual(viewModel.historyLoadState, .failed("加载历史失败，已保留当前内容"))
+        XCTAssertEqual(viewModel.bannerMessage, "加载历史失败，已保留当前内容")
     }
 
     private func temporaryRoot() -> URL {
