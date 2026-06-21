@@ -2,6 +2,8 @@ import SwiftUI
 
 struct TopStoriesView: View {
     let topStories: [TopStory]
+    let readStoryIDs: Set<Int>
+    let markRead: (Int) -> Void
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -16,15 +18,19 @@ struct TopStoriesView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             Text(story.title)
                                 .font(.headline)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(readStoryIDs.contains(story.id) ? .secondary : .primary)
                                 .lineLimit(2)
                         }
                         .frame(width: 240, alignment: .leading)
                         .padding(12)
                         .background(.thinMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .opacity(readStoryIDs.contains(story.id) ? 0.72 : 1)
                     }
                     .buttonStyle(.plain)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        markRead(story.id)
+                    })
                 }
             }
         }

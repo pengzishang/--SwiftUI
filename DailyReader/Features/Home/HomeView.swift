@@ -25,15 +25,14 @@ struct HomeView: View {
                 ContentUnavailableView("今日暂无内容", systemImage: "newspaper", description: Text("稍后再试，或者下拉刷新。"))
                     .listRowSeparator(.hidden)
             case .loaded:
-                HomeStatusHeaderView(
-                    date: viewModel.sections.first?.date,
-                    source: viewModel.loadedContentSource
-                )
-                .listRowSeparator(.hidden)
-
                 if !viewModel.topStories.isEmpty {
                     Section {
-                        TopStoriesView(topStories: viewModel.topStories)
+                        TopStoriesView(
+                            topStories: viewModel.topStories,
+                            readStoryIDs: viewModel.readStoryIDs
+                        ) { storyID in
+                            viewModel.markStoryRead(storyID)
+                        }
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             .listRowSeparator(.hidden)
                     }
@@ -45,7 +44,13 @@ struct HomeView: View {
                             NavigationLink {
                                 ArticleDetailView(viewModel: AppEnvironment.makeDetailViewModel(story: story))
                             } label: {
-                                StoryRowView(story: story)
+                                StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
+                            }
+                            .simultaneousGesture(TapGesture().onEnded {
+                                viewModel.markStoryRead(story.id)
+                            })
+                            .task {
+                                await viewModel.loadMoreIfNeeded(currentStoryID: story.id)
                             }
                         }
                     }
@@ -58,6 +63,7 @@ struct HomeView: View {
             }
         }
         .navigationTitle("日报阅读器")
+        .navigationBarTitleDisplayMode(.inline)
         .refreshable {
             await viewModel.refresh()
         }
@@ -75,64 +81,6 @@ struct HomeView: View {
     }
 }
 
-private extension HomeViewModel {
-    var loadedContentSource: ContentSource? {
-        if case .loaded(let source) = phase {
-            return source
-        }
-        return nil
-    }
-}
-
-private struct HomeStatusHeaderView: View {
-    let date: String?
-    let source: ContentSource?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(dateLabel)
-                .font(.title2.bold())
-                .foregroundStyle(.primary)
-            HStack(spacing: 8) {
-                Label(sourceLabel, systemImage: sourceIcon)
-                    .font(.caption)
-                    .foregroundStyle(sourceColor)
-                Spacer()
-            }
-        }
-        .padding(.vertical, 8)
-        .accessibilityIdentifier("homeStatusHeader")
-    }
-
-    private var dateLabel: String {
-        guard let date, date.count == 8 else { return "今日日报" }
-        let month = date.dropFirst(4).prefix(2)
-        let day = date.suffix(2)
-        return "\(month)月\(day)日 · 今日日报"
-    }
-
-    private var sourceLabel: String {
-        guard let source else { return "正在准备内容" }
-        switch source {
-        case .network:
-            return "实时内容"
-        case .cache(let cachedAt):
-            if let cachedAt {
-                return "缓存内容 · \(cachedAt.formatted(date: .omitted, time: .shortened))"
-            }
-            return "缓存内容"
-        }
-    }
-
-    private var sourceIcon: String {
-        source?.isCache == true ? "externaldrive" : "bolt.horizontal.circle"
-    }
-
-    private var sourceColor: Color {
-        source?.isCache == true ? .orange : .secondary
-    }
-}
-
 private struct HistoryPaginationFooter: View {
     let state: HistoryLoadState
     let loadMore: () -> Void
@@ -141,11 +89,8 @@ private struct HistoryPaginationFooter: View {
         VStack(spacing: 10) {
             switch state {
             case .idle:
-                Button(action: loadMore) {
-                    Label("加载更早日报", systemImage: "clock.arrow.circlepath")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
+                Color.clear
+                    .frame(height: 1)
             case .loading:
                 HStack(spacing: 10) {
                     ProgressView()

@@ -43,10 +43,52 @@ struct HTMLWebView: UIViewRepresentable {
           <style>
             body { font: -apple-system-body; color: \(textColor); background: transparent; line-height: 1.65; padding: 0; margin: 0; }
             img { max-width: 100%; height: auto; border-radius: 12px; }
+            .avatar, .author img, .meta img, .origin-source img, .source img {
+              width: 72px !important;
+              height: 72px !important;
+              max-width: 72px !important;
+              max-height: 72px !important;
+              object-fit: cover;
+              border-radius: 18px;
+              vertical-align: middle;
+            }
+            body > img:first-child, body > p:first-child img:first-child {
+              max-width: 96px !important;
+              max-height: 96px !important;
+              object-fit: cover;
+              border-radius: 18px;
+              vertical-align: middle;
+            }
             a { color: #0A84FF; }
+            a.discussion-pill {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              box-sizing: border-box;
+              min-height: 36px;
+              padding: 6px 16px;
+              margin-top: 8px;
+              border-radius: 999px;
+              background: rgba(10, 132, 255, 0.16);
+              color: #0A84FF;
+              font-weight: 600;
+              text-decoration: none;
+            }
+            a.discussion-pill:active {
+              background: rgba(10, 132, 255, 0.26);
+            }
           </style>
         </head>
-        <body>\(htmlBody)</body>
+        <body>
+          \(htmlBody)
+          <script>
+            document.querySelectorAll('a').forEach(function(link) {
+              if ((link.textContent || '').trim().indexOf('查看知乎讨论') !== -1) {
+                link.classList.add('discussion-pill');
+              }
+            });
+          </script>
+        </body>
         </html>
         """
     }

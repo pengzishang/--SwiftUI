@@ -26,16 +26,19 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var topStories: [TopStory] = []
     @Published private(set) var sections: [DailySection] = []
     @Published private(set) var historyLoadState: HistoryLoadState = .idle
+    @Published private(set) var readStoryIDs: Set<Int>
     @Published var bannerMessage: String?
 
     private let apiClient: DailyAPIClient
     private let cacheStore: CacheStore
     private var loadedStoryIDs = Set<Int>()
     private var hasAttemptedInitialLoad = false
+    private let readStoryIDsKey = "DailyReader.readStoryIDs"
 
     init(apiClient: DailyAPIClient, cacheStore: CacheStore) {
         self.apiClient = apiClient
         self.cacheStore = cacheStore
+        self.readStoryIDs = Set(UserDefaults.standard.array(forKey: readStoryIDsKey) as? [Int] ?? [])
     }
 
     func load() async {
@@ -71,6 +74,20 @@ final class HomeViewModel: ObservableObject {
                 bannerMessage = message
             }
         }
+    }
+
+    func loadMoreIfNeeded(currentStoryID: Int) async {
+        guard currentStoryID == sections.last?.stories.last?.id else { return }
+        await loadMore()
+    }
+
+    func markStoryRead(_ storyID: Int) {
+        guard readStoryIDs.insert(storyID).inserted else { return }
+        UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
+    }
+
+    func isStoryRead(_ storyID: Int) -> Bool {
+        readStoryIDs.contains(storyID)
     }
 
     private func loadLatest(allowCacheFallback: Bool) async {

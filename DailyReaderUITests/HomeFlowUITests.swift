@@ -31,8 +31,10 @@ final class HomeFlowUITests: XCTestCase {
     func testLoadHistoryShowsOlderStory() {
         let app = launchApp(scenario: "latest_success")
 
-        XCTAssertTrue(app.buttons["加载更早日报"].waitForExistence(timeout: 5))
-        app.buttons["加载更早日报"].tap()
+        XCTAssertTrue(app.staticTexts["今天，先读一篇长一点的故事"].waitForExistence(timeout: 5))
+        for _ in 0..<5 where !app.staticTexts["昨天的好问题"].exists {
+            app.swipeUp()
+        }
 
         XCTAssertTrue(app.staticTexts["昨天的好问题"].waitForExistence(timeout: 5))
         attachScreenshot(named: "history-loaded", app: app)

@@ -106,6 +106,18 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.bannerMessage, "当前离线，正在显示缓存内容")
     }
 
+    func testReadStoryIDsPersistAcrossViewModelInstances() {
+        let key = "DailyReader.readStoryIDs"
+        UserDefaults.standard.removeObject(forKey: key)
+        defer { UserDefaults.standard.removeObject(forKey: key) }
+
+        let firstViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        firstViewModel.markStoryRead(42)
+
+        let secondViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        XCTAssertTrue(secondViewModel.isStoryRead(42))
+    }
+
     private func temporaryRoot() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
