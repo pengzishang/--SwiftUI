@@ -68,8 +68,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		06DCA0DBD3BD108F9044F970 /* detail_empty_body.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = detail_empty_body.json; sourceTree = "<group>"; };
 		00A1C0DF00A1C0DF00A1C0DF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		06DCA0DBD3BD108F9044F970 /* detail_empty_body.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = detail_empty_body.json; sourceTree = "<group>"; };
 		0F600A8288749211086F479D /* StorySummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorySummary.swift; sourceTree = "<group>"; };
 		1642DC550939B8CC16F94AAB /* malformed.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = malformed.json; sourceTree = "<group>"; };
 		197F1FC5E583AE386A8E2AD8 /* TopStory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopStory.swift; sourceTree = "<group>"; };
@@ -89,7 +89,7 @@
 		75DF78B56B534189EA196B63 /* OfflineBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineBanner.swift; sourceTree = "<group>"; };
 		79707C307289A8C9771F10F0 /* ArticleDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleDetailViewModel.swift; sourceTree = "<group>"; };
 		8BEE5E8EA505B065FCE5C893 /* DailyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyAPIClient.swift; sourceTree = "<group>"; };
-		8CE6C7ACB7A81A9C255BF3CF /* DailyReader.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DailyReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8CE6C7ACB7A81A9C255BF3CF /* DailyReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F1331C82786EF3BF467029C /* DailyResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyResponse.swift; sourceTree = "<group>"; };
 		90DD866C6D0EE7A7E1528A3A /* DiskCacheStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskCacheStore.swift; sourceTree = "<group>"; };
 		949C7B3009D6A43FCFE44EFB /* ZhihuDailyAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZhihuDailyAPITests.swift; sourceTree = "<group>"; };
@@ -570,6 +570,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 2VU9VJU88T;
 				INFOPLIST_FILE = DailyReader/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -620,6 +621,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 2VU9VJU88T;
 				INFOPLIST_FILE = DailyReader/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
