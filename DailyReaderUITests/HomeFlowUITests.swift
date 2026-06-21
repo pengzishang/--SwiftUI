@@ -28,6 +28,33 @@ final class HomeFlowUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["日报阅读器"].waitForExistence(timeout: 5))
     }
 
+    func testShareSheetCanOpenAndDismissWithoutLeavingDetail() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-UITestMode"]
+        app.launchEnvironment = ["MOCK_SCENARIO": "latest_success"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["今天，先读一篇长一点的故事"].waitForExistence(timeout: 5))
+        app.staticTexts["今天，先读一篇长一点的故事"].firstMatch.tap()
+
+        XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
+        app.buttons["分享"].tap()
+
+        let activityList = app.otherElements.matching(identifier: "ActivityListView").firstMatch
+        let shareSheet = app.sheets.firstMatch
+        XCTAssertTrue(activityList.waitForExistence(timeout: 5) || shareSheet.waitForExistence(timeout: 1))
+
+        if app.buttons["Close"].exists {
+            app.buttons["Close"].tap()
+        } else if app.buttons["取消"].exists {
+            app.buttons["取消"].tap()
+        } else {
+            app.swipeDown()
+        }
+
+        XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
+    }
+
     func testLoadHistoryShowsOlderStory() {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode"]
