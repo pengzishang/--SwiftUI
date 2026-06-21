@@ -36,6 +36,13 @@ struct HomeView: View {
                             } label: {
                                 StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                             }
+                            .onAppear {
+                                if story.id == viewModel.thresholdStoryID {
+                                    Task {
+                                        await viewModel.loadMore()
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -86,6 +86,13 @@ final class HomeViewModel: ObservableObject {
         readStoryIDs.contains(storyID)
     }
 
+    var thresholdStoryID: Int? {
+        let allStories = sections.flatMap { $0.stories }
+        guard !allStories.isEmpty else { return nil }
+        let thresholdIndex = max(0, allStories.count - 4)
+        return allStories[thresholdIndex].id
+    }
+
     private func loadLatest(allowCacheFallback: Bool) async {
         do {
             let response = try await apiClient.fetchLatest()
