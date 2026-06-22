@@ -27,13 +27,20 @@ struct HTMLWebView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.parent = self
-        let nextContentKey = "\(reloadToken)-\(fontSize)-\(wrappedHTML)"
+        let html = wrappedHTML
+        let nextContentKey = ContentKey(
+            reloadToken: reloadToken,
+            fontSize: fontSize,
+            htmlBodyHash: htmlBody.hashValue,
+            cssLinksHash: cssLinks.hashValue,
+            colorScheme: UITraitCollection.current.userInterfaceStyle.rawValue
+        )
         guard context.coordinator.loadedContentKey != nextContentKey else {
             context.coordinator.updateHeight(for: webView)
             return
         }
         context.coordinator.loadedContentKey = nextContentKey
-        webView.loadHTMLString(wrappedHTML, baseURL: nil)
+        webView.loadHTMLString(html, baseURL: nil)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -150,9 +157,17 @@ struct HTMLWebView: UIViewRepresentable {
         UIColor.label.resolvedColor(with: UITraitCollection.current).hexString
     }
 
+    struct ContentKey: Equatable {
+        let reloadToken: Int
+        let fontSize: Double
+        let htmlBodyHash: Int
+        let cssLinksHash: Int
+        let colorScheme: Int
+    }
+
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var parent: HTMLWebView
-        var loadedContentKey: String?
+        var loadedContentKey: ContentKey?
 
         init(parent: HTMLWebView) {
             self.parent = parent

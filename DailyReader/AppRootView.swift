@@ -38,6 +38,9 @@ struct AppRootView: View {
             }
             .tag(3)
         }
+        .task {
+            ArticleWebViewPrewarmer.shared.warmUpIfNeeded()
+        }
     }
 }
 
