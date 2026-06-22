@@ -81,7 +81,7 @@ struct HTMLWebView: UIViewRepresentable {
               background: rgba(120, 120, 128, 0.08) !important;
               padding: 6px 12px !important;
               border-radius: 20px !important;
-              margin: 10px 0 18px 0 !important;
+              margin: 2px 0 18px 0 !important;
               border: 1px solid rgba(120, 120, 128, 0.12) !important;
             }
             .author {

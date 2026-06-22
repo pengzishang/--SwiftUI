@@ -49,37 +49,39 @@ struct ArticleDetailView: View {
                                 .frame(height: 220)
                                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         }
-                        Text(detail.title.isEmpty ? viewModel.story.title : detail.title)
-                            .font(.largeTitle.bold())
-                            .lineLimit(nil)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(detail.title.isEmpty ? viewModel.story.title : detail.title)
+                                .font(.largeTitle.bold())
+                                .lineLimit(nil)
 
-                        if let body = detail.body, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            if let htmlErrorMessage {
-                                ErrorStateView(message: htmlErrorMessage) {
-                                    self.htmlErrorMessage = nil
-                                    htmlReloadToken += 1
-                                }
-                                .frame(maxWidth: .infinity, minHeight: 240)
-                            } else {
-                                HTMLWebView(
-                                    htmlBody: body,
-                                    cssLinks: detail.css,
-                                    reloadToken: htmlReloadToken,
-                                    fontSize: fontSize,
-                                    contentHeight: $htmlContentHeight,
-                                    onImageTap: { url in
-                                        selectedImage = IdentifiableImageURL(url: url)
-                                    },
-                                    onError: { message in
-                                        htmlErrorMessage = message
+                            if let body = detail.body, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                if let htmlErrorMessage {
+                                    ErrorStateView(message: htmlErrorMessage) {
+                                        self.htmlErrorMessage = nil
+                                        htmlReloadToken += 1
                                     }
-                                )
-                                .frame(minHeight: htmlContentHeight)
-                                .accessibilityIdentifier("articleHTMLContent")
+                                    .frame(maxWidth: .infinity, minHeight: 240)
+                                } else {
+                                    HTMLWebView(
+                                        htmlBody: body,
+                                        cssLinks: detail.css,
+                                        reloadToken: htmlReloadToken,
+                                        fontSize: fontSize,
+                                        contentHeight: $htmlContentHeight,
+                                        onImageTap: { url in
+                                            selectedImage = IdentifiableImageURL(url: url)
+                                        },
+                                        onError: { message in
+                                            htmlErrorMessage = message
+                                        }
+                                    )
+                                    .frame(minHeight: htmlContentHeight)
+                                    .accessibilityIdentifier("articleHTMLContent")
+                                }
+                            } else {
+                                ContentUnavailableView("文章内容暂不可用", systemImage: "doc.text.magnifyingglass")
+                                    .frame(maxWidth: .infinity, minHeight: 240)
                             }
-                        } else {
-                            ContentUnavailableView("文章内容暂不可用", systemImage: "doc.text.magnifyingglass")
-                                .frame(maxWidth: .infinity, minHeight: 240)
                         }
                     }
                     .padding()
