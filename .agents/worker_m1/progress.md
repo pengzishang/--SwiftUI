@@ -8,4 +8,4 @@
 - [x] 修改 `ZhihuDailyAPITests.swift` 中对应的 User-Agent 断言
 - [x] 运行单元测试验证改动是否成功且 40 个用例全部通过
 - [x] 按照 AGENTS.md 规则进行 Git Commit
-- [ ] 写入 `handoff.md` 并汇报 parent
+- [x] 写入 `handoff.md` 并汇报 parent
