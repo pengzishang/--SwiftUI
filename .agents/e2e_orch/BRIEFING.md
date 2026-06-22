@@ -49,18 +49,20 @@
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| explorer_infra_1 | teamwork_preview_explorer | 探索并设计测试架构 | in-progress | 3aedb657-ea40-40cd-9b51-5bf175f02488 |
+| explorer_infra_1 | teamwork_preview_explorer | 探索并设计测试架构 | completed | 3aedb657-ea40-40cd-9b51-5bf175f02488 |
+| worker_1 | teamwork_preview_worker | 创建 TEST_INFRA.md 并验证当前构建环境 | failed | 95a3556e-3441-4060-b6d7-de4e60be8fcc |
+| worker_2 | teamwork_preview_worker | 实现 UI 测试与 Mock 并验证运行状况 | in-progress | 93dcef51-2f5c-4ff1-a1b0-da8deb437957 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 1 / 16
-- Pending subagents: 3aedb657-ea40-40cd-9b51-5bf175f02488
+- Spawn count: 3 / 16
+- Pending subagents: 93dcef51-2f5c-4ff1-a1b0-da8deb437957
 - Predecessor: none
 - Successor: not yet spawned
 
 ## Active Timers
 - Heartbeat cron: not started
-- Safety timer: task-63
+- Safety timer: task-124
 
 ## Artifact Index
 - TEST_INFRA.md — 测试基础设施与用例设计

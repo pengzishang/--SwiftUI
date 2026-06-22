@@ -13,7 +13,7 @@
 
 | # | 里程碑名称 | 开发范围描述 | 依赖项 | 当前状态 |
 |---|---|---|---|---|
-| M1 | Alamofire 迁移 | 更新 `project.yml`，改写 `HTTPClient.swift` 支持 Alamofire，注入浏览器 User-Agent 头部。 | 无 | 进行中 (Conv ID: 200f8823-fb1b-4d20-81dc-4bf0f24aaec8) |
+| M1 | Alamofire 迁移 | 更新 `project.yml`，改写 `HTTPClient.swift` 支持 Alamofire，注入浏览器 User-Agent 头部。 | 无 | 进行中 (Conv ID: e28362e5-ba17-484d-9466-5ef5bc99ed50) |
 | M2 | 热榜与回答列表 | 创建热榜与回答数据模型，扩展 API 客户端获取 Top 50 热榜，实现热榜列表、回答列表及 Web 详情页渲染。 | M1 | 规划中 (PLANNED) |
 | M3 | “我的”页面合并 | TabBar 重构为 4 个。新建 `MeView` 合并收藏和已读，实现药丸胶囊滑块动效与统一搜索过滤。 | M2 | 规划中 (PLANNED) |
 | M4 | Keychain 数据备份 | 实现 `KeychainHelper` 模块。在 HomeViewModel 的收藏/历史/冷宫写操作中加入 Keychain 备份，并在 App 启动检测到沙盒为空时恢复。 | 无 | 规划中 (PLANNED) |

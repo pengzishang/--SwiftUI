@@ -1,32 +1,26 @@
-# 交接报告 (Handoff Report) — 初始化与子代理分发
+# 交接报告 (Handoff Report) — 子代理故障替换
 
 ## 里程碑状态 (Milestone State)
-- **全局规划与环境初始化**：已完成。`plan.md`、`progress.md` 以及全局 `PROJECT.md` 已全部用中文初始化。
-- **M1 (Alamofire 迁移)**：进行中。已分发给子编排器 `200f8823-fb1b-4d20-81dc-4bf0f24aaec8`。
-- **M2 (热榜与回答)**：规划中。依赖 M1 完成。
-- **M3 (我的页面合并)**：规划中。
-- **M4 (Keychain 数据备份)**：规划中。
-- **M5 (单元测试迁移)**：规划中。
-- **M6 (E2E 与对抗测试)**：规划中。
-- **E2E 测试轨 (E2E Testing Track)**：进行中。已分发给子编排器 `47e330e6-2eff-4f4a-a612-e6369f5420ac`。
+- **全局规划与环境初始化**：已完成。
+- **M1 (Alamofire 迁移)**：故障替换中。由于前一编排器实例 (`200f8823-fb1b-4d20-81dc-4bf0f24aaec8`) 出现连接中断，已拉起替代实例 (`e28362e5-ba17-484d-9466-5ef5bc99ed50`) 接管。前一实例已完成了网络库代码的编写与测试依赖集成，新实例将负责对此进行审查、评估之前的子任务（Reviewer、Challenger、Auditor）并予以闭环。
+- **E2E 测试轨 (E2E Testing Track)**：故障替换中。由于前一实例 (`47e330e6-2eff-4f4a-a612-e6369f5420ac`) 中断，已拉起替代实例 (`c129315e-4d34-4d31-9941-7a06b6faecdb`) 从状态恢复并继续生成 `TEST_INFRA.md` 与 UI 自动化套件。
+- **M2-M6 (后续里程碑)**：规划中。
 
 ## 活跃子代理 (Active Subagents)
-- **E2E 测试编排器 (E2E Testing Orchestrator)**：
-  - 会话 ID：`47e330e6-2eff-4f4a-a612-e6369f5420ac`
-  - 任务：根据产品需求设计 XCTest 4-Tier 覆盖率测试用例，输出 `TEST_INFRA.md` 和 `TEST_READY.md`。
-- **Milestone 1 子编排器 (Milestone 1 Sub-orchestrator)**：
-  - 会话 ID：`200f8823-fb1b-4d20-81dc-4bf0f24aaec8`
-  - 任务：更新 `project.yml` 并基于 Alamofire 重构网络请求底层类 `HTTPClient.swift`。
+- **E2E 测试编排器 (替代实例)**：
+  - 会话 ID：`c129315e-4d34-4d31-9941-7a06b6faecdb`
+  - 任务：接管前一实例的状态，恢复 UI 自动化用例开发。
+- **Milestone 1 子编排器 (替代实例)**：
+  - 会话 ID：`e28362e5-ba17-484d-9466-5ef5bc99ed50`
+  - 任务：接管 M1 开发状态，恢复并继续代码评审、对抗验证和法证审计工作。
 
 ## 待决决策 (Pending Decisions)
-- 无阻塞性技术待决决策。
+- 无。
 
 ## 剩余工作 (Remaining Work)
-1. 监控 E2E 测试编排器 (`47e330e6-2eff-4f4a-a612-e6369f5420ac`) 的进度，确保它编写好完整的黑盒测试架构并产出 `TEST_INFRA.md` 与 `TEST_READY.md`。
-2. 监控 Milestone 1 子编排器 (`200f8823-fb1b-4d20-81dc-4bf0f24aaec8`) 的进度，接收其 handoff 报告，确认 Alamofire 重构及 `User-Agent` 注入完成。
-3. 当 M1 完成后，分发里程碑 M2 (热榜与回答列表)。
-4. 依次推进 M3、M4、M5 里程碑。
-5. 汇合 E2E 轨，执行里程碑 M6 的 E2E 测试套件校验与 Adversarial 对抗性覆盖加固。
+1. 监控替代后的 E2E 测试编排器 (`c129315e-4d34-4d31-9941-7a06b6faecdb`) 并等待测试基础设施就绪报告 (`TEST_READY.md`)。
+2. 监控替代后的 M1 编排器 (`e28362e5-ba17-484d-9466-5ef5bc99ed50`)，等待其完成双重评审和法证审计并汇报完工。
+3. 当 M1 完工后分发 Milestone 2。
 
 ## 关键产物 (Key Artifacts)
 - `/Users/pengzishang/Current Project/知乎日报-SwiftUI/.agents/orchestrator/ORIGINAL_REQUEST.md` — 原始需求记录。

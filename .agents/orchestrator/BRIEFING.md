@@ -50,13 +50,13 @@ Orchestrate the development of DailyReader v1.2, implementing Alamofire network,
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| E2E Testing Orch | self | E2E test suite development | in-progress | 47e330e6-2eff-4f4a-a612-e6369f5420ac |
-| M1 Orch | self | Alamofire migration | in-progress | 200f8823-fb1b-4d20-81dc-4bf0f24aaec8 |
+| E2E Testing Orch | self | E2E test suite development | in-progress | c129315e-4d34-4d31-9941-7a06b6faecdb |
+| M1 Orch | self | Alamofire migration | in-progress | e28362e5-ba17-484d-9466-5ef5bc99ed50 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 2 / 16
-- Pending subagents: 47e330e6-2eff-4f4a-a612-e6369f5420ac, 200f8823-fb1b-4d20-81dc-4bf0f24aaec8
+- Spawn count: 4 / 16
+- Pending subagents: c129315e-4d34-4d31-9941-7a06b6faecdb, e28362e5-ba17-484d-9466-5ef5bc99ed50
 - Predecessor: none
 - Successor: not yet spawned
 

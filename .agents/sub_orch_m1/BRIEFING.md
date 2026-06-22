@@ -46,19 +46,30 @@
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
 | explorer_1 | teamwork_preview_explorer | project.yml 与 xcodegen 调研 | completed | f6dccc23-4876-4b5d-accb-e434541ac92d |
-| explorer_2 | teamwork_preview_explorer | HTTPClient 与 网络层 API 调研 | pending | a681e1b4-abd8-4caf-a417-a7ef030313ef |
-| explorer_3 | teamwork_preview_explorer | 测试用例与构建命令调研 | pending | fc6197c6-4be0-4531-9e98-d60d0f093629 |
+| explorer_2 | teamwork_preview_explorer | HTTPClient 与 网络层 API 调研 | completed | a681e1b4-abd8-4caf-a417-a7ef030313ef |
+| explorer_3 | teamwork_preview_explorer | 测试用例与构建命令调研 | completed | fc6197c6-4be0-4531-9e98-d60d0f093629 |
+| worker_1 | teamwork_preview_worker | Alamofire 迁移与集成 | completed | 403ab09e-69f4-4b9c-87d1-aff57b933afe |
+| reviewer_1 | teamwork_preview_reviewer | 代码双重评审-1 | failed | 1db00cdb-61c6-4c11-997a-13c9ecc37f17 |
+| reviewer_2 | teamwork_preview_reviewer | 代码双重评审-2 | failed | 598910e2-7fa5-4313-8369-425d40fcef54 |
+| challenger_1 | teamwork_preview_challenger | 对抗性用例与异常边界验证-1 | failed | ea00b1d3-3ac5-40c0-9d42-80c0f39033c6 |
+| challenger_2 | teamwork_preview_challenger | 对抗性用例与异常边界验证-2 | failed | 622ac878-0182-4335-8235-74b8b767d92f |
+| auditor_1 | teamwork_preview_auditor | 真实性法证审计 | failed | 6823c09f-db3e-407e-8fe9-4b41f44488cd |
+| reviewer_1_retry1 | teamwork_preview_reviewer | 代码双重评审-1 (重试) | pending | 23166263-5c0f-48ae-9232-3f789f2446bb |
+| reviewer_2_retry1 | teamwork_preview_reviewer | 代码双重评审-2 (重试) | pending | 9d70d8a5-7b43-4357-8fc7-330ff5f90d4c |
+| challenger_1_retry1 | teamwork_preview_challenger | 对抗性用例与异常边界验证-1 (重试) | pending | 2fb93513-c7a6-48c8-b012-925a4dab26d4 |
+| challenger_2_retry1 | teamwork_preview_challenger | 对抗性用例与异常边界验证-2 (重试) | pending | c3711803-dd7e-45df-b9c6-690a233a58b0 |
+| auditor_1_retry1 | teamwork_preview_auditor | 真实性法证审计 (重试) | pending | 9ec5dcf8-67f6-467e-aa3d-2e0f4d4abe19 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 3 / 16
-- Pending subagents: f6dccc23-4876-4b5d-accb-e434541ac92d, a681e1b4-abd8-4caf-a417-a7ef030313ef, fc6197c6-4be0-4531-9e98-d60d0f093629
+- Spawn count: 14 / 16
+- Pending subagents: 23166263-5c0f-48ae-9232-3f789f2446bb, 9d70d8a5-7b43-4357-8fc7-330ff5f90d4c, 2fb93513-c7a6-48c8-b012-925a4dab26d4, c3711803-dd7e-45df-b9c6-690a233a58b0, 9ec5dcf8-67f6-467e-aa3d-2e0f4d4abe19
 - Predecessor: none
 - Successor: not yet spawned
 
 ## Active Timers
 - Heartbeat cron: task-13
-- Safety timer: task-49
+- Safety timer: task-147
 
 ## Artifact Index
 - /Users/pengzishang/Current Project/知乎日报-SwiftUI/.agents/sub_orch_m1/ORIGINAL_REQUEST.md — 原始用户请求记录
