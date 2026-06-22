@@ -27,7 +27,7 @@ final class ZhihuDailyAPITests: XCTestCase {
 
         XCTAssertEqual(capturedRequest?.url?.path, "/api/4/news/before/20260621")
         XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "Accept"), "application/json")
-        XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "User-Agent"), "DailyReaderSwiftUI/1.0")
+        XCTAssertEqual(capturedRequest?.value(forHTTPHeaderField: "User-Agent"), HTTPClient.browserUserAgent)
     }
 
     func testFetchLatestSkipsBrokenStoryInsteadOfFailingWholeResponse() async throws {
