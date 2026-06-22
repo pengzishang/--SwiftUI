@@ -19,10 +19,13 @@
   - **严格互斥分流规则**：确保一篇文章只能出现在 4 个 Tab 中其中一个地方。优先级从高到低依次为：**冷宫 > 收藏 > 已读 > 日报首页**。
   - **增量刷新（Diff 级渲染）**：重构了 `refresh` 拉取机制。当下拉刷新时，不再全量清空重载 `sections`，而是进行**增量合并 (Incremental Merge)**。如果新抓取的数据与第一组 Section 日期重合，则增量向前插入新文章；如果是全新日期的文章，则直接在顶部 prepend 新的 Section，而老旧的历史 Section（如昨日、前日）和滚动位置均完好保留，实现平滑流畅的加载动画。
 
+- **[ArticleDetailViewModel.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/ArticleDetailViewModel.swift)** [MODIFY]：
+  - **已读文章缓存优先 (Cache-First)**：重构了详情页的加载逻辑。如果本地已存在该文章的缓存详情数据，直接加载并呈现在界面上，跳过网络请求，从而实现“秒开”的效果，且避免了网络带宽和时间的重复开销。
+
 ### 3. UI 界面与交互重构
 - **[AppRootView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/AppRootView.swift)** [MODIFY]：
   - 重整分栏选项，底部 TabBar 精简为 **4 个 Tab 标签栏布局**：日报 (`newspaper`)、收藏 (`star`)、已读 (`checkmark.circle`) 和**设置 (`gearshape`)**。
-  - **UI测试隔离**：在 `-UITestMode` 下启动时，会自动清空已读、冷宫、收藏等数据的 UserDefaults 缓存，提供干净隔离 of 测试环境。
+  - **UI测试隔离**：在 `-UITestMode` 下启动时，会自动清空已读、冷宫、收藏等数据的 UserDefaults 缓存，并且每次启动均清除网络缓存文件夹 `DailyReaderCache`，确保测试在隔离干净、无脏缓存残留的环境下进行。
 - **[SettingsView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Home/SettingsView.swift)** [MODIFY]：
   - **移入“冷宫”功能**：精简底部主导航后，将原“冷宫”功能页面移入设置页面内，添加了 NavigationLink 入口。
   - **列表字体大小调节**：新增“列表字体大小”调节滑动条，同样使用 5 档刻度，通过 `@AppStorage("DailyReader.listFontSize")` 控制并持久化。
@@ -39,6 +42,7 @@
   - **扁平列表与时间排序**：不再按日期 Section 分组，重构为单一的平铺列表并按阅读时间由新到旧排序。
   - **内置搜索功能**：增加了基于 `.searchable` 的搜索栏，支持在已读文章中进行实时不区分大小写的标题搜索，若无结果则展示标准的无匹配 Empty 界面。
 - **[ArticleDetailView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/ArticleDetailView.swift)** [MODIFY]：
+  - **异步渐进式加载（并行渲染）**：重构了页面排版。文章的大图 Banner 与大标题现在直接使用列表传入的 `StorySummary` 数据进行**瞬时渲染 (Instant Load)**。只有底部的富文本正文区会异步展示加载指示器（或渲染 WebView）。这使得用户在点击文章进入的瞬间就能看到标题和图片，体验上大幅消除了白屏感，实现内容与图片的并行请求和渲染。
   - **TabBar 自动隐藏**：在进入详情页时自动隐藏底部分栏，返回时恢复。
   - **动态导航标题**：导航栏标题自适应为文章实际标题。
   - **正文插图全屏与缩放**：点击正文插图唤起全屏大图预览 `FullScreenImageViewer`，基于 `UIScrollView` 实现完美的原生双指平滑缩放、双击还原及回弹效果。
@@ -55,6 +59,8 @@
   - 针对设置页面的全局字体持久化以及列表字体持久化进行UserDefaults 读写逻辑测试。
 - **[HomeViewModelTests.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReaderTests/HomeViewModelTests.swift)** [MODIFY]：
   - 新增互斥分流与列表操作覆盖测试。
+- **[ArticleDetailViewModelTests.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReaderTests/ArticleDetailViewModelTests.swift)** [MODIFY]：
+  - 适配了缓存优先的详情加载测试，增加对跳过网络请求直接使用本地缓存行为的校验。
 - **[HomeFlowUITests.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReaderUITests/HomeFlowUITests.swift)** [MODIFY]：
   - 适配了动态导航标题的元素定位，确保测试的高可用性。
 
@@ -65,12 +71,12 @@
 所有自动化测试用例通过：
 
 ```bash
-Test Suite 'HomeFlowUITests' passed at 2026-06-22 09:13:43.428.
-	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.421 (69.434) seconds
-Test Suite 'DailyReaderUITests.xctest' passed at 2026-06-22 09:13:43.430.
-	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.421 (69.436) seconds
-Test Suite 'All tests' passed at 2026-06-22 09:13:43.431.
-	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.421 (69.441) seconds
+Test Suite 'HomeFlowUITests' passed at 2026-06-22 09:32:48.336.
+	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.665 (69.677) seconds
+Test Suite 'DailyReaderUITests.xctest' passed at 2026-06-22 09:32:48.337.
+	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.665 (69.678) seconds
+Test Suite 'All tests' passed at 2026-06-22 09:32:48.339.
+	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.665 (69.680) seconds
 
-** TEST SUCCEEDED ** [86.032 sec]
+** TEST SUCCEEDED ** [91.763 sec]
 ```

@@ -28,6 +28,34 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.phase.isCacheLoaded)
     }
 
+    func testLoadLatestWithCacheAndNetworkSuccess() async {
+        let store = DiskCacheStore(rootURL: temporaryRoot())
+        await store.saveLatest(.fixture)
+
+        let api = MockDailyAPIClient()
+        let networkResponse = DailyResponse(
+            date: "20260621",
+            stories: [
+                StorySummary(id: 1, title: "第一篇日报"),
+                StorySummary(id: 2, title: "第二篇日报"),
+                StorySummary(id: 3, title: "第三篇日报新加入")
+            ],
+            topStories: [
+                TopStory(id: 1, title: "顶部故事")
+            ]
+        )
+        api.latestResult = .success(networkResponse)
+
+        let viewModel = HomeViewModel(apiClient: api, cacheStore: store)
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.sections.first?.stories.count, 3)
+        XCTAssertEqual(viewModel.sections.first?.stories[0].id, 3)
+        XCTAssertEqual(viewModel.phase, .loaded(.network))
+        XCTAssertNil(viewModel.bannerMessage)
+    }
+
     func testNetworkFailureWithoutCacheShowsRetryableErrorState() async {
         let api = MockDailyAPIClient()
         api.latestResult = .failure(APIError.transport("offline"))

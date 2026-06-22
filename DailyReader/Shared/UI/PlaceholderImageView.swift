@@ -2,25 +2,49 @@ import SwiftUI
 
 struct PlaceholderImageView: View {
     let urlString: String?
+    var thumbnailURLString: String? = nil
 
     var body: some View {
-        if let urlString, let url = URL(string: urlString) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                    placeholder
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                case .failure:
-                    placeholder
-                @unknown default:
-                    placeholder
+        let isSame = urlString != nil && urlString == thumbnailURLString
+        ZStack {
+            // Background/Thumbnail layer
+            if !isSame, let thumbnailURLString, let thumbURL = URL(string: thumbnailURLString) {
+                AsyncImage(url: thumbURL) { phase in
+                    if case .success(let image) = phase {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    }
                 }
             }
-        } else {
-            placeholder
+
+            // Main/High-res layer
+            if let urlString, let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        if isSame || thumbnailURLString == nil {
+                            placeholder
+                        }
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    case .failure:
+                        if isSame || thumbnailURLString == nil {
+                            placeholder
+                        }
+                    @unknown default:
+                        if isSame || thumbnailURLString == nil {
+                            placeholder
+                        }
+                    }
+                }
+            } else if !isSame, thumbnailURLString != nil {
+                EmptyView()
+            } else {
+                placeholder
+            }
         }
     }
 

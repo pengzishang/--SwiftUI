@@ -119,8 +119,15 @@ final class HomeViewModel: ObservableObject {
     func load() async {
         guard !hasAttemptedInitialLoad else { return }
         hasAttemptedInitialLoad = true
-        phase = .loading
-        await loadLatest(allowCacheFallback: true)
+        
+        if let cached = await cacheStore.loadLatest() {
+            replace(with: cached.value, source: .cache(cached.cachedAt))
+            bannerMessage = "当前离线，正在显示缓存内容"
+            await loadLatest(allowCacheFallback: false)
+        } else {
+            phase = .loading
+            await loadLatest(allowCacheFallback: true)
+        }
     }
 
     func refresh() async {
@@ -259,7 +266,11 @@ final class HomeViewModel: ObservableObject {
             } else if sections.isEmpty {
                 phase = .failed("网络不可用，请检查连接后重试")
             } else {
-                bannerMessage = "刷新失败，已保留上次内容"
+                if case .loaded(let source) = phase, source.isCache {
+                    bannerMessage = "当前离线，正在显示缓存内容"
+                } else {
+                    bannerMessage = "刷新失败，已保留上次内容"
+                }
             }
         }
     }

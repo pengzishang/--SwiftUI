@@ -17,6 +17,7 @@ struct ArticleDetailView: View {
     @State private var htmlContentHeight: CGFloat = 520
     @State private var htmlReloadToken = 0
     @State private var htmlErrorMessage: String?
+    @State private var isWebViewLoading = true
 
     @AppStorage("DailyReader.fontSize") private var fontSize: Double = 16.0
     @State private var selectedImage: IdentifiableImageURL?
@@ -38,9 +39,12 @@ struct ArticleDetailView: View {
 
                 // 1. Cover Image (Instant from story summary, fallback to loaded detail cover)
                 if let imageURL = detailImageURL {
-                    PlaceholderImageView(urlString: imageURL)
-                        .frame(height: 220)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    PlaceholderImageView(
+                        urlString: imageURL,
+                        thumbnailURLString: viewModel.story.images.first
+                    )
+                    .frame(height: 220)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -74,24 +78,44 @@ struct ArticleDetailView: View {
                                 ErrorStateView(message: htmlErrorMessage) {
                                     self.htmlErrorMessage = nil
                                     htmlReloadToken += 1
+                                    isWebViewLoading = true
                                 }
                                 .frame(maxWidth: .infinity, minHeight: 240)
                             } else {
-                                HTMLWebView(
-                                    htmlBody: body,
-                                    cssLinks: detail.css,
-                                    reloadToken: htmlReloadToken,
-                                    fontSize: fontSize,
-                                    contentHeight: $htmlContentHeight,
-                                    onImageTap: { url in
-                                        selectedImage = IdentifiableImageURL(url: url)
-                                    },
-                                    onError: { message in
-                                        htmlErrorMessage = message
+                                ZStack {
+                                    HTMLWebView(
+                                        htmlBody: body,
+                                        cssLinks: detail.css,
+                                        reloadToken: htmlReloadToken,
+                                        fontSize: fontSize,
+                                        contentHeight: $htmlContentHeight,
+                                        isLoading: $isWebViewLoading,
+                                        onImageTap: { url in
+                                            selectedImage = IdentifiableImageURL(url: url)
+                                        },
+                                        onError: { message in
+                                            htmlErrorMessage = message
+                                            isWebViewLoading = false
+                                        }
+                                    )
+                                    .frame(minHeight: htmlContentHeight)
+                                    .accessibilityIdentifier("articleHTMLContent")
+                                    .opacity(isWebViewLoading ? 0 : 1)
+
+                                    if isWebViewLoading {
+                                        HStack {
+                                            Spacer()
+                                            VStack(spacing: 12) {
+                                                ProgressView()
+                                                Text("正在加载正文...")
+                                                    .font(.footnote)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                            .padding(.vertical, 40)
+                                            Spacer()
+                                        }
                                     }
-                                )
-                                .frame(minHeight: htmlContentHeight)
-                                .accessibilityIdentifier("articleHTMLContent")
+                                }
                             }
                         } else {
                             ContentUnavailableView("文章内容暂不可用", systemImage: "doc.text.magnifyingglass")
@@ -184,6 +208,7 @@ struct ArticleDetailView: View {
         .onChange(of: viewModel.loadedDetailID) { _, _ in
             htmlContentHeight = 520
             htmlErrorMessage = nil
+            isWebViewLoading = true
         }
     }
 

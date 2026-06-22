@@ -7,6 +7,7 @@ struct HTMLWebView: UIViewRepresentable {
     let reloadToken: Int
     let fontSize: Double
     @Binding var contentHeight: CGFloat
+    @Binding var isLoading: Bool
     let onImageTap: (String) -> Void
     let onError: (String) -> Void
 
@@ -165,18 +166,30 @@ struct HTMLWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             updateHeight(for: webView)
+            DispatchQueue.main.async { [weak self] in
+                self?.parent.isLoading = false
+            }
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
             parent.onError("文章内容加载失败，请重试")
+            DispatchQueue.main.async { [weak self] in
+                self?.parent.isLoading = false
+            }
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
             parent.onError("文章内容加载失败，请重试")
+            DispatchQueue.main.async { [weak self] in
+                self?.parent.isLoading = false
+            }
         }
 
         func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
             parent.onError("文章内容加载失败，请重试")
+            DispatchQueue.main.async { [weak self] in
+                self?.parent.isLoading = false
+            }
         }
 
         func webView(
