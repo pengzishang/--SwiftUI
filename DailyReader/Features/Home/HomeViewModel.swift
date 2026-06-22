@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct DailySection: Identifiable, Equatable {
     var id: String { date }
@@ -243,7 +244,13 @@ final class HomeViewModel: ObservableObject {
         do {
             let response = try await apiClient.fetchLatest()
             await cacheStore.saveLatest(response)
-            replace(with: response, source: .network)
+            if sections.isEmpty {
+                replace(with: response, source: .network)
+            } else {
+                withAnimation {
+                    merge(with: response, source: .network)
+                }
+            }
             bannerMessage = nil
         } catch {
             if allowCacheFallback, sections.isEmpty, let cached = await cacheStore.loadLatest() {
@@ -262,8 +269,41 @@ final class HomeViewModel: ObservableObject {
         topStories = response.topStories
         let filteredStories = uniqueStories(from: response.stories)
         sections = filteredStories.isEmpty ? [] : [DailySection(date: response.date, stories: filteredStories)]
+        for story in filteredStories {
+            loadedStoryIDs.insert(story.id)
+        }
         phase = filteredStories.isEmpty && topStories.isEmpty ? .empty : .loaded(source)
         historyLoadState = .idle
+    }
+
+    private func merge(with response: DailyResponse, source: ContentSource) {
+        topStories = response.topStories
+        
+        let newStories = response.stories.filter { story in
+            !story.title.isEmpty && !loadedStoryIDs.contains(story.id)
+        }
+        
+        for story in response.stories where !story.title.isEmpty {
+            loadedStoryIDs.insert(story.id)
+        }
+        
+        if let index = sections.firstIndex(where: { $0.date == response.date }) {
+            var existingSection = sections[index]
+            let uniqueNewStories = newStories.filter { newStory in
+                !existingSection.stories.contains(where: { $0.id == newStory.id })
+            }
+            if !uniqueNewStories.isEmpty {
+                existingSection.stories.insert(contentsOf: uniqueNewStories, at: 0)
+                sections[index] = existingSection
+            }
+        } else {
+            if !newStories.isEmpty {
+                let newSection = DailySection(date: response.date, stories: newStories)
+                sections.insert(newSection, at: 0)
+            }
+        }
+        
+        phase = .loaded(source)
     }
 
     private func append(response: DailyResponse) {
