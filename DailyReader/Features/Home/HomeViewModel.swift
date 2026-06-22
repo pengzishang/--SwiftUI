@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-struct DailySection: Identifiable, Equatable {
+struct DailySection: Identifiable, Equatable, Codable {
     var id: String { date }
     let date: String
     var stories: [StorySummary]
@@ -120,8 +120,11 @@ final class HomeViewModel: ObservableObject {
         guard !hasAttemptedInitialLoad else { return }
         hasAttemptedInitialLoad = true
         
-        if let cached = await cacheStore.loadLatest() {
-            replace(with: cached.value, source: .cache(cached.cachedAt))
+        if let cached = await cacheStore.loadHomeFeed() {
+            self.topStories = cached.value.topStories
+            self.sections = cached.value.sections
+            self.loadedStoryIDs = Set(cached.value.sections.flatMap { $0.stories }.map { $0.id })
+            self.phase = .loaded(.cache(cached.cachedAt))
             bannerMessage = "当前离线，正在显示缓存内容"
             await loadLatest(allowCacheFallback: false)
         } else {
@@ -285,6 +288,11 @@ final class HomeViewModel: ObservableObject {
         }
         phase = filteredStories.isEmpty && topStories.isEmpty ? .empty : .loaded(source)
         historyLoadState = .idle
+        
+        Task { [weak self] in
+            guard let self else { return }
+            await self.cacheStore.saveHomeFeed(sections: self.sections, topStories: self.topStories)
+        }
     }
 
     private func merge(with response: DailyResponse, source: ContentSource) {
@@ -315,12 +323,22 @@ final class HomeViewModel: ObservableObject {
         }
         
         phase = .loaded(source)
+        
+        Task { [weak self] in
+            guard let self else { return }
+            await self.cacheStore.saveHomeFeed(sections: self.sections, topStories: self.topStories)
+        }
     }
 
     private func append(response: DailyResponse) {
         let filteredStories = uniqueStories(from: response.stories)
         guard !filteredStories.isEmpty else { return }
         sections.append(DailySection(date: response.date, stories: filteredStories))
+        
+        Task { [weak self] in
+            guard let self else { return }
+            await self.cacheStore.saveHomeFeed(sections: self.sections, topStories: self.topStories)
+        }
     }
 
     private func uniqueStories(from stories: [StorySummary]) -> [StorySummary] {

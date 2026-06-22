@@ -16,7 +16,7 @@ final class HomeViewModelTests: XCTestCase {
 
     func testNetworkFailureFallsBackToCachedLatest() async {
         let store = DiskCacheStore(rootURL: temporaryRoot())
-        await store.saveLatest(.fixture)
+        await store.saveHomeFeed(sections: [DailySection(date: DailyResponse.fixture.date, stories: DailyResponse.fixture.stories)], topStories: DailyResponse.fixture.topStories)
         let api = MockDailyAPIClient()
         api.latestResult = .failure(APIError.transport("offline"))
         let viewModel = HomeViewModel(apiClient: api, cacheStore: store)
@@ -30,7 +30,7 @@ final class HomeViewModelTests: XCTestCase {
 
     func testLoadLatestWithCacheAndNetworkSuccess() async {
         let store = DiskCacheStore(rootURL: temporaryRoot())
-        await store.saveLatest(.fixture)
+        await store.saveHomeFeed(sections: [DailySection(date: DailyResponse.fixture.date, stories: DailyResponse.fixture.stories)], topStories: DailyResponse.fixture.topStories)
 
         let api = MockDailyAPIClient()
         let networkResponse = DailyResponse(

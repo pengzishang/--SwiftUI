@@ -41,6 +41,19 @@ actor DiskCacheStore: CacheStore {
         await read(from: detailURL(for: id))
     }
 
+    func saveHomeFeed(sections: [DailySection], topStories: [TopStory]) async {
+        let feed = CachedHomeFeed(sections: sections, topStories: topStories)
+        await write(CacheEnvelope(value: feed), to: homeFeedURL)
+    }
+
+    func loadHomeFeed() async -> CachedValue<CachedHomeFeed>? {
+        await read(from: homeFeedURL)
+    }
+
+    private var homeFeedURL: URL {
+        rootURL.appendingPathComponent("home_feed.json")
+    }
+
     private var latestURL: URL {
         rootURL.appendingPathComponent("latest.json")
     }
