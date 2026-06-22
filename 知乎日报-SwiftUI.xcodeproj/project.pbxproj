@@ -34,6 +34,7 @@
 		85E0957366C5BEAF7F4753AA /* TopStoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2858DCC9283E6D495E2F81E6 /* TopStoriesView.swift */; };
 		86999B20AA6E4B6AE486A518 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 38A0F5FF4BD11864B00421E9 /* Assets.xcassets */; };
 		886B2DF665069A9BDD51352F /* detail_empty_body.json in Resources */ = {isa = PBXBuildFile; fileRef = 06DCA0DBD3BD108F9044F970 /* detail_empty_body.json */; };
+		8899418B089D925831A87E04 /* SettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7FBD69C7FA65459B907E95 /* SettingsTests.swift */; };
 		8E243FCB52E50D1CAE5F6FC1 /* DailyReaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6C398C93E8B3F367674022F /* DailyReaderApp.swift */; };
 		9CDD0662DC067F1871813CE2 /* malformed.json in Resources */ = {isa = PBXBuildFile; fileRef = 1642DC550939B8CC16F94AAB /* malformed.json */; };
 		A28509C39544418422D9ADCA /* HomeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5D6A375F7A118BBDFF7610 /* HomeFlowUITests.swift */; };
@@ -48,6 +49,7 @@
 		C8B7D6E09A6F73ABAA7886D9 /* ArticleDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCF475A067D61BD86CFAD26 /* ArticleDetailViewModelTests.swift */; };
 		CFF6512494663C08B5A9DEB9 /* CacheStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B6EF925CD2065B5748127C9 /* CacheStoreTests.swift */; };
 		D4CA31095BCFB56A9C1913EC /* ArticleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7C79607306E50ACE6C0DFC /* ArticleDetailView.swift */; };
+		DE7A68333D32947604805F1F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0608E686DB3D314734545A /* SettingsView.swift */; };
 		F69571E76F8D8A1FF8127275 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31104644F19921AD9D334A3D /* HTTPClient.swift */; };
 		F73F0CF692DA477361745D97 /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283A03F341151960A501A680 /* MockURLProtocol.swift */; };
 		FA3DD4E3FEC746CD2F07BD4D /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE4749CF00FE9356E2F8CE2 /* APIError.swift */; };
@@ -81,6 +83,7 @@
 		2858DCC9283E6D495E2F81E6 /* TopStoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopStoriesView.swift; sourceTree = "<group>"; };
 		2907FFCCD4CF66A22036ED5D /* HTMLWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLWebView.swift; sourceTree = "<group>"; };
 		2B017832CF358EDAC7DA4F2D /* HomeViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModelTests.swift; sourceTree = "<group>"; };
+		2C0608E686DB3D314734545A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		31104644F19921AD9D334A3D /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
 		38A0F5FF4BD11864B00421E9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3DF0DEF90931194B63842FB5 /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
@@ -91,6 +94,7 @@
 		5EE4749CF00FE9356E2F8CE2 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
 		6318C0681EF318DCC3EB077C /* LocalFixtureDailyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFixtureDailyAPIClient.swift; sourceTree = "<group>"; };
 		6BBFF9D7B209979D64C6E26D /* latest_with_broken_story.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = latest_with_broken_story.json; sourceTree = "<group>"; };
+		6D7FBD69C7FA65459B907E95 /* SettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTests.swift; sourceTree = "<group>"; };
 		75DF78B56B534189EA196B63 /* OfflineBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineBanner.swift; sourceTree = "<group>"; };
 		79707C307289A8C9771F10F0 /* ArticleDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleDetailViewModel.swift; sourceTree = "<group>"; };
 		8BEE5E8EA505B065FCE5C893 /* DailyAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyAPIClient.swift; sourceTree = "<group>"; };
@@ -161,6 +165,7 @@
 				BADBAFBFE993C1024774F5F1 /* HomeView.swift */,
 				9F51C97D085E13AC30E08F74 /* HomeViewModel.swift */,
 				D58E686D2F9FE1D1C0F29DC6 /* ReadStoriesView.swift */,
+				2C0608E686DB3D314734545A /* SettingsView.swift */,
 				40D6D44F133F24B1158C644D /* StoryRowView.swift */,
 				2858DCC9283E6D495E2F81E6 /* TopStoriesView.swift */,
 			);
@@ -208,6 +213,7 @@
 				2B017832CF358EDAC7DA4F2D /* HomeViewModelTests.swift */,
 				B9DC0B357A827FCD33657C2B /* MockDailyAPIClient.swift */,
 				283A03F341151960A501A680 /* MockURLProtocol.swift */,
+				6D7FBD69C7FA65459B907E95 /* SettingsTests.swift */,
 				949C7B3009D6A43FCFE44EFB /* ZhihuDailyAPITests.swift */,
 				D9B2EFBF5968C769C2CFF0D6 /* TestFixtures */,
 			);
@@ -453,6 +459,7 @@
 				776EE114784DDFFB12BA2B69 /* PersistentStories.swift in Sources */,
 				71DA183946DD7D6BDD49327D /* PlaceholderImageView.swift in Sources */,
 				2365CC6AE79C1344A9299E31 /* ReadStoriesView.swift in Sources */,
+				DE7A68333D32947604805F1F /* SettingsView.swift in Sources */,
 				2F95467040D684BCF377C6A4 /* ShareSheet.swift in Sources */,
 				6C495ADA14F4B23FA4210733 /* StoryRowView.swift in Sources */,
 				20398182DE55D2C574950A92 /* StorySummary.swift in Sources */,
@@ -471,6 +478,7 @@
 				B78A2319AD4601423E468F93 /* HomeViewModelTests.swift in Sources */,
 				190E97910DAE99AAD1E2EE9F /* MockDailyAPIClient.swift in Sources */,
 				F73F0CF692DA477361745D97 /* MockURLProtocol.swift in Sources */,
+				8899418B089D925831A87E04 /* SettingsTests.swift in Sources */,
 				80258868A231FDA8CEF4C179 /* ZhihuDailyAPITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

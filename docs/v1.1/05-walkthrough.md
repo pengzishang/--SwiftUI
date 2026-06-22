@@ -20,8 +20,10 @@
 
 ### 3. UI 界面与交互重构
 - **[AppRootView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/AppRootView.swift)** [MODIFY]：
-  - 引入 `TabView` 并配置 4 个 NavigationStack 标签栏页面（日报 `newspaper`、冷宫 `snowflake`、收藏 `star`、已读 `checkmark.circle`）。
+  - 升级为 **5 Tab 标签栏布局**，分别对应：日报 (`newspaper`)、冷宫 (`snowflake`)、收藏 (`star`)、已读 (`checkmark.circle`) 和新增的**设置 (`gearshape`)**。
   - **UI测试隔离**：为了保证 UI 测试不受前序测试写入的 UserDefaults 数据影响，在 `-UITestMode` 下启动时，会自动清空已读、冷宫、收藏等数据的 UserDefaults 缓存，提供干净隔离的测试环境。
+- **[SettingsView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Home/SettingsView.swift)** [NEW]：
+  - 新增设置面板，包含 5 档刻度字体大小修改（14px, 16px, 18px, 20px, 22px），通过 `@AppStorage("DailyReader.fontSize")` 实现全局存储和响应。
 - **[HomeView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Home/HomeView.swift)** [MODIFY]：
   - 列表数据源改为 `visibleSections`，增加左滑“不感兴趣”红色手势。
 - **[StoryRowView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Home/StoryRowView.swift)** [MODIFY]：
@@ -33,17 +35,24 @@
 - **[ReadStoriesView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Home/ReadStoriesView.swift)** [NEW]：
   - 展示已读文章，左滑提供橘色的“设为未读”按钮。
 - **[ArticleDetailView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/ArticleDetailView.swift)** [MODIFY]：
-  - 增加 `source` (enum `ArticleDetailSource`) 及 `date` 参数，区分从哪个 Tab 打开该页面。
-  - 右上角分享改为自适应的 `Menu`（图标 `ellipsis.circle`），根据来源及状态，动态展现“分享”、“（取消）收藏”、“设为已读”及“不感兴趣/恢复”选项。
+  - **TabBar 自动隐藏**：声明 `.toolbar(.hidden, for: .tabBar)`，在进入详情页时自动隐藏底部分栏，返回时自动恢复。
+  - **动态导航标题**：导航栏标题由固定的 “文章详情” 修改为自适应的文章 title (`viewModel.shareTitle`)。
+  - **正文插图全屏大图预览**：点击 HTML 中任意正文插图（不包含 Banner 及头像）会唤起全屏大图浏览器 `FullScreenImageViewer`。
+  - **手势缩放与还原**：基于 `UIScrollView` 实现极其顺滑的 Pinch-to-zoom、双击自动缩放/复位、拖拽平移与回弹效果。
   - **已读状态菜单限制**：在日报首页、冷宫及收藏打开的文章详情页中，三个点菜单**不再显示“设为未读”**，仅显示“设为已读”选项。只有在已读 Tab 打开的文章详情页中，才允许显示“设为未读”以将文章移出已读列表。
 - **[HTMLWebView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/HTMLWebView.swift)** [MODIFY]：
+  - 监听并绑定 `@AppStorage` 中的全局字体 `fontSize`，实时将其应用到 HTML 样式中，实现 5 档刻度字体大小的实时切换。
+  - 注入图片点击 JS 监听器，并在 native 代理回调中将事件安全传递给 Swift 端进行大图呈现。
   - 将“查看知乎讨论”按钮 CSS 样式重写为满宽且具有 `12px` 圆角。
 
 ### 4. 测试与验证层
+- **[SettingsTests.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReaderTests/SettingsTests.swift)** [NEW]：
+  - 针对设置页面的字体持久化进行单元测试，验证 UserDefaults 读写的可靠性。
 - **[HomeViewModelTests.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReaderTests/HomeViewModelTests.swift)** [MODIFY]：
   - 新增测试：`testHideAndRestoreStory`、`testFavoriteStoryToggle`、`testReadStoryToggleAndSync`、`testPersistenceAcrossInstances`、`testUnfavoriteAutomaticallyUnhides`。
   - 新增互斥分流完整生命周期测试：`testMutualExclusivityOfSections`，从“日报（未读未收藏） -> 已读 Tab -> 收藏 Tab -> 冷宫 Tab -> 收藏 Tab（移出冷宫） -> 已读 Tab（取消收藏） -> 日报（设为未读）”完整验证排他与流转逻辑。
 - **[HomeFlowUITests.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReaderUITests/HomeFlowUITests.swift)** [MODIFY]：
+  - **支持动态导航标题**：将 hardcode 的 `"文章详情"` 改为动态的 `app.navigationBars.firstMatch`，增强 UI 测试健壮性。
   - 适配详情页下拉菜单 Menu，支持先点击“操作”再进行按钮禁用的断言。
   - 移除锁定在 1.0 的“收藏”为禁用词，以支持底部分栏。
 
@@ -54,12 +63,12 @@
 所有测试用例已全面通过：
 
 ```bash
-Test Suite 'HomeFlowUITests' passed at 2026-06-22 01:29:16.529.
-	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 74.669 (74.681) seconds
-Test Suite 'DailyReaderUITests.xctest' passed at 2026-06-22 01:29:16.531.
-	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 74.669 (74.683) seconds
-Test Suite 'All tests' passed at 2026-06-22 01:29:16.533.
-	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 74.669 (74.686) seconds
+Test Suite 'HomeFlowUITests' passed at 2026-06-22 08:20:12.432.
+	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.925 (69.940) seconds
+Test Suite 'DailyReaderUITests.xctest' passed at 2026-06-22 08:20:12.433.
+	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.925 (69.941) seconds
+Test Suite 'All tests' passed at 2026-06-22 08:20:12.434.
+	 Executed 10 tests, with 1 test skipped and 0 failures (0 unexpected) in 69.925 (69.947) seconds
 
-** TEST SUCCEEDED **
+** TEST SUCCEEDED ** [84.320 sec]
 ```

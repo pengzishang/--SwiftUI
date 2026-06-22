@@ -5,11 +5,18 @@ struct HTMLWebView: UIViewRepresentable {
     let htmlBody: String
     let cssLinks: [String]
     let reloadToken: Int
+    let fontSize: Double
     @Binding var contentHeight: CGFloat
+    let onImageTap: (String) -> Void
     let onError: (String) -> Void
 
     func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
+        let configuration = WKWebViewConfiguration()
+        let controller = WKUserContentController()
+        controller.add(context.coordinator, name: "imageClicked")
+        configuration.userContentController = controller
+
+        let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.isScrollEnabled = false
@@ -19,7 +26,7 @@ struct HTMLWebView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.parent = self
-        let nextContentKey = "\(reloadToken)-\(wrappedHTML)"
+        let nextContentKey = "\(reloadToken)-\(fontSize)-\(wrappedHTML)"
         guard context.coordinator.loadedContentKey != nextContentKey else {
             context.coordinator.updateHeight(for: webView)
             return
@@ -41,7 +48,7 @@ struct HTMLWebView: UIViewRepresentable {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           \(css)
           <style>
-            body { font: -apple-system-body; color: \(textColor); background: transparent; line-height: 1.65; padding: 0; margin: 0; }
+            body { font: -apple-system-body; color: \(textColor); background: transparent; line-height: 1.65; padding: 0; margin: 0; font-size: \(fontSize)px !important; }
             img { max-width: 100%; height: auto; border-radius: 12px; }
             .content img, .content-inner img {
               display: block !important;
@@ -115,6 +122,15 @@ struct HTMLWebView: UIViewRepresentable {
                 link.classList.add('discussion-pill');
               }
             });
+            document.querySelectorAll('img').forEach(function(img) {
+              if (img.classList.contains('avatar') || img.closest('.avatar') || img.closest('.author') || img.closest('.source')) {
+                return;
+              }
+              img.style.cursor = 'pointer';
+              img.addEventListener('click', function() {
+                window.webkit.messageHandlers.imageClicked.postMessage(img.src);
+              });
+            });
           </script>
         </body>
         </html>
@@ -125,12 +141,18 @@ struct HTMLWebView: UIViewRepresentable {
         UIColor.label.resolvedColor(with: UITraitCollection.current).hexString
     }
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var parent: HTMLWebView
         var loadedContentKey: String?
 
         init(parent: HTMLWebView) {
             self.parent = parent
+        }
+
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            if message.name == "imageClicked", let imageUrl = message.body as? String {
+                parent.onImageTap(imageUrl)
+            }
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {

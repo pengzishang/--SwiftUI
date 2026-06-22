@@ -15,13 +15,13 @@ final class HomeFlowUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["今天，先读一篇长一点的故事"].waitForExistence(timeout: 5))
         app.staticTexts["今天，先读一篇长一点的故事"].firstMatch.tap()
 
-        XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 5))
         
         XCTAssertTrue(app.buttons["操作"].exists)
         attachScreenshot(named: "detail-success", app: app)
 
-        app.navigationBars["文章详情"].buttons.firstMatch.tap()
+        app.navigationBars.firstMatch.buttons.firstMatch.tap()
         XCTAssertTrue(app.navigationBars["日报阅读器"].waitForExistence(timeout: 5))
     }
 
@@ -62,7 +62,7 @@ final class HomeFlowUITests: XCTestCase {
 
         openFirstStory(in: app)
 
-        XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["文章内容暂不可用"].waitForExistence(timeout: 5))
         attachScreenshot(named: "detail-empty-body", app: app)
     }
@@ -72,7 +72,7 @@ final class HomeFlowUITests: XCTestCase {
 
         openFirstStory(in: app)
 
-        XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["无分享链接文章"].waitForExistence(timeout: 5))
         
         XCTAssertTrue(app.buttons["操作"].waitForExistence(timeout: 5))
@@ -87,7 +87,7 @@ final class HomeFlowUITests: XCTestCase {
 
         openFirstStory(in: app)
 
-        XCTAssertTrue(app.navigationBars["文章详情"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 5))
         for _ in 0..<8 where !app.staticTexts["长正文结尾标记"].exists {
             app.swipeUp()
         }

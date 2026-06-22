@@ -37,6 +37,14 @@ struct AppRootView: View {
                 Label("已读", systemImage: "checkmark.circle")
             }
             .tag(3)
+
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem {
+                Label("设置", systemImage: "gearshape")
+            }
+            .tag(4)
         }
     }
 }
