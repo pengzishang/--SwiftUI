@@ -67,13 +67,11 @@ enum AppEnvironment {
             defaults.removeObject(forKey: "DailyReader.favoriteStories")
             defaults.removeObject(forKey: "DailyReader.readStories")
 
-            if processInfo.arguments.contains("-ResetCache") {
-                try? FileManager.default.removeItem(
-                    at: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
-                        .first!
-                        .appendingPathComponent("DailyReaderCache", isDirectory: true)
-                )
-            }
+            try? FileManager.default.removeItem(
+                at: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+                    .first!
+                    .appendingPathComponent("DailyReaderCache", isDirectory: true)
+            )
             let scenario = processInfo.environment["MOCK_SCENARIO"] ?? "latest_success"
             return LocalFixtureDailyAPIClient(scenario: scenario)
         }

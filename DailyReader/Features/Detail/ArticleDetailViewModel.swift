@@ -60,6 +60,12 @@ final class ArticleDetailViewModel: ObservableObject {
     }
 
     func reload() async {
+        if let cached = await cacheStore.loadDetail(id: story.id) {
+            phase = .loaded(cached.value, .cache(cached.cachedAt))
+            bannerMessage = nil
+            return
+        }
+
         phase = .loading
         do {
             let detail = try await apiClient.fetchDetail(id: story.id)
@@ -67,12 +73,7 @@ final class ArticleDetailViewModel: ObservableObject {
             phase = .loaded(detail, .network)
             bannerMessage = nil
         } catch {
-            if let cached = await cacheStore.loadDetail(id: story.id) {
-                phase = .loaded(cached.value, .cache(cached.cachedAt))
-                bannerMessage = "当前离线，正在显示缓存内容"
-            } else {
-                phase = .failed("文章加载失败，请稍后重试")
-            }
+            phase = .failed("文章加载失败，请稍后重试")
         }
     }
 }

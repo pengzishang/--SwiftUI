@@ -30,63 +30,77 @@ struct ArticleDetailView: View {
     }
 
     var body: some View {
-        Group {
-            switch viewModel.phase {
-            case .idle, .loading:
-                LoadingView(message: "正在加载文章")
-            case .failed(let message):
-                ErrorStateView(message: message) {
-                    Task { await viewModel.reload() }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                if let bannerMessage = viewModel.bannerMessage {
+                    OfflineBanner(message: bannerMessage)
                 }
-            case .loaded(let detail, _):
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        if let bannerMessage = viewModel.bannerMessage {
-                            OfflineBanner(message: bannerMessage)
-                        }
-                        if let image = detail.image ?? detail.images.first {
-                            PlaceholderImageView(urlString: image)
-                                .frame(height: 220)
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        }
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(detail.title.isEmpty ? viewModel.story.title : detail.title)
-                                .font(.largeTitle.bold())
-                                .lineLimit(nil)
 
-                            if let body = detail.body, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                if let htmlErrorMessage {
-                                    ErrorStateView(message: htmlErrorMessage) {
-                                        self.htmlErrorMessage = nil
-                                        htmlReloadToken += 1
-                                    }
-                                    .frame(maxWidth: .infinity, minHeight: 240)
-                                } else {
-                                    HTMLWebView(
-                                        htmlBody: body,
-                                        cssLinks: detail.css,
-                                        reloadToken: htmlReloadToken,
-                                        fontSize: fontSize,
-                                        contentHeight: $htmlContentHeight,
-                                        onImageTap: { url in
-                                            selectedImage = IdentifiableImageURL(url: url)
-                                        },
-                                        onError: { message in
-                                            htmlErrorMessage = message
-                                        }
-                                    )
-                                    .frame(minHeight: htmlContentHeight)
-                                    .accessibilityIdentifier("articleHTMLContent")
-                                }
-                            } else {
-                                ContentUnavailableView("文章内容暂不可用", systemImage: "doc.text.magnifyingglass")
-                                    .frame(maxWidth: .infinity, minHeight: 240)
+                // 1. Cover Image (Instant from story summary, fallback to loaded detail cover)
+                if let imageURL = detailImageURL {
+                    PlaceholderImageView(urlString: imageURL)
+                        .frame(height: 220)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    // 2. Title (Instant from story summary, fallback to loaded detail title)
+                    Text(detailTitle)
+                        .font(.largeTitle.bold())
+                        .lineLimit(nil)
+
+                    // 3. Body loading/loaded/failed phases
+                    switch viewModel.phase {
+                    case .idle, .loading:
+                        HStack {
+                            Spacer()
+                            VStack(spacing: 12) {
+                                ProgressView()
+                                Text("正在加载内容...")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
                             }
+                            .padding(.vertical, 40)
+                            Spacer()
+                        }
+                    case .failed(let message):
+                        ErrorStateView(message: message) {
+                            Task { await viewModel.reload() }
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 240)
+                    case .loaded(let detail, _):
+                        if let body = detail.body, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            if let htmlErrorMessage {
+                                ErrorStateView(message: htmlErrorMessage) {
+                                    self.htmlErrorMessage = nil
+                                    htmlReloadToken += 1
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 240)
+                            } else {
+                                HTMLWebView(
+                                    htmlBody: body,
+                                    cssLinks: detail.css,
+                                    reloadToken: htmlReloadToken,
+                                    fontSize: fontSize,
+                                    contentHeight: $htmlContentHeight,
+                                    onImageTap: { url in
+                                        selectedImage = IdentifiableImageURL(url: url)
+                                    },
+                                    onError: { message in
+                                        htmlErrorMessage = message
+                                    }
+                                )
+                                .frame(minHeight: htmlContentHeight)
+                                .accessibilityIdentifier("articleHTMLContent")
+                            }
+                        } else {
+                            ContentUnavailableView("文章内容暂不可用", systemImage: "doc.text.magnifyingglass")
+                                .frame(maxWidth: .infinity, minHeight: 240)
                         }
                     }
-                    .padding()
                 }
             }
+            .padding()
         }
         .navigationTitle(viewModel.shareTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -171,6 +185,20 @@ struct ArticleDetailView: View {
             htmlContentHeight = 520
             htmlErrorMessage = nil
         }
+    }
+
+    private var detailImageURL: String? {
+        if case .loaded(let detail, _) = viewModel.phase {
+            return detail.image ?? detail.images.first ?? viewModel.story.images.first
+        }
+        return viewModel.story.images.first
+    }
+
+    private var detailTitle: String {
+        if case .loaded(let detail, _) = viewModel.phase, !detail.title.isEmpty {
+            return detail.title
+        }
+        return viewModel.story.title
     }
 }
 

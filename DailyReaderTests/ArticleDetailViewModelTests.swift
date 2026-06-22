@@ -61,7 +61,7 @@ final class ArticleDetailViewModelTests: XCTestCase {
 
         await viewModel.load()
 
-        XCTAssertEqual(viewModel.bannerMessage, "当前离线，正在显示缓存内容")
+        XCTAssertNil(viewModel.bannerMessage)
         XCTAssertTrue(viewModel.phase.isCacheLoaded)
     }
 
