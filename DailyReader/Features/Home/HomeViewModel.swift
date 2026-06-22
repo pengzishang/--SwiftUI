@@ -108,6 +108,12 @@ final class HomeViewModel: ObservableObject {
         .sorted(by: { $0.date > $1.date })
     }
 
+    var visibleReadStories: [ReadStory] {
+        readStories
+            .filter { !isStoryHidden($0.id) && !isStoryFavorited($0.id) }
+            .sorted(by: { $0.readAt > $1.readAt })
+    }
+
     // MARK: - API Actions
     func load() async {
         guard !hasAttemptedInitialLoad else { return }
@@ -151,12 +157,15 @@ final class HomeViewModel: ObservableObject {
     }
 
     func markStoryRead(_ story: StorySummary, date: String) {
-        guard readStoryIDs.insert(story.id).inserted else { return }
+        readStoryIDs.insert(story.id)
         UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
-        if !readStories.contains(where: { $0.id == story.id }) {
-            readStories.append(ReadStory(date: date, story: story))
-            saveReadStories()
+        if let index = readStories.firstIndex(where: { $0.id == story.id }) {
+            let old = readStories.remove(at: index)
+            readStories.append(ReadStory(date: old.date, story: old.story, readAt: Date()))
+        } else {
+            readStories.append(ReadStory(date: date, story: story, readAt: Date()))
         }
+        saveReadStories()
     }
 
     func isStoryRead(_ storyID: Int) -> Bool {
@@ -198,9 +207,8 @@ final class HomeViewModel: ObservableObject {
             readStories.removeAll(where: { $0.id == story.id })
         } else {
             readStoryIDs.insert(story.id)
-            if !readStories.contains(where: { $0.id == story.id }) {
-                readStories.append(ReadStory(date: date, story: story))
-            }
+            readStories.removeAll(where: { $0.id == story.id })
+            readStories.append(ReadStory(date: date, story: story, readAt: Date()))
         }
         UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
         saveReadStories()

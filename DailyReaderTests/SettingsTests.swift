@@ -19,4 +19,16 @@ final class SettingsTests: XCTestCase {
         
         defaults.removeObject(forKey: "DailyReader.fontSize")
     }
+
+    func testListFontSizePersistence() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: "DailyReader.listFontSize")
+        
+        XCTAssertEqual(defaults.double(forKey: "DailyReader.listFontSize"), 0.0)
+        
+        defaults.set(18.0, forKey: "DailyReader.listFontSize")
+        XCTAssertEqual(defaults.double(forKey: "DailyReader.listFontSize"), 18.0)
+        
+        defaults.removeObject(forKey: "DailyReader.listFontSize")
+    }
 }

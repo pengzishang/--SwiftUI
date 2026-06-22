@@ -15,20 +15,12 @@ struct AppRootView: View {
             .tag(0)
 
             NavigationStack {
-                ColdPalaceView(viewModel: homeViewModel)
-            }
-            .tabItem {
-                Label("冷宫", systemImage: "snowflake")
-            }
-            .tag(1)
-
-            NavigationStack {
                 FavoritesView(viewModel: homeViewModel)
             }
             .tabItem {
                 Label("收藏", systemImage: "star")
             }
-            .tag(2)
+            .tag(1)
 
             NavigationStack {
                 ReadStoriesView(viewModel: homeViewModel)
@@ -36,15 +28,15 @@ struct AppRootView: View {
             .tabItem {
                 Label("已读", systemImage: "checkmark.circle")
             }
-            .tag(3)
+            .tag(2)
 
             NavigationStack {
-                SettingsView()
+                SettingsView(viewModel: homeViewModel)
             }
             .tabItem {
                 Label("设置", systemImage: "gearshape")
             }
-            .tag(4)
+            .tag(3)
         }
     }
 }

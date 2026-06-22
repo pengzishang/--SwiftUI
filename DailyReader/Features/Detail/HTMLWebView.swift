@@ -108,9 +108,17 @@ struct HTMLWebView: UIViewRepresentable {
               color: #0A84FF !important;
               font-weight: 600 !important;
               text-decoration: none !important;
-            }
             a.discussion-pill:active {
               background: rgba(10, 132, 255, 0.26) !important;
+            }
+            blockquote {
+              border-left: 3px solid #8E8E93 !important;
+              color: #8E8E93 !important;
+              padding-left: 12px !important;
+              margin-left: 8px !important;
+              margin-right: 0 !important;
+              margin-top: 10px !important;
+              margin-bottom: 10px !important;
             }
           </style>
         </head>
