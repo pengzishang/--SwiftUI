@@ -4,6 +4,12 @@
 
 ## 主要变更
 
+### 0. 当前导航与版本状态
+- 当前 App 内版本显示为 **1.1**。
+- 底部主导航为 **4 个 Tab**：日报、收藏、已读、设置。
+- “冷宫”作为低频管理入口，已移动到：设置 → 阅读管理 → 冷宫。
+- `docs/v1.0` 保留为首版验收归档；当前主线文档以 `docs/v1.1` 为准。
+
 ### 1. 数据模型与持久化层
 - **[PersistentStories.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Models/PersistentStories.swift)** [MODIFY]：
   - 定义了 `HiddenStory`、`FavoriteStory` 和 `ReadStory` 三个数据结构，保存 `StorySummary` 及 `date` 字段，用于列表的分组渲染。
@@ -30,6 +36,7 @@
 - **[AppRootView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/AppRootView.swift)** [MODIFY]：
   - 重整分栏选项，底部 TabBar 精简为 **4 个 Tab 标签栏布局**：日报 (`newspaper`)、收藏 (`star`)、已读 (`checkmark.circle`) 和**设置 (`gearshape`)**。
   - **UI测试隔离**：在 `-UITestMode` 下启动时，会自动清空已读、冷宫、收藏等数据的 UserDefaults 缓存，并且每次启动均清除网络缓存文件夹 `DailyReaderCache`，确保测试在隔离干净、无脏缓存残留的环境下进行。
+  - **文章 WebView 预热**：App 进入后延迟触发 `ArticleWebViewPrewarmer`，提前初始化轻量 `WKWebView`，降低第一次进入文章详情时的 WebKit 冷启动顿卡。
 - **[SettingsView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Home/SettingsView.swift)** [MODIFY]：
   - **移入“冷宫”功能**：精简底部主导航后，将原“冷宫”功能页面移入设置页面内，添加了 NavigationLink 入口。
   - **列表字体大小调节**：新增“列表字体大小”调节滑动条，同样使用 5 档刻度，通过 `@AppStorage("DailyReader.listFontSize")` 控制并持久化。
@@ -56,8 +63,20 @@
 - **[HTMLWebView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/HTMLWebView.swift)** [MODIFY]：
   - **文章引用样式优化**：新增了对 `blockquote` 标签的 CSS 渲染，为文章内部的作者引用/回复区域加上极简优雅的灰色左侧竖边框（`border-left: 3px solid #8E8E93`）与灰色文字，完美对齐知乎日报原生效果。
   - **间距微调**：将正文顶端作者名框框 (`.meta`) 的 top margin 从 `10px` 调整为 `2px`，进一步收窄视觉缝隙。
+  - **渲染 key 优化**：`updateUIView` 不再重复拼接完整 HTML，也不再用整段 HTML 字符串作为 reload key，改用轻量 `ContentKey` 判断是否需要重新加载。
   - 监听并应用全局阅读字体大小 `fontSize`。
   - 将“查看知乎讨论”按钮 CSS 样式重写为满宽且具有 `12px` 圆角。
+
+- **[ArticleWebViewPrewarmer.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/ArticleWebViewPrewarmer.swift)** [NEW]：
+  - 在首页进入后空闲时预热一个极简 `WKWebView`，把 WebKit 首次初始化成本从“第一次点文章”提前到用户浏览首页阶段。
+
+### 3.1 启动屏与资源
+- **[Info.plist](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Resources/Info.plist)** [MODIFY]：
+  - 使用 `UILaunchScreen` 配置启动页，替代 deprecated Launch Image。
+- **[LaunchBackground.colorset](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Resources/Assets.xcassets/LaunchBackground.colorset)** [NEW]：
+  - 提供浅色/深色动态蓝色背景。
+- **[LaunchBrandMark.imageset](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Resources/Assets.xcassets/LaunchBrandMark.imageset)** [NEW]：
+  - 提供居中的品牌图，包含阅读器图标、中文标题与英文副标。
 
 ### 4. 测试与验证层
 - **[SettingsTests.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReaderTests/SettingsTests.swift)** [MODIFY]：
