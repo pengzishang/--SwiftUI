@@ -23,7 +23,10 @@ targets:
       path: DailyReader/Resources/Info.plist
       properties:
         CFBundleDisplayName: 日报阅读器
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+          UIImageName: LaunchBrandMark
+          UIImageRespectsSafeAreaInsets: true
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
   DailyReaderTests:
