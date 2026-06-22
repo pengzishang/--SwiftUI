@@ -18,6 +18,10 @@
   - **已读状态记录更新**：在 `markStoryRead` 及 `toggleRead` 逻辑中，当文章被标记为已读时，会实时追加或更新 `readAt` 为当前系统时间，从而让最新阅读过的文章立刻呈现在已读页最顶端。
   - **严格互斥分流规则**：确保一篇文章只能出现在 4 个 Tab 中其中一个地方。优先级从高到低依次为：**冷宫 > 收藏 > 已读 > 日报首页**。
   - **增量刷新（Diff 级渲染）**：重构了 `refresh` 拉取机制。当下拉刷新时，不再全量清空重载 `sections`，而是进行**增量合并 (Incremental Merge)**。如果新抓取的数据与第一组 Section 日期重合，则增量向前插入新文章；如果是全新日期的文章，则直接在顶部 prepend 新的 Section，而老旧的历史 Section（如昨日、前日）和滚动位置均完好保留，实现平滑流畅的加载动画。
+  - **主页完整 Feed 缓存优先与后台 Revalidate**：主页启动 `load()` 时优先从本地读取序列化的完整 `sections` 和 `topStories`（包括历史分页数据）进行秒级渲染展示，接着在后台执行网络请求更新，并在更新成功后自动保存和合并，发生网络异常时保留当前缓存展现并提示离线横幅。
+
+- **[CacheStore.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Storage/CacheStore.swift) / [DiskCacheStore.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Storage/DiskCacheStore.swift)** [MODIFY]：
+  - 支持 `saveHomeFeed` 和 `loadHomeFeed` 接口，把主页的所有 sections 完整状态与 topStories 缓存到 `home_feed.json` 磁盘文件中。
 
 - **[ArticleDetailViewModel.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/ArticleDetailViewModel.swift)** [MODIFY]：
   - **已读文章缓存优先 (Cache-First)**：重构了详情页的加载逻辑。如果本地已存在该文章的缓存详情数据，直接加载并呈现在界面上，跳过网络请求，从而实现“秒开”的效果，且避免了网络带宽和时间的重复开销。
@@ -42,7 +46,8 @@
   - **扁平列表与时间排序**：不再按日期 Section 分组，重构为单一的平铺列表并按阅读时间由新到旧排序。
   - **内置搜索功能**：增加了基于 `.searchable` 的搜索栏，支持在已读文章中进行实时不区分大小写的标题搜索，若无结果则展示标准的无匹配 Empty 界面。
 - **[ArticleDetailView.swift](file:///Users/pengzishang/Current%20Project/知乎日报-SwiftUI/DailyReader/Features/Detail/ArticleDetailView.swift)** [MODIFY]：
-  - **异步渐进式加载（并行渲染）**：重构了页面排版。文章的大图 Banner 与大标题现在直接使用列表传入的 `StorySummary` 数据进行**瞬时渲染 (Instant Load)**。只有底部的富文本正文区会异步展示加载指示器（或渲染 WebView）。这使得用户在点击文章进入的瞬间就能看到标题和图片，体验上大幅消除了白屏感，实现内容与图片的并行请求和渲染。
+  - **异步渐进式加载（并行渲染与解耦）**：将大图封面、标题渲染与正文富文本 WebView 渲染全面并行解耦。正文加载阶段引入局部 ProgressView 指示器并在 WebView 渲染完成后优雅淡入显示。
+  - **封面大图秒开与无缝过渡**：`PlaceholderImageView` 支持传入缩略图 URL。加载高解析大图期间，直接显示已缓存的缩略图做平稳背景占位，大图下载完成后直接浮现覆盖，消除了灰色 placeholder 框的闪烁。
   - **TabBar 自动隐藏**：在进入详情页时自动隐藏底部分栏，返回时恢复。
   - **动态导航标题**：导航栏标题自适应为文章实际标题。
   - **正文插图全屏与缩放**：点击正文插图唤起全屏大图预览 `FullScreenImageViewer`，基于 `UIScrollView` 实现完美的原生双指平滑缩放、双击还原及回弹效果。
