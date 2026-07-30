@@ -37,7 +37,18 @@ final class CacheStoreTests: XCTestCase {
         XCTAssertEqual(cachedDetail?.value, .fixture)
     }
 
-    func testDailyListCacheKeepsMostRecentThirtyEntries() async {
+    func testHotListCachePersistsAcrossStoreInstances() async {
+        let writer = DiskCacheStore(rootURL: temporaryDirectory)
+        await writer.saveHotList(.fixture)
+
+        let reader = DiskCacheStore(rootURL: temporaryDirectory)
+        let cachedHotList = await reader.loadHotList()
+
+        XCTAssertEqual(cachedHotList?.value.data.first?.target.title, HotListResponse.fixture.data.first?.target.title)
+        XCTAssertNotNil(cachedHotList?.cachedAt)
+    }
+
+    func testDailyListCacheRetainsPreviouslyFetchedHistory() async {
         let store = DiskCacheStore(rootURL: temporaryDirectory)
 
         for offset in 0..<31 {
@@ -54,11 +65,25 @@ final class CacheStoreTests: XCTestCase {
             .appendingPathComponent("daily", isDirectory: true)
         let files = (try? FileManager.default.contentsOfDirectory(at: cacheRoot, includingPropertiesForKeys: nil)) ?? []
 
-        XCTAssertEqual(files.count, 30)
-        let prunedOldestDaily = await store.loadDaily(date: "20260601")
-        let retainedNewestDaily = await store.loadDaily(date: "20260631")
-        XCTAssertNil(prunedOldestDaily)
-        XCTAssertNotNil(retainedNewestDaily)
+        XCTAssertEqual(files.count, 31)
+        let oldestDaily = await store.loadDaily(date: "20260601")
+        let newestDaily = await store.loadDaily(date: "20260631")
+        XCTAssertNotNil(oldestDaily)
+        XCTAssertNotNil(newestDaily)
+    }
+
+    func testBulkDailyLoadReturnsOnlyCachedDates() async {
+        let store = DiskCacheStore(rootURL: temporaryDirectory)
+        await store.saveDaily(.fixture)
+        await store.saveDaily(.historyFixture)
+
+        let cached = await store.loadDaily(dates: [
+            DailyResponse.fixture.date,
+            DailyResponse.historyFixture.date,
+            "20260619"
+        ])
+
+        XCTAssertEqual(Set(cached.keys), Set(["20260621", "20260620"]))
     }
 
     func testBrokenCacheFileReturnsNilInsteadOfCrashing() async throws {

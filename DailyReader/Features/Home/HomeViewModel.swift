@@ -1,18 +1,17 @@
 import Foundation
 import SwiftUI
 
-struct DailySection: Identifiable, Equatable, Codable {
-    var id: String { date }
-    let date: String
-    var stories: [StorySummary]
-}
-
 enum HomePhase: Equatable {
     case idle
     case loading
     case loaded(ContentSource)
     case empty
     case failed(String)
+
+    var contentSource: ContentSource? {
+        guard case .loaded(let source) = self else { return nil }
+        return source
+    }
 }
 
 enum HistoryLoadState: Equatable {
@@ -27,45 +26,151 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var topStories: [TopStory] = []
     @Published private(set) var sections: [DailySection] = []
     @Published private(set) var historyLoadState: HistoryLoadState = .idle
+    @Published private(set) var historyCursor: String?
     @Published private(set) var readStoryIDs: Set<Int>
     @Published private(set) var hiddenStories: [HiddenStory] = []
     @Published private(set) var favoriteStories: [FavoriteStory] = []
     @Published private(set) var readStories: [ReadStory] = []
     @Published var bannerMessage: String?
 
-    private let apiClient: DailyAPIClient
-    private let cacheStore: CacheStore
+    private static let maximumAutomaticHistoryBatchCount = 12
+    private static let historyPrefetchRemainingStoryCount = 8
+
+    private let repository: HomeRepositoryProtocol
     private var loadedStoryIDs = Set<Int>()
     private var hasAttemptedInitialLoad = false
+    private var loadingHistoryCursor: String?
     private let readStoryIDsKey = "DailyReader.readStoryIDs"
     private let hiddenStoriesKey = "DailyReader.hiddenStories"
     private let favoriteStoriesKey = "DailyReader.favoriteStories"
     private let readStoriesKey = "DailyReader.readStories"
 
-    init(apiClient: DailyAPIClient, cacheStore: CacheStore) {
-        self.apiClient = apiClient
-        self.cacheStore = cacheStore
-        self.readStoryIDs = Set(UserDefaults.standard.array(forKey: readStoryIDsKey) as? [Int] ?? [])
+    init(repository: HomeRepositoryProtocol) {
+        self.repository = repository
         
-        if let data = UserDefaults.standard.data(forKey: hiddenStoriesKey),
-           let list = try? JSONDecoder().decode([HiddenStory].self, from: data) {
-            self.hiddenStories = list
+        let defaults = UserDefaults.standard
+        let readIDs = defaults.array(forKey: readStoryIDsKey) as? [Int]
+        let hiddenData = defaults.data(forKey: hiddenStoriesKey)
+        let favoriteData = defaults.data(forKey: favoriteStoriesKey)
+        let readData = defaults.data(forKey: readStoriesKey)
+        
+        let isUserDefaultsEmpty = (readIDs == nil || readIDs!.isEmpty) &&
+                                  (hiddenData == nil) &&
+                                  (favoriteData == nil) &&
+                                  (readData == nil)
+                                  
+        if isUserDefaultsEmpty {
+            var restoredReadIDs: [Int]? = nil
+            var restoredHidden: [HiddenStory]? = nil
+            var restoredFavorite: [FavoriteStory]? = nil
+            var restoredRead: [ReadStory]? = nil
+            
+            if let data = KeychainHelper.shared.read(forKey: readStoryIDsKey) {
+                if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
+                    KeychainHelper.shared.delete(forKey: readStoryIDsKey)
+                } else {
+                    do {
+                        let list = try JSONDecoder().decode([Int].self, from: data)
+                        restoredReadIDs = list
+                        defaults.set(list, forKey: readStoryIDsKey)
+                    } catch {
+                        KeychainHelper.shared.delete(forKey: readStoryIDsKey)
+                        defaults.removeObject(forKey: readStoryIDsKey)
+                    }
+                }
+            }
+            
+            if let data = KeychainHelper.shared.read(forKey: hiddenStoriesKey) {
+                if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
+                    KeychainHelper.shared.delete(forKey: hiddenStoriesKey)
+                } else {
+                    do {
+                        let list = try JSONDecoder().decode([HiddenStory].self, from: data)
+                        restoredHidden = list
+                        defaults.set(data, forKey: hiddenStoriesKey)
+                    } catch {
+                        KeychainHelper.shared.delete(forKey: hiddenStoriesKey)
+                        defaults.removeObject(forKey: hiddenStoriesKey)
+                    }
+                }
+            }
+            
+            if let data = KeychainHelper.shared.read(forKey: favoriteStoriesKey) {
+                if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
+                    KeychainHelper.shared.delete(forKey: favoriteStoriesKey)
+                } else {
+                    do {
+                        let list = try JSONDecoder().decode([FavoriteStory].self, from: data)
+                        restoredFavorite = list
+                        defaults.set(data, forKey: favoriteStoriesKey)
+                    } catch {
+                        KeychainHelper.shared.delete(forKey: favoriteStoriesKey)
+                        defaults.removeObject(forKey: favoriteStoriesKey)
+                    }
+                }
+            }
+            
+            if let data = KeychainHelper.shared.read(forKey: readStoriesKey) {
+                if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
+                    KeychainHelper.shared.delete(forKey: readStoriesKey)
+                } else {
+                    do {
+                        let list = try JSONDecoder().decode([ReadStory].self, from: data)
+                        restoredRead = list
+                        defaults.set(data, forKey: readStoriesKey)
+                    } catch {
+                        KeychainHelper.shared.delete(forKey: readStoriesKey)
+                        defaults.removeObject(forKey: readStoriesKey)
+                    }
+                }
+            }
+            
+            self.readStoryIDs = Set(restoredReadIDs ?? [])
+            self.hiddenStories = restoredHidden ?? []
+            self.favoriteStories = restoredFavorite ?? []
+            self.readStories = restoredRead ?? []
         } else {
-            self.hiddenStories = []
-        }
-
-        if let data = UserDefaults.standard.data(forKey: favoriteStoriesKey),
-           let list = try? JSONDecoder().decode([FavoriteStory].self, from: data) {
-            self.favoriteStories = list
-        } else {
-            self.favoriteStories = []
-        }
-
-        if let data = UserDefaults.standard.data(forKey: readStoriesKey),
-           let list = try? JSONDecoder().decode([ReadStory].self, from: data) {
-            self.readStories = list
-        } else {
-            self.readStories = []
+            self.readStoryIDs = Set(readIDs ?? [])
+            
+            if let data = hiddenData,
+               let list = try? JSONDecoder().decode([HiddenStory].self, from: data) {
+                self.hiddenStories = list
+            } else {
+                self.hiddenStories = []
+            }
+            
+            if let data = favoriteData,
+               let list = try? JSONDecoder().decode([FavoriteStory].self, from: data) {
+                self.favoriteStories = list
+            } else {
+                self.favoriteStories = []
+            }
+            
+            if let data = readData,
+               let list = try? JSONDecoder().decode([ReadStory].self, from: data) {
+                self.readStories = list
+            } else {
+                self.readStories = []
+            }
+            
+            // Check if Keychain is empty, and if so, perform reverse backup (T2-KC-04)
+            let kcReadData = KeychainHelper.shared.read(forKey: readStoryIDsKey)
+            if kcReadData == nil {
+                if !self.readStoryIDs.isEmpty {
+                    if let data = try? JSONEncoder().encode(Array(self.readStoryIDs)) {
+                        KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+                    }
+                }
+                if let data = hiddenData {
+                    KeychainHelper.shared.save(data, forKey: hiddenStoriesKey)
+                }
+                if let data = favoriteData {
+                    KeychainHelper.shared.save(data, forKey: favoriteStoriesKey)
+                }
+                if let data = readData {
+                    KeychainHelper.shared.save(data, forKey: readStoriesKey)
+                }
+            }
         }
     }
 
@@ -119,57 +224,108 @@ final class HomeViewModel: ObservableObject {
     func load() async {
         guard !hasAttemptedInitialLoad else { return }
         hasAttemptedInitialLoad = true
-        
-        if let cached = await cacheStore.loadHomeFeed() {
-            self.topStories = cached.value.topStories
-            self.sections = cached.value.sections
-            self.loadedStoryIDs = Set(cached.value.sections.flatMap { $0.stories }.map { $0.id })
-            self.phase = .loaded(.cache(cached.cachedAt))
-            bannerMessage = "当前离线，正在显示缓存内容"
-            await loadLatest(allowCacheFallback: false)
-        } else {
-            phase = .loading
-            await loadLatest(allowCacheFallback: true)
+        phase = .loading
+
+        do {
+            for try await event in repository.loadHomeFeed() {
+                switch event {
+                case .cached(let value):
+                    apply(value)
+                    bannerMessage = "当前离线，正在显示缓存内容"
+                case .refreshed(let value):
+                    withAnimation {
+                        apply(value)
+                    }
+                    bannerMessage = nil
+                }
+            }
+        } catch {
+            phase = .failed("网络不可用，请检查连接后重试")
         }
     }
 
     func refresh() async {
-        await loadLatest(allowCacheFallback: true)
+        do {
+            let value = try await repository.refreshHomeFeed(current: snapshot)
+            withAnimation {
+                apply(value)
+            }
+            bannerMessage = nil
+        } catch {
+            bannerMessage = sections.isEmpty ? "网络不可用，请检查连接后重试" : "刷新失败，已保留上次内容"
+            if sections.isEmpty {
+                phase = .failed("网络不可用，请检查连接后重试")
+            }
+        }
     }
 
     func loadMore() async {
-        guard historyLoadState != .loading, let oldestDate = sections.last?.date else { return }
+        guard historyLoadState != .loading,
+              let cursor = historyCursor ?? sections.last?.date,
+              loadingHistoryCursor != cursor
+        else {
+            return
+        }
+
+        loadingHistoryCursor = cursor
         historyLoadState = .loading
+        defer { loadingHistoryCursor = nil }
 
         do {
-            let response = try await apiClient.fetchBefore(date: oldestDate)
-            await cacheStore.saveDaily(response)
-            append(response: response)
-            historyLoadState = .idle
-            bannerMessage = nil
-        } catch {
-            if let fallbackDate = Self.previousDateString(before: oldestDate),
-               let cached = await cacheStore.loadDaily(date: fallbackDate) {
-                append(response: cached.value)
-                historyLoadState = .idle
-                bannerMessage = "当前离线，正在显示缓存内容"
-            } else {
-                let message = "加载历史失败，已保留当前内容"
-                historyLoadState = .failed(message)
-                bannerMessage = message
+            let initialVisibleStoryIDs = Set(visibleSections.flatMap(\.stories).map(\.id))
+            var nextCursor = cursor
+            var currentSnapshot = snapshot
+            var latestSource = phase.contentSource ?? .network
+
+            for _ in 0..<Self.maximumAutomaticHistoryBatchCount {
+                let value = try await repository.loadMore(
+                    before: nextCursor,
+                    current: currentSnapshot
+                )
+                currentSnapshot = value.value
+                latestSource = value.source
+
+                let candidateVisibleIDs = visibleStoryIDs(in: currentSnapshot)
+                if !candidateVisibleIDs.subtracting(initialVisibleStoryIDs).isEmpty {
+                    apply(value)
+                    historyLoadState = .idle
+                    return
+                }
+
+                guard let advancedCursor = currentSnapshot.historyCursor,
+                      advancedCursor != nextCursor
+                else {
+                    apply(value)
+                    historyLoadState = .idle
+                    return
+                }
+                nextCursor = advancedCursor
             }
+
+            apply(RepositoryValue(value: currentSnapshot, source: latestSource))
+            historyLoadState = .idle
+        } catch {
+            historyLoadState = .failed("加载历史失败，已保留当前内容")
         }
     }
 
     // MARK: - Status updates & Persistence
     func markStoryRead(_ storyID: Int) {
         guard readStoryIDs.insert(storyID).inserted else { return }
-        UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
+        let array = Array(readStoryIDs)
+        UserDefaults.standard.set(array, forKey: readStoryIDsKey)
+        if let data = try? JSONEncoder().encode(array) {
+            KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+        }
     }
 
     func markStoryRead(_ story: StorySummary, date: String) {
         readStoryIDs.insert(story.id)
-        UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
+        let array = Array(readStoryIDs)
+        UserDefaults.standard.set(array, forKey: readStoryIDsKey)
+        if let data = try? JSONEncoder().encode(array) {
+            KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+        }
         if let index = readStories.firstIndex(where: { $0.id == story.id }) {
             let old = readStories.remove(at: index)
             readStories.append(ReadStory(date: old.date, story: old.story, readAt: Date()))
@@ -221,147 +377,71 @@ final class HomeViewModel: ObservableObject {
             readStories.removeAll(where: { $0.id == story.id })
             readStories.append(ReadStory(date: date, story: story, readAt: Date()))
         }
-        UserDefaults.standard.set(Array(readStoryIDs), forKey: readStoryIDsKey)
+        let array = Array(readStoryIDs)
+        UserDefaults.standard.set(array, forKey: readStoryIDsKey)
+        if let data = try? JSONEncoder().encode(array) {
+            KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+        }
         saveReadStories()
     }
 
     private func saveHiddenStories() {
         if let data = try? JSONEncoder().encode(hiddenStories) {
             UserDefaults.standard.set(data, forKey: hiddenStoriesKey)
+            KeychainHelper.shared.save(data, forKey: hiddenStoriesKey)
         }
     }
 
     private func saveFavoriteStories() {
         if let data = try? JSONEncoder().encode(favoriteStories) {
             UserDefaults.standard.set(data, forKey: favoriteStoriesKey)
+            KeychainHelper.shared.save(data, forKey: favoriteStoriesKey)
         }
     }
 
     private func saveReadStories() {
         if let data = try? JSONEncoder().encode(readStories) {
             UserDefaults.standard.set(data, forKey: readStoriesKey)
+            KeychainHelper.shared.save(data, forKey: readStoriesKey)
         }
     }
 
     var thresholdStoryID: Int? {
-        let allStories = sections.flatMap { $0.stories }
-        guard !allStories.isEmpty else { return nil }
-        let thresholdIndex = max(0, allStories.count - 4)
-        return allStories[thresholdIndex].id
+        let stories = visibleSections.flatMap(\.stories)
+        guard !stories.isEmpty else { return nil }
+        let thresholdIndex = max(
+            0,
+            stories.count - Self.historyPrefetchRemainingStoryCount - 1
+        )
+        return stories[thresholdIndex].id
     }
 
-    private func loadLatest(allowCacheFallback: Bool) async {
-        do {
-            let response = try await apiClient.fetchLatest()
-            await cacheStore.saveLatest(response)
-            if sections.isEmpty {
-                replace(with: response, source: .network)
-            } else {
-                withAnimation {
-                    merge(with: response, source: .network)
-                }
+    private func visibleStoryIDs(in snapshot: HomeFeedSnapshot) -> Set<Int> {
+        Set(snapshot.sections.flatMap(\.stories).compactMap { story in
+            guard !isStoryHidden(story.id),
+                  !isStoryFavorited(story.id),
+                  !isStoryRead(story.id)
+            else {
+                return nil
             }
-            bannerMessage = nil
-        } catch {
-            if allowCacheFallback, sections.isEmpty, let cached = await cacheStore.loadLatest() {
-                replace(with: cached.value, source: .cache(cached.cachedAt))
-                bannerMessage = "当前离线，正在显示缓存内容"
-            } else if sections.isEmpty {
-                phase = .failed("网络不可用，请检查连接后重试")
-            } else {
-                if case .loaded(let source) = phase, source.isCache {
-                    bannerMessage = "当前离线，正在显示缓存内容"
-                } else {
-                    bannerMessage = "刷新失败，已保留上次内容"
-                }
-            }
-        }
+            return story.id
+        })
     }
 
-    private func replace(with response: DailyResponse, source: ContentSource) {
-        loadedStoryIDs = []
-        topStories = response.topStories
-        let filteredStories = uniqueStories(from: response.stories)
-        sections = filteredStories.isEmpty ? [] : [DailySection(date: response.date, stories: filteredStories)]
-        for story in filteredStories {
-            loadedStoryIDs.insert(story.id)
-        }
-        phase = filteredStories.isEmpty && topStories.isEmpty ? .empty : .loaded(source)
+    private var snapshot: HomeFeedSnapshot {
+        HomeFeedSnapshot(
+            sections: sections,
+            topStories: topStories,
+            historyCursor: historyCursor
+        )
+    }
+
+    private func apply(_ value: RepositoryValue<HomeFeedSnapshot>) {
+        topStories = value.value.topStories
+        sections = value.value.sections
+        historyCursor = value.value.historyCursor
+        loadedStoryIDs = Set(sections.flatMap(\.stories).map(\.id))
+        phase = sections.isEmpty && topStories.isEmpty ? .empty : .loaded(value.source)
         historyLoadState = .idle
-        
-        Task { [weak self] in
-            guard let self else { return }
-            await self.cacheStore.saveHomeFeed(sections: self.sections, topStories: self.topStories)
-        }
-    }
-
-    private func merge(with response: DailyResponse, source: ContentSource) {
-        topStories = response.topStories
-        
-        let newStories = response.stories.filter { story in
-            !story.title.isEmpty && !loadedStoryIDs.contains(story.id)
-        }
-        
-        for story in response.stories where !story.title.isEmpty {
-            loadedStoryIDs.insert(story.id)
-        }
-        
-        if let index = sections.firstIndex(where: { $0.date == response.date }) {
-            var existingSection = sections[index]
-            let uniqueNewStories = newStories.filter { newStory in
-                !existingSection.stories.contains(where: { $0.id == newStory.id })
-            }
-            if !uniqueNewStories.isEmpty {
-                existingSection.stories.insert(contentsOf: uniqueNewStories, at: 0)
-                sections[index] = existingSection
-            }
-        } else {
-            if !newStories.isEmpty {
-                let newSection = DailySection(date: response.date, stories: newStories)
-                sections.insert(newSection, at: 0)
-            }
-        }
-        
-        phase = .loaded(source)
-        
-        Task { [weak self] in
-            guard let self else { return }
-            await self.cacheStore.saveHomeFeed(sections: self.sections, topStories: self.topStories)
-        }
-    }
-
-    private func append(response: DailyResponse) {
-        let filteredStories = uniqueStories(from: response.stories)
-        guard !filteredStories.isEmpty else { return }
-        sections.append(DailySection(date: response.date, stories: filteredStories))
-        
-        Task { [weak self] in
-            guard let self else { return }
-            await self.cacheStore.saveHomeFeed(sections: self.sections, topStories: self.topStories)
-        }
-    }
-
-    private func uniqueStories(from stories: [StorySummary]) -> [StorySummary] {
-        stories.filter { story in
-            guard !loadedStoryIDs.contains(story.id), !story.title.isEmpty else { return false }
-            loadedStoryIDs.insert(story.id)
-            return true
-        }
-    }
-
-    private static func previousDateString(before dateString: String) -> String? {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "yyyyMMdd"
-
-        guard
-            let date = formatter.date(from: dateString),
-            let previousDate = formatter.calendar.date(byAdding: .day, value: -1, to: date)
-        else {
-            return nil
-        }
-        return formatter.string(from: previousDate)
     }
 }

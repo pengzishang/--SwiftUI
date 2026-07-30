@@ -1,0 +1,29 @@
+[
+  {
+    "id": "builtin.default",
+    "name": "默认服务",
+    "lanes": [
+      {
+        "id": "online",
+        "endpoint": "https://请替换为-ONLINE-接口地址/v1",
+        "model": "请替换为-ONLINE-模型名",
+        "apiKey": "请替换为-ONLINE-API-Key",
+        "allowsSearchTools": false
+      },
+      {
+        "id": "sensenova_gou",
+        "endpoint": "https://请替换为-SenseNova-接口地址/v1",
+        "model": "deepseek-v4-flash",
+        "apiKey": "请替换为-SenseNova-API-Key",
+        "allowsSearchTools": false
+      },
+      {
+        "id": "eric",
+        "endpoint": "https://请替换为-ERIC-接口地址/v1",
+        "model": "请替换为-ERIC-模型名",
+        "apiKey": "请替换为-ERIC-API-Key",
+        "allowsSearchTools": false
+      }
+    ]
+  }
+]

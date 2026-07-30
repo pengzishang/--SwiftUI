@@ -2,12 +2,14 @@ import SwiftUI
 
 struct HomeView: View {
     @ObservedObject var viewModel: HomeViewModel
+    @EnvironmentObject private var aiCoordinator: AIChatCoordinator
 
     var body: some View {
         List {
             if let bannerMessage = viewModel.bannerMessage {
                 OfflineBanner(message: bannerMessage)
                     .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             }
 
             switch viewModel.phase {
@@ -15,18 +17,22 @@ struct HomeView: View {
                 LoadingView(message: "正在加载日报")
                     .frame(maxWidth: .infinity)
                     .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             case .failed(let message):
                 ErrorStateView(message: message) {
                     Task { await viewModel.refresh() }
                 }
                 .frame(maxWidth: .infinity)
                 .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             case .empty:
                 ContentUnavailableView("今日暂无内容", systemImage: "newspaper", description: Text("稍后再试，或者下拉刷新。"))
                     .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
             case .loaded:
                 ForEach(viewModel.visibleSections) { section in
-                    Section(header: Text(formattedDate(section.date))) {
+                    // 每一天是一期：分节头做成带文武线的日期刊头
+                    Section {
                         ForEach(section.stories) { story in
                             NavigationLink {
                                 ArticleDetailView(story: story, homeViewModel: viewModel, source: .daily, date: section.date)
@@ -34,14 +40,21 @@ struct HomeView: View {
                                         viewModel.markStoryRead(story, date: section.date)
                                     }
                             } label: {
-                                StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
+                                StoryRowView(
+                                    story: story,
+                                    isRead: viewModel.isStoryRead(story.id),
+                                    displaysMetrics: true
+                                )
                             }
+                            .listRowBackground(Color.clear)
+                            .listRowSeparatorTint(DS.hairline)
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
                                     viewModel.hideStory(story, date: section.date)
                                 } label: {
                                     Label("不感兴趣", systemImage: "eye.slash")
                                 }
+                                .tint(DS.cinnabar)
                             }
                             .onAppear {
                                 if story.id == viewModel.thresholdStoryID {
@@ -51,6 +64,10 @@ struct HomeView: View {
                                 }
                             }
                         }
+                    } header: {
+                        DatelineHeader(date: section.date, storyCount: section.stories.count)
+                            .textCase(nil)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 4, trailing: 20))
                     }
                 }
 
@@ -59,28 +76,33 @@ struct HomeView: View {
                 }
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
-                .id("footer-\(viewModel.sections.count)")
-                .task {
-                    await viewModel.loadMore()
-                }
             }
         }
+        .listStyle(.plain)
+        .paperListBackground()
         .navigationTitle("日报阅读器")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    aiCoordinator.openIndependentChat()
+                } label: {
+                    Text("知")
+                        .font(DS.songBlack(16))
+                        .foregroundStyle(DS.indigo)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel("AI 搜索")
+                .accessibilityHint("打开独立 AI 对话")
+                .accessibilityIdentifier("home.aiButton")
+            }
+        }
         .refreshable {
             await viewModel.refresh()
         }
         .task {
             await viewModel.load()
         }
-    }
-
-    private func formattedDate(_ date: String) -> String {
-        guard date.count == 8 else { return date.isEmpty ? "今日" : date }
-        let year = date.prefix(4)
-        let month = date.dropFirst(4).prefix(2)
-        let day = date.suffix(2)
-        return "\(year)年\(month)月\(day)日"
     }
 }
 
@@ -97,16 +119,18 @@ private struct HistoryPaginationFooter: View {
             case .loading:
                 HStack(spacing: 10) {
                     ProgressView()
+                        .tint(DS.inkSecondary)
                     Text("正在加载更早日报")
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 13))
+                        .foregroundStyle(DS.inkSecondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
             case .failed(let message):
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     Text(message)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.inkSecondary)
                     Button("重试加载历史", action: loadMore)
                         .buttonStyle(.borderedProminent)
                 }

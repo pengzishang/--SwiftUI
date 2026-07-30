@@ -1,0 +1,4 @@
+// Copy this file to AIProviders.local.xcconfig (ignored by Git).
+// Encode a JSON array as Base64URL without padding. Each visible service contains one or more internal lanes:
+// [{"id":"builtin.default","name":"默认服务","lanes":[{"id":"lane-a","endpoint":"https://api.example.com/v1","model":"model-name","apiKey":"replace-me","allowsSearchTools":false}]}]
+AI_BUILTIN_PROVIDERS_B64URL = REPLACE_WITH_BASE64URL_JSON

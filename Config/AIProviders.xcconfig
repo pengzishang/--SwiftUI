@@ -1,0 +1,2 @@
+AI_BUILTIN_PROVIDERS_B64URL =
+#include? "AIProviders.local.xcconfig"

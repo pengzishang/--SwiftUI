@@ -1,21 +1,18 @@
 import Alamofire
 import Foundation
 
-final class HTTPClient {
+final class HTTPClient: HTTPClientProtocol {
     static let browserUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
 
-    private let baseURL: URL
     private let afSession: Session
     private let decoder: JSONDecoder
     private let timeoutInterval: TimeInterval
 
     init(
-        baseURL: URL = URL(string: "https://news-at.zhihu.com/api/4")!,
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder(),
         timeoutInterval: TimeInterval = 15
     ) {
-        self.baseURL = baseURL
         self.decoder = decoder
         self.timeoutInterval = timeoutInterval
 
@@ -27,19 +24,16 @@ final class HTTPClient {
         self.afSession = Session(configuration: configuration, interceptor: interceptor)
     }
 
-    func get<T: Decodable>(_ path: String, as type: T.Type = T.self) async throws -> T {
-        let normalizedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        guard !normalizedPath.isEmpty else {
-            throw APIError.invalidURL
-        }
-        let url = baseURL.appendingPathComponent(normalizedPath)
+    func execute<Response: Decodable>(
+        _ endpoint: Endpoint<Response>
+    ) async throws -> Response {
+        let request = try endpoint.urlRequest(timeoutInterval: timeoutInterval)
 
         do {
-            let value = try await afSession.request(url)
+            return try await afSession.request(request)
                 .validate(statusCode: 200..<300)
-                .serializingDecodable(T.self, decoder: decoder)
+                .serializingDecodable(Response.self, decoder: decoder)
                 .value
-            return value
         } catch {
             throw mapError(error)
         }
@@ -88,4 +82,3 @@ final class HTTPClientInterceptor: RequestInterceptor {
         completion(.success(request))
     }
 }
-

@@ -2,65 +2,107 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var viewModel: HomeViewModel
+    @EnvironmentObject private var aiCoordinator: AIChatCoordinator
     @AppStorage("DailyReader.fontSize") private var fontSize: Double = 16.0
     @AppStorage("DailyReader.listFontSize") private var listFontSize: Double = 16.0
 
     var body: some View {
         List {
-            Section(header: Text("阅读设置")) {
+            Section(header: sectionHeader("阅读设置")) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("文章字体大小")
+                            .foregroundStyle(DS.ink)
                         Spacer()
                         Text(fontSizeLabel)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.inkSecondary)
                     }
-                    
+
                     Slider(value: $fontSize, in: 14...22, step: 2) {
                         Text("文章字体大小")
                     } minimumValueLabel: {
-                        Text("A").font(.system(size: 14))
+                        Text("A").font(.system(size: 14)).foregroundStyle(DS.inkSecondary)
                     } maximumValueLabel: {
-                        Text("A").font(.system(size: 22))
+                        Text("A").font(.system(size: 22)).foregroundStyle(DS.inkSecondary)
                     }
                 }
                 .padding(.vertical, 4)
+                .listRowBackground(DS.paperElevated)
 
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("列表字体大小")
+                            .foregroundStyle(DS.ink)
                         Spacer()
                         Text(listFontSizeLabel)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DS.inkSecondary)
                     }
-                    
+
                     Slider(value: $listFontSize, in: 14...22, step: 2) {
                         Text("列表字体大小")
                     } minimumValueLabel: {
-                        Text("A").font(.system(size: 14))
+                        Text("A").font(.system(size: 14)).foregroundStyle(DS.inkSecondary)
                     } maximumValueLabel: {
-                        Text("A").font(.system(size: 22))
+                        Text("A").font(.system(size: 22)).foregroundStyle(DS.inkSecondary)
                     }
                 }
                 .padding(.vertical, 4)
+                .listRowBackground(DS.paperElevated)
             }
+            .listRowSeparatorTint(DS.hairline)
 
-            Section(header: Text("阅读管理")) {
+            Section(header: sectionHeader("阅读管理")) {
                 NavigationLink(destination: ColdPalaceView(viewModel: viewModel)) {
                     Label("冷宫", systemImage: "snowflake")
+                        .foregroundStyle(DS.ink)
                 }
+                .listRowBackground(DS.paperElevated)
             }
-            
-            Section(header: Text("关于")) {
+            .listRowSeparatorTint(DS.hairline)
+
+            Section(header: sectionHeader("AI 服务")) {
+                NavigationLink {
+                    AIConfigurationView(store: aiCoordinator.configurationStore)
+                } label: {
+                    HStack {
+                        Label("AI 服务设置", systemImage: "text.bubble")
+                            .foregroundStyle(DS.ink)
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(aiCoordinator.configurationStore.isReady ? "可用" : "未启用")
+                            Text(aiCoordinator.configurationStore.enabledProviderSummary)
+                        }
+                        .font(.caption)
+                        .foregroundStyle(aiCoordinator.configurationStore.isReady ? DS.indigo : DS.inkSecondary)
+                    }
+                }
+                .listRowBackground(DS.paperElevated)
+            }
+            .listRowSeparatorTint(DS.hairline)
+
+            Section(header: sectionHeader("关于")) {
                 HStack {
                     Text("版本")
+                        .foregroundStyle(DS.ink)
                     Spacer()
                     Text("1.1")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.inkSecondary)
                 }
+                .listRowBackground(DS.paperElevated)
             }
+            .listRowSeparatorTint(DS.hairline)
         }
+        .scrollContentBackground(.hidden)
+        .background(DS.paper.ignoresSafeArea())
         .navigationTitle("设置")
+    }
+
+    /// 分组节头：小号宋体，压住整组的「铅字」气质
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(DS.songBold(13))
+            .foregroundStyle(DS.inkSecondary)
+            .textCase(nil)
     }
 
     private var fontSizeLabel: String {

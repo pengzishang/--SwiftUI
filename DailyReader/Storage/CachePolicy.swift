@@ -1,5 +1,5 @@
 import Foundation
 
 enum CachePolicy {
-    static let retainedDailyListCount = 30
+    static let historyPrefetchDayCount = 10
 }

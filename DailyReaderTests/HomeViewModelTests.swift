@@ -3,9 +3,33 @@ import XCTest
 
 @MainActor
 final class HomeViewModelTests: XCTestCase {
+    private let persistedStoryStateKeys = [
+        "DailyReader.readStoryIDs",
+        "DailyReader.hiddenStories",
+        "DailyReader.favoriteStories",
+        "DailyReader.readStories"
+    ]
+
+    override func setUp() {
+        super.setUp()
+        resetPersistedStoryState()
+    }
+
+    override func tearDown() {
+        resetPersistedStoryState()
+        super.tearDown()
+    }
+
+    private func resetPersistedStoryState() {
+        for key in persistedStoryStateKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+            KeychainHelper.shared.delete(forKey: key)
+        }
+    }
+
     func testLoadLatestShowsNetworkContent() async {
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
 
         await viewModel.load()
 
@@ -16,10 +40,10 @@ final class HomeViewModelTests: XCTestCase {
 
     func testNetworkFailureFallsBackToCachedLatest() async {
         let store = DiskCacheStore(rootURL: temporaryRoot())
-        await store.saveHomeFeed(sections: [DailySection(date: DailyResponse.fixture.date, stories: DailyResponse.fixture.stories)], topStories: DailyResponse.fixture.topStories)
-        let api = MockDailyAPIClient()
-        api.latestResult = .failure(APIError.transport("offline"))
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: store)
+        await store.saveHomeFeed(sections: [DailySection(date: DailyResponse.fixture.date, stories: DailyResponse.fixture.stories)], topStories: DailyResponse.fixture.topStories, historyCursor: DailyResponse.fixture.date)
+        let service = MockDailyService()
+        service.latestResult = .failure(APIError.transport("offline"))
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: store))
 
         await viewModel.load()
 
@@ -30,9 +54,9 @@ final class HomeViewModelTests: XCTestCase {
 
     func testLoadLatestWithCacheAndNetworkSuccess() async {
         let store = DiskCacheStore(rootURL: temporaryRoot())
-        await store.saveHomeFeed(sections: [DailySection(date: DailyResponse.fixture.date, stories: DailyResponse.fixture.stories)], topStories: DailyResponse.fixture.topStories)
+        await store.saveHomeFeed(sections: [DailySection(date: DailyResponse.fixture.date, stories: DailyResponse.fixture.stories)], topStories: DailyResponse.fixture.topStories, historyCursor: DailyResponse.fixture.date)
 
-        let api = MockDailyAPIClient()
+        let service = MockDailyService()
         let networkResponse = DailyResponse(
             date: "20260621",
             stories: [
@@ -44,9 +68,9 @@ final class HomeViewModelTests: XCTestCase {
                 TopStory(id: 1, title: "顶部故事")
             ]
         )
-        api.latestResult = .success(networkResponse)
+        service.latestResult = .success(networkResponse)
 
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: store)
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: store))
 
         await viewModel.load()
 
@@ -57,9 +81,9 @@ final class HomeViewModelTests: XCTestCase {
     }
 
     func testNetworkFailureWithoutCacheShowsRetryableErrorState() async {
-        let api = MockDailyAPIClient()
-        api.latestResult = .failure(APIError.transport("offline"))
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        service.latestResult = .failure(APIError.transport("offline"))
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
 
         await viewModel.load()
 
@@ -69,11 +93,11 @@ final class HomeViewModelTests: XCTestCase {
     }
 
     func testRefreshFailureWithoutCacheKeepsVisibleContent() async {
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
 
         await viewModel.load()
-        api.latestResult = .failure(APIError.transport("offline"))
+        service.latestResult = .failure(APIError.transport("offline"))
         await viewModel.refresh()
 
         XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2])
@@ -81,12 +105,12 @@ final class HomeViewModelTests: XCTestCase {
     }
 
     func testRefreshFailureKeepsLoadedHistorySections() async {
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
 
         await viewModel.load()
         await viewModel.loadMore()
-        api.latestResult = .failure(APIError.transport("offline"))
+        service.latestResult = .failure(APIError.transport("offline"))
         await viewModel.refresh()
 
         XCTAssertEqual(viewModel.sections.map(\.date), ["20260621", "20260620"])
@@ -95,8 +119,8 @@ final class HomeViewModelTests: XCTestCase {
     }
 
     func testLoadMoreDeduplicatesStories() async {
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
 
         await viewModel.load()
         await viewModel.loadMore()
@@ -106,24 +130,24 @@ final class HomeViewModelTests: XCTestCase {
     }
 
     func testLoadMoreFailureKeepsExistingStoriesAndExposesRetryState() async {
-        let api = MockDailyAPIClient()
-        api.beforeResult = .failure(APIError.httpStatus(502))
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        service.beforeResult = .failure(APIError.httpStatus(502))
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
 
         await viewModel.load()
         await viewModel.loadMore()
 
         XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2])
         XCTAssertEqual(viewModel.historyLoadState, .failed("加载历史失败，已保留当前内容"))
-        XCTAssertEqual(viewModel.bannerMessage, "加载历史失败，已保留当前内容")
+        XCTAssertNil(viewModel.bannerMessage)
     }
 
     func testLoadMoreFailureFallsBackToCachedPreviousDailyList() async {
         let store = DiskCacheStore(rootURL: temporaryRoot())
         await store.saveDaily(.historyFixture)
-        let api = MockDailyAPIClient()
-        api.beforeResult = .failure(APIError.transport("offline"))
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: store)
+        let service = MockDailyService()
+        service.beforeResult = .failure(APIError.transport("offline"))
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: store))
 
         await viewModel.load()
         await viewModel.loadMore()
@@ -131,7 +155,94 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.sections.map(\.date), ["20260621", "20260620"])
         XCTAssertEqual(viewModel.sections.flatMap(\.stories).map(\.id), [1, 2, 3])
         XCTAssertEqual(viewModel.historyLoadState, .idle)
-        XCTAssertEqual(viewModel.bannerMessage, "当前离线，正在显示缓存内容")
+        XCTAssertNil(viewModel.bannerMessage)
+    }
+
+    func testThresholdUsesVisibleStories() async {
+        let readIDsKey = "DailyReader.readStoryIDs"
+        let readStoriesKey = "DailyReader.readStories"
+        UserDefaults.standard.set([2], forKey: readIDsKey)
+        UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        defer {
+            UserDefaults.standard.removeObject(forKey: readIDsKey)
+            UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        }
+
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        ))
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.visibleSections.flatMap(\.stories).map(\.id), [1])
+        XCTAssertEqual(viewModel.thresholdStoryID, 1)
+    }
+
+    func testThresholdStartsPrefetchWithEightVisibleStoriesRemaining() async {
+        let readIDsKey = "DailyReader.readStoryIDs"
+        UserDefaults.standard.set([999], forKey: readIDsKey)
+        defer { UserDefaults.standard.removeObject(forKey: readIDsKey) }
+
+        let service = MockDailyService()
+        service.latestResult = .success(DailyResponse(
+            date: "20260621",
+            stories: (1...15).map { StorySummary(id: $0, title: "日报 \($0)") }
+        ))
+        let viewModel = HomeViewModel(repository: makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        ))
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.thresholdStoryID, 7)
+        let visibleIDs = viewModel.visibleSections.flatMap(\.stories).map(\.id)
+        let thresholdIndex = try? XCTUnwrap(
+            visibleIDs.firstIndex(of: viewModel.thresholdStoryID ?? -1)
+        )
+        XCTAssertEqual(thresholdIndex.map { visibleIDs.count - $0 - 1 }, 8)
+    }
+
+    func testLoadMoreContinuesByTenDayBatchesUntilUnreadStoryAppears() async {
+        let readIDsKey = "DailyReader.readStoryIDs"
+        let readStoriesKey = "DailyReader.readStories"
+        UserDefaults.standard.set([3], forKey: readIDsKey)
+        UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        defer {
+            UserDefaults.standard.removeObject(forKey: readIDsKey)
+            UserDefaults.standard.removeObject(forKey: readStoriesKey)
+        }
+
+        let service = MockDailyService()
+        service.beforeResults = Dictionary(uniqueKeysWithValues: (1...20).map { offset in
+            let requestDay = 22 - offset
+            let responseDay = requestDay - 1
+            let requestDate = String(format: "202606%02d", requestDay)
+            let responseDate = String(format: "202606%02d", responseDay)
+            let storyID = requestDate == "20260611" ? 4 : 3
+            return (requestDate, .success(DailyResponse(
+                date: responseDate,
+                stories: [StorySummary(
+                    id: storyID,
+                    title: storyID == 4 ? "跨过已读区间后的未读日报" : "已读日报"
+                )]
+            )))
+        })
+        let viewModel = HomeViewModel(repository: makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        ))
+
+        await viewModel.load()
+        await viewModel.loadMore()
+
+        XCTAssertEqual(service.beforeCallCount, 20)
+        XCTAssertTrue(viewModel.visibleSections.flatMap(\.stories).contains(where: { $0.id == 4 }))
+        XCTAssertEqual(viewModel.historyCursor, "20260601")
+        XCTAssertNil(viewModel.bannerMessage)
+        XCTAssertEqual(viewModel.historyLoadState, .idle)
     }
 
     func testReadStoryIDsPersistAcrossViewModelInstances() {
@@ -139,10 +250,10 @@ final class HomeViewModelTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: key)
         defer { UserDefaults.standard.removeObject(forKey: key) }
 
-        let firstViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let firstViewModel = HomeViewModel(repository: makeRepository(service: MockDailyService(), cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         firstViewModel.markStoryRead(42)
 
-        let secondViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let secondViewModel = HomeViewModel(repository: makeRepository(service: MockDailyService(), cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         XCTAssertTrue(secondViewModel.isStoryRead(42))
     }
 
@@ -151,8 +262,8 @@ final class HomeViewModelTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: hiddenKey)
         defer { UserDefaults.standard.removeObject(forKey: hiddenKey) }
 
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         await viewModel.load()
 
         let storyToHide = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
@@ -182,8 +293,8 @@ final class HomeViewModelTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: favoriteKey)
         defer { UserDefaults.standard.removeObject(forKey: favoriteKey) }
 
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         await viewModel.load()
 
         let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
@@ -209,8 +320,8 @@ final class HomeViewModelTests: XCTestCase {
             UserDefaults.standard.removeObject(forKey: readStoriesKey)
         }
 
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         await viewModel.load()
 
         let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
@@ -249,14 +360,14 @@ final class HomeViewModelTests: XCTestCase {
             UserDefaults.standard.removeObject(forKey: readStoriesKey)
         }
 
-        let firstViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let firstViewModel = HomeViewModel(repository: makeRepository(service: MockDailyService(), cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
         
         firstViewModel.hideStory(story, date: "20260621")
         firstViewModel.toggleFavorite(story, date: "20260621")
         firstViewModel.markStoryRead(story, date: "20260621")
 
-        let secondViewModel = HomeViewModel(apiClient: MockDailyAPIClient(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let secondViewModel = HomeViewModel(repository: makeRepository(service: MockDailyService(), cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         
         XCTAssertTrue(secondViewModel.isStoryHidden(1))
         XCTAssertTrue(secondViewModel.isStoryFavorited(1))
@@ -276,8 +387,8 @@ final class HomeViewModelTests: XCTestCase {
             UserDefaults.standard.removeObject(forKey: favoriteKey)
         }
 
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         await viewModel.load()
 
         let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)
@@ -314,8 +425,8 @@ final class HomeViewModelTests: XCTestCase {
             UserDefaults.standard.removeObject(forKey: readStoriesKey)
         }
 
-        let api = MockDailyAPIClient()
-        let viewModel = HomeViewModel(apiClient: api, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
+        let service = MockDailyService()
+        let viewModel = HomeViewModel(repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot())))
         await viewModel.load()
 
         let story = StorySummary(id: 1, title: "Story 1", images: [], hint: "Hint 1", url: nil)

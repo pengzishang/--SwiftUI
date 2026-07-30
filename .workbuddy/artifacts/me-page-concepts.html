@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>DailyReader「我」页面 · 三套界面方案</title>
+  <style>
+    :root {
+      --page: #f3f0e9;
+      --ink: #24231f;
+      --muted: #716f67;
+      --line: rgba(36, 35, 31, .13);
+      --white: #fffdfa;
+      --accent: #a85c43;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      color: var(--ink);
+      background: var(--page);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; min-width: 320px; background: radial-gradient(circle at 15% 0%, #fff9ed 0, transparent 29rem), var(--page); }
+    button { font: inherit; }
+    button:focus-visible, a:focus-visible { outline: 3px solid #315d85; outline-offset: 3px; }
+    .shell { width: min(1500px, 100%); margin: 0 auto; padding: clamp(24px, 5vw, 72px) clamp(16px, 4vw, 56px) 80px; }
+    .intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 28px; align-items: end; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+    .eyebrow { margin: 0 0 12px; color: #92523d; font-size: 12px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { max-width: 820px; margin: 0; font-family: "Songti SC", "STSong", serif; font-size: clamp(38px, 6vw, 78px); line-height: .98; letter-spacing: -.055em; font-weight: 900; }
+    .intro p { margin: 0; color: var(--muted); line-height: 1.75; font-size: 15px; }
+    .context { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .chip { border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; color: #514f49; background: rgba(255,255,255,.45); font-size: 12px; }
+    .compare-nav { position: sticky; top: 0; z-index: 30; display: flex; gap: 8px; overflow-x: auto; padding: 12px 0; margin: 18px 0 28px; background: color-mix(in srgb, var(--page) 90%, transparent); backdrop-filter: blur(14px); scrollbar-width: none; }
+    .compare-nav::-webkit-scrollbar { display: none; }
+    .compare-nav a { flex: none; min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); text-decoration: none; background: rgba(255,255,255,.65); font-size: 13px; font-weight: 700; }
+    .comparison-board { scroll-margin-top: 86px; margin-bottom: clamp(56px, 8vw, 96px); }
+    .comparison-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 22px; }
+    .comparison-head h2 { margin: 0; font-family: "Songti SC", "STSong", serif; font-size: clamp(28px, 4vw, 48px); }
+    .comparison-head p { max-width: 520px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+    .compare-viewport { overflow-x: auto; padding: 2px 2px 24px; scroll-snap-type: x mandatory; scrollbar-color: rgba(36,35,31,.25) transparent; }
+    .compare-grid { min-width: 1130px; display: grid; grid-template-columns: repeat(3, 350px); justify-content: center; gap: 28px; }
+    .compare-card { --scale: .78; min-width: 0; scroll-snap-align: center; }
+    .compare-label { min-height: 84px; padding: 0 4px 14px; border-bottom: 1px solid var(--line); }
+    .compare-label span { color: var(--theme-accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+    .compare-label h3 { margin: 6px 0 2px; font-family: var(--theme-display); font-size: 23px; letter-spacing: -.035em; }
+    .compare-label p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .compare-phone-wrap { height: 620px; display: grid; place-items: start center; padding-top: 20px; overflow: hidden; border-radius: 0 0 30px 30px; background: var(--stage-bg); position: relative; }
+    .compare-phone-wrap::before { content: ""; position: absolute; inset: 0; background: var(--stage-pattern); opacity: .7; }
+    .compare-phone-wrap .phone { flex: none; width: 390px; margin: 0; transform: scale(var(--scale)); transform-origin: top center; box-shadow: 0 24px 50px rgba(50,42,33,.2), inset 0 0 0 1px rgba(255,255,255,.25); }
+    .compare-hint { display: none; color: var(--muted); font-size: 11px; margin: 8px 0 0; }
+    .concepts { display: grid; gap: clamp(50px, 8vw, 104px); }
+    .concept { display: grid; grid-template-columns: minmax(340px, .82fr) minmax(620px, 1.4fr); gap: clamp(32px, 6vw, 84px); align-items: start; scroll-margin-top: 88px; }
+    .brief { position: sticky; top: 84px; }
+    .number { color: var(--theme-accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+    h2 { margin: 10px 0 5px; font-family: var(--theme-display); font-size: clamp(30px, 4vw, 52px); letter-spacing: -.04em; line-height: 1.04; }
+    .tagline { margin: 0 0 22px; color: var(--theme-accent); font-size: 14px; font-weight: 760; }
+    .brief-section { padding: 16px 0; border-top: 1px solid var(--line); }
+    .brief-section h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .1em; }
+    .brief-section p, .brief-section li { color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .brief-section p { margin: 0; }
+    .brief-section ul { margin: 0; padding-left: 18px; }
+    .swatches { display: flex; align-items: center; gap: 7px; margin-top: 12px; }
+    .swatch { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0,0,0,.1); background: var(--c); }
+    .stage { min-height: 790px; display: grid; place-items: center; padding: clamp(24px, 5vw, 62px); overflow: hidden; border-radius: 42px; background: var(--stage-bg); border: 1px solid rgba(40,35,28,.1); position: relative; }
+    .stage::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--stage-pattern); opacity: .7; }
+    .phone { position: relative; z-index: 1; width: min(390px, 100%); height: 760px; border: 8px solid #24231f; border-radius: 48px; overflow: hidden; background: var(--phone-bg); color: var(--phone-ink); box-shadow: 0 34px 80px rgba(50,42,33,.22), inset 0 0 0 1px rgba(255,255,255,.25); }
+    .phone::before { content: ""; position: absolute; z-index: 20; width: 112px; height: 28px; top: 7px; left: 50%; transform: translateX(-50%); border-radius: 18px; background: #24231f; }
+    .screen { height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+    .status { height: 45px; display: flex; flex: none; align-items: center; justify-content: space-between; padding: 10px 25px 0; font-size: 11px; font-weight: 800; }
+    .status-icons { display: flex; gap: 5px; align-items: center; }
+    .signal { display: flex; gap: 2px; align-items: end; height: 10px; }
+    .signal i { width: 2px; background: currentColor; border-radius: 1px; }
+    .signal i:nth-child(1){height:4px}.signal i:nth-child(2){height:6px}.signal i:nth-child(3){height:8px}.signal i:nth-child(4){height:10px}
+    .battery { width: 18px; height: 9px; border: 1px solid currentColor; border-radius: 2px; padding: 1px; }
+    .battery::before { content:""; display:block; width:75%; height:100%; background:currentColor; border-radius:1px; }
+    .scroll { flex: 1; min-height: 0; overflow: auto; scrollbar-width: none; }
+    .scroll::-webkit-scrollbar { display: none; }
+    .tabbar { height: 76px; flex: none; display: grid; grid-template-columns: repeat(4,1fr); padding: 8px 10px 16px; border-top: 1px solid var(--tab-line); background: var(--tab-bg); backdrop-filter: blur(18px); }
+    .tab { min-width: 44px; min-height: 44px; display: grid; place-items: center; align-content: center; gap: 3px; color: var(--tab-muted); font-size: 9px; border: 0; background: transparent; border-radius: 12px; }
+    .tab.active { color: var(--theme-accent); font-weight: 800; }
+    .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .row-ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Concept A */
+    .concept-a { --theme-accent:#a53f30; --theme-display:"Songti SC", "STSong", serif; --stage-bg:#ebe2d3; --stage-pattern:repeating-linear-gradient(0deg,transparent 0 38px,rgba(82,62,39,.035) 38px 39px); --phone-bg:#f8f3e8; --phone-ink:#28241d; --tab-bg:rgba(248,243,232,.96); --tab-line:rgba(40,36,29,.14); --tab-muted:#777064; }
+    .a-head { padding: 8px 20px 12px; }
+    .a-kicker { display:flex; align-items:center; justify-content:space-between; color:#746c60; font-size:11px; }
+    .seal { background:#a53f30; color:#fffaf1; padding:4px 6px; border-radius:3px; font-family:"Songti SC",serif; font-weight:800; }
+    .a-title { display:flex; align-items:end; justify-content:space-between; margin-top:13px; }
+    .a-title h4 { margin:0; font-family:"Songti SC",serif; font-size:31px; line-height:1; }
+    .gear { width:44px; height:44px; border:1px solid rgba(40,36,29,.15); display:grid; place-items:center; border-radius:50%; color:#655f55; background:transparent; }
+    .double-rule { height:5px; border-top:2px solid #28241d; border-bottom:1px solid rgba(40,36,29,.35); margin-top:14px; }
+    .a-profile { padding:15px 20px 0; display:grid; grid-template-columns:58px 1fr auto; gap:12px; align-items:center; }
+    .avatar-a { width:58px; height:58px; border-radius:50%; background:#e5d1b7; display:grid; place-items:center; font-family:"Songti SC",serif; font-size:25px; border:1px solid rgba(40,36,29,.15); }
+    .a-profile b { display:block; font-family:"Songti SC",serif; font-size:18px; }
+    .a-profile small { color:#756e62; line-height:1.6; }
+    .a-stats { text-align:right; font-family:"Songti SC",serif; }
+    .a-stats strong { display:block; font-size:21px; }
+    .a-stats span { font-size:10px; color:#756e62; }
+    .a-segment { margin:18px 20px 0; display:grid; grid-template-columns:repeat(3,1fr); padding:4px; border:1px solid rgba(40,36,29,.14); border-radius:999px; background:#fffaf0; }
+    .a-segment button { min-height:38px; border:0; background:transparent; border-radius:999px; color:#746c60; font-family:"Songti SC",serif; font-weight:700; }
+    .a-segment .on { color:#fffaf0; background:#28241d; }
+    .a-search { margin:12px 20px 0; min-height:44px; display:flex; align-items:center; gap:8px; padding:0 13px; color:#7b7468; border-bottom:1px solid rgba(40,36,29,.25); font-size:13px; }
+    .a-date { display:flex; justify-content:space-between; align-items:center; margin:18px 20px 0; padding-bottom:8px; border-bottom:3px double #28241d; font-family:"Songti SC",serif; }
+    .a-date b { font-size:17px; } .a-date span { color:#756e62; font-size:10px; }
+    .article-row { display:grid; grid-template-columns:1fr 70px; gap:12px; margin:0 20px; padding:14px 0; border-bottom:1px solid rgba(40,36,29,.12); }
+    .article-row b { display:block; font-family:"Songti SC",serif; font-size:15px; line-height:1.35; }
+    .article-row p { margin:7px 0 0; color:#746c60; font-size:10px; line-height:1.45; }
+    .thumb { border-radius:9px; background:linear-gradient(135deg,#c9b08c,#6e7d73); position:relative; overflow:hidden; }
+    .thumb::after { content:"日"; position:absolute; right:6px; bottom:-8px; font-family:"Songti SC",serif; font-size:44px; color:rgba(255,255,255,.32); }
+
+    /* Concept B */
+    .concept-b { --theme-accent:#c4674f; --theme-display:"PingFang SC",sans-serif; --stage-bg:#f2ddcb; --stage-pattern:radial-gradient(circle at 13% 18%,rgba(255,255,255,.8) 0 10%,transparent 28%),radial-gradient(circle at 84% 82%,rgba(198,103,79,.12) 0 14%,transparent 32%); --phone-bg:#fff9f2; --phone-ink:#3c302c; --tab-bg:rgba(255,249,242,.92); --tab-line:rgba(60,48,44,.09); --tab-muted:#95847c; }
+    .b-hero { margin:4px 14px 0; padding:22px 18px 18px; border-radius:28px; background:linear-gradient(135deg,#f5c8a9 0%,#e9a887 62%,#d9856a 100%); color:#4a2d25; position:relative; overflow:hidden; }
+    .b-hero::after { content:""; position:absolute; width:130px; height:130px; border:32px solid rgba(255,255,255,.18); border-radius:50%; right:-48px; top:-40px; }
+    .b-top { display:flex; justify-content:space-between; align-items:start; position:relative; z-index:1; }
+    .avatar-b { width:64px; height:64px; border:3px solid rgba(255,255,255,.78); background:#fff6e9; border-radius:22px; display:grid; place-items:center; font-size:24px; font-weight:800; }
+    .b-settings { width:44px; height:44px; border:0; color:#51362d; background:rgba(255,255,255,.35); border-radius:16px; display:grid; place-items:center; }
+    .b-hero h4 { position:relative; z-index:1; margin:15px 0 3px; font-size:22px; letter-spacing:-.03em; }
+    .b-hero p { position:relative; z-index:1; margin:0; font-size:11px; opacity:.72; }
+    .b-progress { position:relative; z-index:1; display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; margin-top:18px; }
+    .b-progress-track { height:7px; border-radius:10px; background:rgba(255,255,255,.4); overflow:hidden; }
+    .b-progress-track i { display:block; width:68%; height:100%; border-radius:inherit; background:#70463a; }
+    .b-progress b { font-size:11px; }
+    .b-section { padding:20px 18px 0; }
+    .b-section-title { display:flex; justify-content:space-between; align-items:end; margin-bottom:12px; }
+    .b-section-title h5 { margin:0; font-size:17px; letter-spacing:-.03em; } .b-section-title span { color:#ae8174; font-size:11px; }
+    .b-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .b-tile { min-height:112px; padding:15px; border:0; text-align:left; border-radius:22px; color:#443732; background:var(--tile); box-shadow:inset 0 0 0 1px rgba(70,50,40,.055); }
+    .b-tile .row-ico { color:#a95742; }
+    .b-tile strong { display:block; margin-top:16px; font-size:14px; }
+    .b-tile small { display:block; margin-top:4px; color:#927c73; font-size:10px; }
+    .b-list { margin:10px 18px 20px; border-radius:24px; overflow:hidden; background:#fffefb; border:1px solid rgba(60,48,44,.07); }
+    .b-row { min-height:58px; display:grid; grid-template-columns:36px 1fr auto; gap:10px; align-items:center; padding:8px 13px; border-bottom:1px solid rgba(60,48,44,.07); }
+    .b-row:last-child { border:0; }
+    .b-row .iconbox { width:36px; height:36px; display:grid; place-items:center; border-radius:13px; background:#f8ede4; color:#aa5d48; }
+    .b-row b { font-size:13px; } .b-row small { display:block; margin-top:2px; color:#98877f; font-size:9px; }
+    .chev { color:#b7a7a0; font-size:18px; }
+
+    /* Concept C */
+    .concept-c { --theme-accent:#486c5b; --theme-display:"Songti SC","STSong",serif; --stage-bg:#dfe7dc; --stage-pattern:linear-gradient(135deg,rgba(255,255,255,.35),transparent 48%),radial-gradient(circle at 70% 18%,rgba(69,105,87,.14),transparent 26%); --phone-bg:#f5f6ef; --phone-ink:#28372f; --tab-bg:rgba(245,246,239,.94); --tab-line:rgba(40,55,47,.12); --tab-muted:#819087; }
+    .c-head { padding:8px 20px 0; display:flex; align-items:center; justify-content:space-between; }
+    .c-head h4 { margin:0; font-family:"Songti SC",serif; font-size:28px; }
+    .c-head button { width:44px; height:44px; border-radius:15px; border:1px solid rgba(40,55,47,.12); background:#eef1e9; color:#4c6457; display:grid; place-items:center; }
+    .c-focus { margin:17px 16px 0; padding:19px; border-radius:26px; background:#dbe7da; position:relative; overflow:hidden; }
+    .c-focus::after { content:""; position:absolute; width:110px; height:110px; border-radius:50%; right:-26px; bottom:-42px; background:rgba(72,108,91,.11); box-shadow:0 0 0 18px rgba(72,108,91,.06); }
+    .c-profile { display:flex; align-items:center; gap:12px; position:relative; z-index:1; }
+    .avatar-c { width:54px; height:54px; border-radius:50% 50% 42% 58% / 56% 44% 56% 44%; display:grid; place-items:center; color:#f6f4e9; background:#567765; font-family:"Songti SC",serif; font-size:20px; }
+    .c-profile b { display:block; font-family:"Songti SC",serif; font-size:18px; } .c-profile small { color:#667c70; font-size:10px; }
+    .c-ring-wrap { position:relative; z-index:1; margin-top:16px; display:grid; grid-template-columns:84px 1fr; align-items:center; gap:17px; }
+    .ring { width:82px; height:82px; border-radius:50%; display:grid; place-items:center; background:conic-gradient(#486c5b 0 72%,rgba(72,108,91,.14) 72%); position:relative; }
+    .ring::before { content:""; position:absolute; inset:8px; background:#dbe7da; border-radius:50%; }
+    .ring b { position:relative; font-size:18px; } .ring span { position:relative; display:block; font-size:8px; color:#667c70; text-align:center; }
+    .c-ring-copy h5 { margin:0 0 6px; font-family:"Songti SC",serif; font-size:16px; } .c-ring-copy p { margin:0; color:#60746a; font-size:10px; line-height:1.5; }
+    .c-chips { display:flex; gap:7px; overflow:hidden; margin:14px 0 0 16px; padding-right:16px; }
+    .c-chip { flex:none; min-height:38px; padding:0 13px; border-radius:999px; border:1px solid rgba(40,55,47,.1); background:#fafbf6; color:#54695d; font-size:11px; font-weight:700; }
+    .c-chip.on { color:#f6f7ef; background:#486c5b; }
+    .c-library { padding:19px 18px 0; }
+    .c-library h5 { margin:0 0 11px; font-family:"Songti SC",serif; font-size:17px; }
+    .c-library-row { display:grid; grid-template-columns:45px 1fr auto; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid rgba(40,55,47,.1); }
+    .c-library-row .leaf { width:44px; height:44px; border-radius:17px 17px 13px 17px; display:grid; place-items:center; color:#496857; background:#e3ebe0; }
+    .c-library-row b { display:block; font-size:13px; } .c-library-row small { color:#7a8b82; font-size:9px; }
+    .c-toggle { width:43px; height:25px; border-radius:20px; padding:3px; background:#486c5b; }
+    .c-toggle::after { content:""; display:block; width:19px; height:19px; border-radius:50%; margin-left:auto; background:#f7f7ef; box-shadow:0 1px 4px rgba(0,0,0,.14); }
+    .c-pref { margin:13px 16px 18px; padding:15px; border-radius:20px; background:#ecefe7; }
+    .c-pref-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; } .c-pref-head b{font-family:"Songti SC",serif;font-size:14px}.c-pref-head span{font-size:10px;color:#78887f}
+    .size-track { display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; color:#687b70; font-family:"Songti SC",serif; }
+    .size-track i { height:5px; border-radius:8px; background:linear-gradient(90deg,#486c5b 0 58%,rgba(72,108,91,.15) 58%); position:relative; }
+    .size-track i::after { content:""; position:absolute; width:15px; height:15px; left:55%; top:50%; transform:translate(-50%,-50%); border-radius:50%; background:#f6f7ef; border:2px solid #486c5b; }
+
+    .matrix { margin-top: 72px; padding-top: 34px; border-top: 1px solid var(--line); }
+    .matrix h2 { font-family:"Songti SC",serif; font-size:clamp(28px,4vw,48px); }
+    .table-wrap { overflow-x:auto; margin-top:20px; border:1px solid var(--line); border-radius:22px; background:rgba(255,255,255,.48); }
+    table { width:100%; min-width:760px; border-collapse:collapse; text-align:left; }
+    th,td { padding:17px 18px; border-bottom:1px solid var(--line); font-size:13px; line-height:1.55; vertical-align:top; }
+    th { color:#5d5a53; font-size:11px; letter-spacing:.08em; background:rgba(255,255,255,.35); }
+    tr:last-child td { border-bottom:0; }
+    td:first-child { font-weight:800; }
+    .recommend { margin-top:24px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start; padding:22px; border-radius:22px; color:#42352f; background:#f1d9c8; }
+    .rec-mark { width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:#a9523f; color:#fff8f2; font-family:"Songti SC",serif; font-weight:900; }
+    .recommend h3 { margin:0 0 5px; font-family:"Songti SC",serif; font-size:19px; }.recommend p{margin:0;color:#765f55;font-size:13px;line-height:1.65}
+    .footnote { margin-top:22px; color:#7c7971; font-size:12px; line-height:1.7; }
+
+    @media (max-width: 1180px) {
+      .comparison-head { align-items: start; flex-direction: column; }
+      .compare-grid { justify-content: start; padding-inline: 12px; }
+      .compare-hint { display: block; }
+    }
+    @media (max-width: 1080px) {
+      .concept { grid-template-columns:1fr; }
+      .brief { position:static; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 28px; }
+      .brief > .number, .brief > h2, .brief > .tagline { grid-column:1/-1; }
+      .stage { min-height:820px; }
+    }
+    @media (max-width: 720px) {
+      .shell { padding-inline:14px; }
+      .intro { grid-template-columns:1fr; }
+      .brief { display:block; }
+      .stage { min-height:auto; padding:18px 8px; border-radius:28px; }
+      .phone { transform:scale(.9); margin:-38px 0; }
+      .recommend { grid-template-columns:1fr; }
+    }
+    @media (max-width: 430px) {
+      .phone { width:390px; transform:scale(.82); margin:-68px -35px; }
+      h1 { font-size:42px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } * { transition:none !important; animation:none !important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="intro">
+      <div>
+        <p class="eyebrow">DailyReader · Mobile UI Direction Study</p>
+        <h1>“我”页面<br>三种生活化表达</h1>
+        <div class="context">
+          <span class="chip">日常资讯读者</span><span class="chip">内容资产</span><span class="chip">阅读偏好</span><span class="chip">温暖生活感</span><span class="chip">移动端优先</span>
+        </div>
+      </div>
+      <p>三套方案均遵循常见移动端操作习惯：底部“我的”入口不变，设置位于右上角，核心触控目标不小于 44pt；差异集中在用户进入页面后的第一关注点、信息组织与情绪氛围。</p>
+    </header>
+
+    <nav class="compare-nav" aria-label="方案导航">
+      <a href="#side-by-side">三套同屏</a><a href="#a">01 纸上书房</a><a href="#b">02 日光收纳</a><a href="#c">03 静谧成长</a><a href="#matrix">对比建议</a>
+    </nav>
+
+    <section class="comparison-board" id="side-by-side" aria-labelledby="comparison-title">
+      <div class="comparison-head"><div><p class="eyebrow">Side-by-side Comparison</p><h2 id="comparison-title">三套方案，同一视线完成对比</h2></div><p>手机尺寸、展示比例和内容基线完全一致，可直接观察三种方案在首屏焦点、信息密度与操作路径上的差异。</p></div>
+      <div class="compare-viewport" tabindex="0" aria-label="三套手机界面横向对比，可左右滚动">
+        <div class="compare-grid">
+          <article class="compare-card concept-a"><header class="compare-label"><span>01 · EDITORIAL</span><h3>纸上书房</h3><p>刊物式 · 内容资产优先 · 品牌连续性最高</p></header><div class="compare-phone-wrap" id="compare-phone-a"></div></article>
+          <article class="compare-card concept-b"><header class="compare-label"><span>02 · WARM ORGANIZER</span><h3>日光收纳</h3><p>生活化 · 快捷入口优先 · 操作最直观</p></header><div class="compare-phone-wrap" id="compare-phone-b"></div></article>
+          <article class="compare-card concept-c"><header class="compare-label"><span>03 · MINDFUL GROWTH</span><h3>静谧成长</h3><p>自然沉静 · 阅读进度优先 · 陪伴感最强</p></header><div class="compare-phone-wrap" id="compare-phone-c"></div></article>
+        </div>
+      </div>
+      <p class="compare-hint">在手机或窄窗口中左右滑动，可依次查看三套完整界面。</p>
+    </section>
+
+    <div class="concepts">
+      <section class="concept concept-a" id="a">
+        <aside class="brief">
+          <span class="number">CONCEPT 01</span><h2>纸上书房</h2><p class="tagline">把个人中心做成一份属于自己的阅读刊物</p>
+          <div class="brief-section"><h3>01 · 视觉系统</h3><p>暖纸米白为底，浓墨与朱砂点睛；结构标题使用宋体，功能文字使用系统黑体。图标采用 1.5–1.8pt 线性轮廓，克制、接近印刷符号。</p><div class="swatches"><i class="swatch" style="--c:#f8f3e8"></i><i class="swatch" style="--c:#28241d"></i><i class="swatch" style="--c:#a53f30"></i><i class="swatch" style="--c:#c9b08c"></i></div></div>
+          <div class="brief-section"><h3>02 · 布局结构</h3><p>头部为日期刊头、标题与设置；内容区先放身份与阅读累计，再以“收藏 / 已读 / 稍后读”分段切换，下面直接进入可搜索文章流；底部保留四栏主导航。</p></div>
+          <div class="brief-section"><h3>03 · 关键交互</h3><ul><li>分段控件支持点击与左右滑动。</li><li>搜索固定在内容资产入口之后，减少查找路径。</li><li>文章行左滑可取消收藏，操作后提供撤销提示。</li><li>日期分组吸顶，保持长列表方向感。</li></ul></div>
+          <div class="brief-section"><h3>04 · 差异化定位</h3><p>信息密度最高，最贴近现有“今日刊”设计系统；减少泛个人中心模块，强调“我的内容”。适合重度读者和品牌连续性优先的版本。</p></div>
+        </aside>
+        <div class="stage">
+          <div class="phone" aria-label="纸上书房方案手机界面">
+            <div class="screen"><div class="status"><span>9:41</span><span class="status-icons"><span class="signal"><i></i><i></i><i></i><i></i></span><span>5G</span><span class="battery"></span></span></div>
+              <div class="scroll">
+                <header class="a-head"><div class="a-kicker"><span><b class="seal">今日</b> 七月二十七日 · 星期一</span><span>深圳 29°</span></div><div class="a-title"><h4>我的书房</h4><button class="gear" aria-label="设置"><svg class="ico"><use href="#settings"/></svg></button></div><div class="double-rule"></div></header>
+                <div class="a-profile"><div class="avatar-a">子</div><div><b>晚上好，子上</b><small>本月已读 36 篇<br>收藏的好文章，都在这里</small></div><div class="a-stats"><strong>128</strong><span>总阅读</span></div></div>
+                <div class="a-segment" role="tablist"><button class="on" role="tab">收藏 24</button><button role="tab">已读 128</button><button role="tab">稍后读 7</button></div>
+                <div class="a-search"><svg class="ico"><use href="#search"/></svg><span>搜索我的文章</span></div>
+                <div class="a-date"><b>七月二十六日</b><span>星期日 · 3 篇</span></div>
+                <div class="article-row"><div><b>为什么我们越来越需要一段不被打扰的阅读时间</b><p>深度阅读 · 8 分钟前收藏</p></div><div class="thumb"></div></div>
+                <div class="article-row"><div><b>城市夜行：在灯火与寂静之间重新认识深圳</b><p>城市 · 昨天阅读</p></div><div class="thumb" style="background:linear-gradient(135deg,#495f69,#c89068)"></div></div>
+                <div class="a-date"><b>七月二十四日</b><span>星期五 · 2 篇</span></div>
+                <div class="article-row"><div><b>当我们谈论好设计时，究竟在谈论什么</b><p>设计 · 4 天前收藏</p></div><div class="thumb" style="background:linear-gradient(135deg,#97735d,#d8c4a1)"></div></div>
+              </div>
+              <nav class="tabbar"><button class="tab"><svg class="ico"><use href="#home"/></svg><span>日报</span></button><button class="tab"><svg class="ico"><use href="#flame"/></svg><span>热榜</span></button><button class="tab"><svg class="ico"><use href="#compass"/></svg><span>发现</span></button><button class="tab active"><svg class="ico"><use href="#person"/></svg><span>我的</span></button></nav>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="concept concept-b" id="b">
+        <aside class="brief">
+          <span class="number">CONCEPT 02</span><h2>日光收纳</h2><p class="tagline">像整理日常物件一样，轻松管理阅读生活</p>
+          <div class="brief-section"><h3>01 · 视觉系统</h3><p>奶油白、杏桃与陶土红构成暖调配色；采用圆润的系统黑体，数字与标题略加粗。图标为柔和圆角线性风格，局部使用色块承载，亲切但不幼态。</p><div class="swatches"><i class="swatch" style="--c:#fff9f2"></i><i class="swatch" style="--c:#f5c8a9"></i><i class="swatch" style="--c:#c4674f"></i><i class="swatch" style="--c:#4a342d"></i></div></div>
+          <div class="brief-section"><h3>02 · 布局结构</h3><p>头部使用大面积个人欢迎区与本周阅读进度；内容区先呈现四个高频资产入口，再放阅读偏好、离线缓存等设置；底部导航以圆角线性图标强化轻松感。</p></div>
+          <div class="brief-section"><h3>03 · 关键交互</h3><ul><li>四个资产入口整块可点，数量直接作为状态反馈。</li><li>最近使用的模块自动排前，但位置只在用户主动确认后调整。</li><li>主题与字号使用二级页，避免首页控制项过多。</li><li>离线下载显示容量与进度，支持暂停和清理。</li></ul></div>
+          <div class="brief-section"><h3>04 · 差异化定位</h3><p>操作最直观、学习成本最低；个人中心感最完整，便于未来扩展账号、通知和会员能力。适合覆盖更广的普通用户。</p></div>
+        </aside>
+        <div class="stage">
+          <div class="phone" aria-label="日光收纳方案手机界面">
+            <div class="screen"><div class="status"><span>9:41</span><span class="status-icons"><span class="signal"><i></i><i></i><i></i><i></i></span><span>5G</span><span class="battery"></span></span></div>
+              <div class="scroll">
+                <section class="b-hero"><div class="b-top"><div class="avatar-b">子</div><button class="b-settings" aria-label="设置"><svg class="ico"><use href="#settings"/></svg></button></div><h4>晚上好，子上</h4><p>今天也为自己留一点阅读时间</p><div class="b-progress"><div class="b-progress-track"><i></i></div><b>本周 5 / 7 天</b></div></section>
+                <section class="b-section"><div class="b-section-title"><h5>我的内容</h5><span>共 159 篇</span></div><div class="b-grid">
+                  <button class="b-tile" style="--tile:#fae9de"><svg class="row-ico"><use href="#bookmark"/></svg><strong>我的收藏</strong><small>24 篇 · 新增 3 篇</small></button>
+                  <button class="b-tile" style="--tile:#f5eddb"><svg class="row-ico"><use href="#clock"/></svg><strong>阅读历史</strong><small>最近读到第 128 篇</small></button>
+                  <button class="b-tile" style="--tile:#e7eee3"><svg class="row-ico"><use href="#inbox"/></svg><strong>稍后阅读</strong><small>7 篇等待阅读</small></button>
+                  <button class="b-tile" style="--tile:#eee6f0"><svg class="row-ico"><use href="#download"/></svg><strong>离线内容</strong><small>12 篇 · 36 MB</small></button>
+                </div></section>
+                <section class="b-section"><div class="b-section-title"><h5>阅读方式</h5><span>按你的习惯</span></div></section>
+                <div class="b-list">
+                  <div class="b-row"><div class="iconbox"><svg class="ico"><use href="#text"/></svg></div><div><b>字体与排版</b><small>正文 18 pt · 列表 16 pt</small></div><span class="chev">›</span></div>
+                  <div class="b-row"><div class="iconbox"><svg class="ico"><use href="#moon"/></svg></div><div><b>外观模式</b><small>跟随系统 · 暖纸主题</small></div><span class="chev">›</span></div>
+                  <div class="b-row"><div class="iconbox"><svg class="ico"><use href="#bell"/></svg></div><div><b>每日提醒</b><small>每天 21:30 · 已开启</small></div><span class="chev">›</span></div>
+                </div>
+              </div>
+              <nav class="tabbar"><button class="tab"><svg class="ico"><use href="#home"/></svg><span>日报</span></button><button class="tab"><svg class="ico"><use href="#flame"/></svg><span>热榜</span></button><button class="tab"><svg class="ico"><use href="#compass"/></svg><span>发现</span></button><button class="tab active"><svg class="ico"><use href="#person"/></svg><span>我的</span></button></nav>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="concept concept-c" id="c">
+        <aside class="brief">
+          <span class="number">CONCEPT 03</span><h2>静谧成长</h2><p class="tagline">让阅读偏好与长期积累成为页面主角</p>
+          <div class="brief-section"><h3>01 · 视觉系统</h3><p>雾白与灰绿色营造安静自然的阅读氛围，深松绿作为唯一交互色；结构标题使用宋体，信息文字使用系统黑体。图标线条细而有机，容器采用不对称柔和圆角。</p><div class="swatches"><i class="swatch" style="--c:#f5f6ef"></i><i class="swatch" style="--c:#dbe7da"></i><i class="swatch" style="--c:#486c5b"></i><i class="swatch" style="--c:#28372f"></i></div></div>
+          <div class="brief-section"><h3>02 · 布局结构</h3><p>头部直接呈现本月阅读完成度和一句轻量反馈；内容区通过横向筛选切换“概览 / 内容库 / 偏好”，先展示资产状态，再嵌入可快速调整的阅读设置；底部导航保持稳定。</p></div>
+          <div class="brief-section"><h3>03 · 关键交互</h3><ul><li>阅读环点击进入数据明细，不用游戏化排名制造压力。</li><li>偏好支持就地开关与即时预览，复杂设置再进入二级页。</li><li>横向筛选可滑动，但始终保留可见按钮入口。</li><li>变更字号时即时展示文章标题样例。</li></ul></div>
+          <div class="brief-section"><h3>04 · 差异化定位</h3><p>情绪价值最强，强调长期陪伴与自我节奏；适合希望产品更有“阅读伙伴”气质，并计划发展阅读数据能力的版本。</p></div>
+        </aside>
+        <div class="stage">
+          <div class="phone" aria-label="静谧成长方案手机界面">
+            <div class="screen"><div class="status"><span>9:41</span><span class="status-icons"><span class="signal"><i></i><i></i><i></i><i></i></span><span>5G</span><span class="battery"></span></span></div>
+              <div class="scroll">
+                <header class="c-head"><h4>我的阅读</h4><button aria-label="设置"><svg class="ico"><use href="#settings"/></svg></button></header>
+                <section class="c-focus"><div class="c-profile"><div class="avatar-c">子</div><div><b>晚上好，子上</b><small>连续阅读第 12 天</small></div></div><div class="c-ring-wrap"><div class="ring"><div><b>72%</b><span>本月目标</span></div></div><div class="c-ring-copy"><h5>读得不必快，持续就很好</h5><p>本月已阅读 36 篇，比上月多 8 篇。今晚还有 2 篇稍后读。</p></div></div></section>
+                <div class="c-chips"><button class="c-chip on">概览</button><button class="c-chip">内容库 159</button><button class="c-chip">阅读偏好</button></div>
+                <section class="c-library"><h5>你的内容库</h5>
+                  <div class="c-library-row"><div class="leaf"><svg class="ico"><use href="#bookmark"/></svg></div><div><b>收藏文章</b><small>24 篇 · 最近更新今天</small></div><span class="chev">›</span></div>
+                  <div class="c-library-row"><div class="leaf"><svg class="ico"><use href="#clock"/></svg></div><div><b>阅读足迹</b><small>128 篇 · 可按日期查找</small></div><span class="chev">›</span></div>
+                  <div class="c-library-row"><div class="leaf"><svg class="ico"><use href="#download"/></svg></div><div><b>自动离线</b><small>Wi-Fi 下缓存当期日报</small></div><span class="c-toggle" aria-label="已开启"></span></div>
+                </section>
+                <section class="c-pref"><div class="c-pref-head"><b>正文大小</b><span>18 pt · 舒适</span></div><div class="size-track"><span style="font-size:13px">字</span><i></i><span style="font-size:20px">字</span></div></section>
+              </div>
+              <nav class="tabbar"><button class="tab"><svg class="ico"><use href="#home"/></svg><span>日报</span></button><button class="tab"><svg class="ico"><use href="#flame"/></svg><span>热榜</span></button><button class="tab"><svg class="ico"><use href="#compass"/></svg><span>发现</span></button><button class="tab active"><svg class="ico"><use href="#person"/></svg><span>我的</span></button></nav>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="matrix" id="matrix">
+      <p class="eyebrow">Decision Matrix</p><h2>三套方案如何选择</h2>
+      <div class="table-wrap"><table><thead><tr><th>维度</th><th>纸上书房</th><th>日光收纳</th><th>静谧成长</th></tr></thead><tbody>
+        <tr><td>第一关注点</td><td>收藏、已读与文章检索</td><td>所有个人资产与功能入口</td><td>阅读进度、偏好与长期积累</td></tr>
+        <tr><td>品牌连续性</td><td>最高，直接延续“今日刊”</td><td>中等，更生活化、更大众</td><td>中高，保留宋体与克制气质</td></tr>
+        <tr><td>上手成本</td><td>低，适合已有用户</td><td>最低，入口语义最直观</td><td>中等，需要理解概览结构</td></tr>
+        <tr><td>扩展能力</td><td>适合内容管理深化</td><td>适合账号、会员、通知等扩展</td><td>适合阅读数据与个性化能力</td></tr>
+        <tr><td>视觉记忆点</td><td>报刊刊头与日期分组</td><td>日光欢迎区与收纳色块</td><td>阅读完成环与自然形态</td></tr>
+        <tr><td>建议人群</td><td>重度阅读、品牌忠实用户</td><td>泛大众、轻量日常用户</td><td>追求仪式感与自我成长用户</td></tr>
+      </tbody></table></div>
+      <div class="recommend"><div class="rec-mark">荐</div><div><h3>建议以“纸上书房”为主线，吸收“日光收纳”的快捷入口</h3><p>现有产品已经建立鲜明的“今日刊”视觉资产，完全切换风格会损失品牌积累。推荐保留方案一的刊物式头部、日期分组和内容优先结构，同时把方案二的“稍后读 / 离线内容”作为可扫描的快捷入口加入首屏。若后续上线阅读统计，再逐步引入方案三的轻量数据反馈。</p></div></div>
+      <p class="footnote">可访问性基线：常规文字与背景对比度目标 ≥ 4.5:1；大文字与图形目标 ≥ 3:1；触控区域 ≥ 44×44pt；不依赖颜色单独表达状态；支持动态字体、VoiceOver 标签与“减弱动态效果”。</p>
+    </section>
+  </main>
+
+  <svg width="0" height="0" style="position:absolute"><defs>
+    <symbol id="home" viewBox="0 0 24 24"><path d="M3 10.8 12 3l9 7.8v9.7H14.8v-6.2H9.2v6.2H3z"/></symbol>
+    <symbol id="flame" viewBox="0 0 24 24"><path d="M12.5 3c.5 3.3-2.8 4.6-2.8 7.3 0 1.2.7 2.1 1.7 2.6-.2-2.1 1.5-3.2 2.3-4.5 2.3 1.8 4.1 4.3 4.1 7.1A5.8 5.8 0 0 1 12 21a5.8 5.8 0 0 1-5.8-5.5C6.2 10.7 10.8 8.3 12.5 3z"/></symbol>
+    <symbol id="compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5z"/></symbol>
+    <symbol id="person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c.5-4 3.1-6.2 7-6.2s6.5 2.2 7 6.2"/></symbol>
+    <symbol id="settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></symbol>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
+    <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="inbox" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 14h4l2 3h4l2-3h4"/></symbol>
+    <symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 20h14"/></symbol>
+    <symbol id="text" viewBox="0 0 24 24"><path d="M5 5h14M12 5v14M8 19h8"/></symbol>
+    <symbol id="moon" viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5z"/></symbol>
+    <symbol id="bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8zM10 21h4"/></symbol>
+  </defs></svg>
+  <script>
+    const comparisons = [
+      [".concept-a .stage .phone", "#compare-phone-a"],
+      [".concept-b .stage .phone", "#compare-phone-b"],
+      [".concept-c .stage .phone", "#compare-phone-c"]
+    ];
+    comparisons.forEach(([sourceSelector, targetSelector]) => {
+      const source = document.querySelector(sourceSelector);
+      const target = document.querySelector(targetSelector);
+      if (source && target) target.append(source.cloneNode(true));
+    });
+  </script>
+</body>
+</html>

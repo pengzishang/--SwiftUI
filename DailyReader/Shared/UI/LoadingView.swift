@@ -6,9 +6,10 @@ struct LoadingView: View {
     var body: some View {
         VStack(spacing: 14) {
             ProgressView()
+                .tint(DS.inkSecondary)
             Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 14))
+                .foregroundStyle(DS.inkSecondary)
         }
         .padding(32)
         .accessibilityIdentifier("loadingView")

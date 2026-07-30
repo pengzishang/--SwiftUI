@@ -17,18 +17,31 @@ struct TopStoriesView: View {
                             }
                     } label: {
                         VStack(alignment: .leading, spacing: 10) {
-                            PlaceholderImageView(urlString: story.image)
+                            PlaceholderImageView(
+                                urlString: story.image,
+                                targetSize: CGSize(width: 240, height: 132)
+                            )
                                 .frame(width: 240, height: 132)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .strokeBorder(DS.hairline, lineWidth: 0.7)
+                                )
                             Text(story.title)
-                                .font(.headline)
-                                .foregroundStyle(readStoryIDs.contains(story.id) ? .secondary : .primary)
+                                .font(DS.songBold(17))
+                                .foregroundStyle(readStoryIDs.contains(story.id) ? DS.inkSecondary : DS.ink)
                                 .lineLimit(2)
                         }
                         .frame(width: 240, alignment: .leading)
                         .padding(12)
-                        .background(.thinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(DS.paperElevated)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .strokeBorder(DS.hairline, lineWidth: 0.7)
+                        )
                         .opacity(readStoryIDs.contains(story.id) ? 0.72 : 1)
                     }
                     .buttonStyle(.plain)

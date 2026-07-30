@@ -26,11 +26,20 @@ actor DiskCacheStore: CacheStore {
     func saveDaily(_ response: DailyResponse) async {
         guard !response.date.isEmpty else { return }
         await write(CacheEnvelope(value: response), to: dailyURL(for: response.date))
-        await pruneDailyLists()
     }
 
     func loadDaily(date: String) async -> CachedValue<DailyResponse>? {
         await read(from: dailyURL(for: date))
+    }
+
+    func loadDaily(dates: [String]) async -> [String: CachedValue<DailyResponse>] {
+        var cachedValues: [String: CachedValue<DailyResponse>] = [:]
+        for date in dates where cachedValues[date] == nil {
+            if let cached: CachedValue<DailyResponse> = await read(from: dailyURL(for: date)) {
+                cachedValues[date] = cached
+            }
+        }
+        return cachedValues
     }
 
     func saveDetail(_ detail: ArticleDetail) async {
@@ -41,13 +50,33 @@ actor DiskCacheStore: CacheStore {
         await read(from: detailURL(for: id))
     }
 
-    func saveHomeFeed(sections: [DailySection], topStories: [TopStory]) async {
-        let feed = CachedHomeFeed(sections: sections, topStories: topStories)
+    func saveHomeFeed(
+        sections: [DailySection],
+        topStories: [TopStory],
+        historyCursor: String?
+    ) async {
+        let feed = CachedHomeFeed(
+            sections: sections,
+            topStories: topStories,
+            historyCursor: historyCursor
+        )
         await write(CacheEnvelope(value: feed), to: homeFeedURL)
     }
 
     func loadHomeFeed() async -> CachedValue<CachedHomeFeed>? {
         await read(from: homeFeedURL)
+    }
+
+    func saveHotList(_ response: HotListResponse) async {
+        await write(CacheEnvelope(value: response), to: hotListURL)
+    }
+
+    func loadHotList() async -> CachedValue<HotListResponse>? {
+        await read(from: hotListURL)
+    }
+
+    private var hotListURL: URL {
+        rootURL.appendingPathComponent("hot_list.json")
     }
 
     private var homeFeedURL: URL {
@@ -94,27 +123,6 @@ actor DiskCacheStore: CacheStore {
         }
     }
 
-    private func pruneDailyLists() async {
-        do {
-            let urls = try fileManager.contentsOfDirectory(
-                at: dailyRootURL,
-                includingPropertiesForKeys: nil,
-                options: [.skipsHiddenFiles]
-            )
-            let sorted = urls.sorted { lhs, rhs in
-                businessDate(from: lhs) > businessDate(from: rhs)
-            }
-            for url in sorted.dropFirst(CachePolicy.retainedDailyListCount) {
-                try? fileManager.removeItem(at: url)
-            }
-        } catch {
-            return
-        }
-    }
-
-    private func businessDate(from url: URL) -> String {
-        url.deletingPathExtension().lastPathComponent
-    }
 }
 
 private struct CacheEnvelope<Value: Codable>: Codable {

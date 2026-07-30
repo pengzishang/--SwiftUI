@@ -10,16 +10,22 @@ enum ArticleDetailPhase: Equatable {
 @MainActor
 final class ArticleDetailViewModel: ObservableObject {
     @Published private(set) var phase: ArticleDetailPhase = .idle
+    @Published private(set) var storyMetrics: DailyStoryMetrics?
+    @Published private(set) var originalAnswerMetrics: OriginalAnswerMetrics?
     @Published var bannerMessage: String?
 
     let story: StorySummary
-    private let apiClient: DailyAPIClient
-    private let cacheStore: CacheStore
+    private let repository: ArticleRepositoryProtocol
+    private let metricsRepository: ArticleMetricsRepositoryProtocol?
 
-    init(story: StorySummary, apiClient: DailyAPIClient, cacheStore: CacheStore) {
+    init(
+        story: StorySummary,
+        repository: ArticleRepositoryProtocol,
+        metricsRepository: ArticleMetricsRepositoryProtocol? = nil
+    ) {
         self.story = story
-        self.apiClient = apiClient
-        self.cacheStore = cacheStore
+        self.repository = repository
+        self.metricsRepository = metricsRepository
     }
 
     var shareURL: URL? {
@@ -56,24 +62,51 @@ final class ArticleDetailViewModel: ObservableObject {
 
     func load() async {
         guard phase == .idle else { return }
-        await reload()
+        async let detailLoad: Void = reload()
+        async let metricsLoad: Void = loadStoryMetrics()
+        _ = await (detailLoad, metricsLoad)
     }
 
     func reload() async {
-        if let cached = await cacheStore.loadDetail(id: story.id) {
-            phase = .loaded(cached.value, .cache(cached.cachedAt))
+        phase = .loading
+        do {
+            let result = try await repository.fetchDetail(id: story.id)
+            try Task.checkCancellation()
+            phase = .loaded(result.value, result.source)
             bannerMessage = nil
+            await loadOriginalAnswerMetrics(from: result.value.body)
+        } catch is CancellationError {
+            return
+        } catch {
+            phase = .failed("文章加载失败，请稍后重试")
+        }
+    }
+
+    private func loadStoryMetrics() async {
+        guard let metricsRepository else { return }
+        do {
+            let value = try await metricsRepository.fetchStoryMetrics(id: story.id)
+            try Task.checkCancellation()
+            storyMetrics = value.hasVisibleValues ? value : nil
+        } catch {
+            storyMetrics = nil
+        }
+    }
+
+    private func loadOriginalAnswerMetrics(from body: String?) async {
+        guard let metricsRepository,
+              let answerID = OriginalAnswerReferenceParser.uniqueAnswerID(in: body)
+        else {
+            originalAnswerMetrics = nil
             return
         }
 
-        phase = .loading
         do {
-            let detail = try await apiClient.fetchDetail(id: story.id)
-            await cacheStore.saveDetail(detail)
-            phase = .loaded(detail, .network)
-            bannerMessage = nil
+            let value = try await metricsRepository.fetchAnswerMetrics(answerID: answerID)
+            try Task.checkCancellation()
+            originalAnswerMetrics = value.hasVisibleValues ? value : nil
         } catch {
-            phase = .failed("文章加载失败，请稍后重试")
+            originalAnswerMetrics = nil
         }
     }
 }

@@ -9,6 +9,7 @@ enum ArticleDetailSource {
 
 struct ArticleDetailView: View {
     @ObservedObject var homeViewModel: HomeViewModel
+    @EnvironmentObject private var aiCoordinator: AIChatCoordinator
     let source: ArticleDetailSource
     let date: String
 
@@ -20,7 +21,15 @@ struct ArticleDetailView: View {
     @State private var isWebViewLoading = true
 
     @AppStorage("DailyReader.fontSize") private var fontSize: Double = 16.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedImage: IdentifiableImageURL?
+    @State private var readingProgress: Double = 0
+    @State private var scrollContentHeight: CGFloat = 0
+    @State private var scrollOffset: CGFloat = 0
+    @State private var preparedArticleText = ""
+
+    private static let topAnchorID = "article-detail-top"
+    static let readingControlVisibilityThreshold: CGFloat = 200
 
     @MainActor
     init(story: StorySummary, homeViewModel: HomeViewModel, source: ArticleDetailSource, date: String) {
@@ -31,27 +40,66 @@ struct ArticleDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+        GeometryReader { _ in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        Color.clear
+                            .frame(height: 1)
+                            .id(Self.topAnchorID)
+
                 if let bannerMessage = viewModel.bannerMessage {
                     OfflineBanner(message: bannerMessage)
                 }
 
-                // 1. Cover Image (Instant from story summary, fallback to loaded detail cover)
+                // 1. 封面图（先用列表摘要图即时显示，详情加载后换高清图）
                 if let imageURL = detailImageURL {
                     PlaceholderImageView(
                         urlString: imageURL,
-                        thumbnailURLString: viewModel.story.images.first
+                        thumbnailURLString: viewModel.story.images.first,
+                        targetSize: CGSize(width: 430, height: 220)
                     )
                     .frame(height: 220)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(DS.hairline, lineWidth: 0.7)
+                    )
                 }
 
-                VStack(alignment: .leading, spacing: 6) {
-                    // 2. Title (Instant from story summary, fallback to loaded detail title)
+                VStack(alignment: .leading, spacing: 10) {
+                    // 2. 标题（宋体特粗，像文章的「题花」）
                     Text(detailTitle)
-                        .font(.largeTitle.bold())
+                        .font(DS.songBlack(26))
+                        .foregroundStyle(DS.ink)
+                        .lineSpacing(5)
                         .lineLimit(nil)
+
+                    // 2.5 题下信息行 + 文武线，正文自此展开
+                    if metaLine != nil || ChineseDate.formatted(date) != nil {
+                        HStack(spacing: 8) {
+                            if let metaLine {
+                                Text(metaLine)
+                            }
+                            if metaLine != nil, ChineseDate.formatted(date) != nil {
+                                Text("·")
+                            }
+                            if let formattedDate = ChineseDate.formatted(date) {
+                                Text(formattedDate)
+                            }
+                        }
+                        .font(.system(size: 13))
+                        .foregroundStyle(DS.inkSecondary)
+                    }
+
+                    ArticleMetricByline(
+                        daily: viewModel.storyMetrics,
+                        originalAnswer: viewModel.originalAnswerMetrics
+                    )
+                    .transition(.opacity)
+
+                    RuleLine()
+                        .padding(.bottom, 2)
 
                     // 3. Body loading/loaded/failed phases
                     switch viewModel.phase {
@@ -60,9 +108,10 @@ struct ArticleDetailView: View {
                             Spacer()
                             VStack(spacing: 12) {
                                 ProgressView()
+                                    .tint(DS.inkSecondary)
                                 Text("正在加载内容...")
                                     .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(DS.inkSecondary)
                             }
                             .padding(.vertical, 40)
                             Spacer()
@@ -93,6 +142,13 @@ struct ArticleDetailView: View {
                                         onImageTap: { url in
                                             selectedImage = IdentifiableImageURL(url: url)
                                         },
+                                        enablesAISearch: true,
+                                        onAISelection: { selection in
+                                            openAIChat(selectedText: selection)
+                                        },
+                                        onArticleTextPrepared: { text in
+                                            preparedArticleText = text
+                                        },
                                         onError: { message in
                                             htmlErrorMessage = message
                                             isWebViewLoading = false
@@ -102,14 +158,27 @@ struct ArticleDetailView: View {
                                     .accessibilityIdentifier("articleHTMLContent")
                                     .opacity(isWebViewLoading ? 0 : 1)
 
+                                    if isImagePreviewUITestScenario {
+                                        Button {
+                                            selectedImage = IdentifiableImageURL(url: imagePreviewFixtureURL)
+                                        } label: {
+                                            Color.clear
+                                                .frame(width: 56, height: 56)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityIdentifier("articleImagePreviewTestTrigger")
+                                    }
+
                                     if isWebViewLoading {
                                         HStack {
                                             Spacer()
                                             VStack(spacing: 12) {
                                                 ProgressView()
+                                                    .tint(DS.inkSecondary)
                                                 Text("正在加载正文...")
                                                     .font(.footnote)
-                                                    .foregroundStyle(.secondary)
+                                                    .foregroundStyle(DS.inkSecondary)
                                             }
                                             .padding(.vertical, 40)
                                             Spacer()
@@ -123,9 +192,49 @@ struct ArticleDetailView: View {
                         }
                     }
                 }
+                    }
+                    .padding()
+                    .background {
+                        ArticleScrollObserver { offset, contentHeight, viewportHeight in
+                            updateScrollMetrics(
+                                offset: offset,
+                                contentHeight: contentHeight,
+                                viewportHeight: viewportHeight
+                            )
+                        }
+                        .frame(width: 0, height: 0)
+                    }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    if makeArticleAIContext() != nil {
+                        VStack(spacing: 10) {
+                            ArticleAIButton {
+                                openAIChat(selectedText: nil)
+                            }
+                            if shouldShowReadingControl {
+                                ReadingProgressButton(progress: readingProgress) {
+                                    let scroll = {
+                                        proxy.scrollTo(Self.topAnchorID, anchor: .top)
+                                    }
+                                    if reduceMotion {
+                                        scroll()
+                                    } else {
+                                        withAnimation(.easeOut(duration: 0.28)) {
+                                            scroll()
+                                        }
+                                    }
+                                }
+                                .transition(.opacity.combined(with: .scale(scale: 0.92)))
+                            }
+                        }
+                        .padding(.trailing, 18)
+                        .padding(.bottom, 18)
+                        .zIndex(10)
+                    }
+                }
             }
-            .padding()
         }
+        .background(DS.paper.ignoresSafeArea())
         .navigationTitle(viewModel.shareTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
@@ -225,6 +334,229 @@ struct ArticleDetailView: View {
         }
         return viewModel.story.title
     }
+
+    /// 题下信息行：优先展示来源提示（如「知乎热榜」「顶部故事」）
+    private var metaLine: String? {
+        if let hint = viewModel.story.hint, !hint.isEmpty {
+            return hint
+        }
+        return nil
+    }
+
+    private func makeArticleAIContext(focusedSelection: String? = nil) -> AIArticleContext? {
+        guard case .loaded(let detail, _) = viewModel.phase,
+              let html = detail.body,
+              !html.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        if preparedArticleText.isEmpty {
+            return AIArticleContextBuilder.make(
+                id: detail.id,
+                title: detailTitle,
+                html: html,
+                sourceURL: detail.shareURL ?? detail.url,
+                focusedSelection: focusedSelection
+            )
+        }
+        return AIArticleContextBuilder.make(
+            id: detail.id,
+            title: detailTitle,
+            plainText: preparedArticleText,
+            sourceURL: detail.shareURL ?? detail.url,
+            focusedSelection: focusedSelection
+        )
+    }
+
+    private func openAIChat(selectedText: String?) {
+        guard let context = makeArticleAIContext(focusedSelection: selectedText) else { return }
+        aiCoordinator.openArticleChat(context: context, selectedText: selectedText)
+    }
+
+    private var isImagePreviewUITestScenario: Bool {
+        ProcessInfo.processInfo.environment["MOCK_SCENARIO"] == "detail_body_image"
+    }
+
+    private var imagePreviewFixtureURL: String {
+        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+    }
+
+    private var shouldShowReadingControl: Bool {
+        guard case .loaded(let detail, _) = viewModel.phase,
+              detail.body?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+            return false
+        }
+        return Self.shouldShowReadingControl(offset: scrollOffset)
+    }
+
+    static func shouldShowReadingControl(offset: CGFloat) -> Bool {
+        offset > readingControlVisibilityThreshold
+    }
+
+    private func updateScrollMetrics(
+        offset: CGFloat,
+        contentHeight: CGFloat,
+        viewportHeight: CGFloat
+    ) {
+        scrollOffset = offset
+        scrollContentHeight = contentHeight
+        readingProgress = Self.progress(
+            offset: offset,
+            contentHeight: contentHeight,
+            viewportHeight: viewportHeight
+        )
+    }
+
+    static func progress(offset: CGFloat, contentHeight: CGFloat, viewportHeight: CGFloat) -> Double {
+        let scrollableDistance = max(contentHeight - viewportHeight, 1)
+        return min(max(Double(offset / scrollableDistance), 0), 1)
+    }
+}
+
+private struct ArticleScrollObserver: UIViewRepresentable {
+    let onChange: (_ offset: CGFloat, _ contentHeight: CGFloat, _ viewportHeight: CGFloat) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onChange: onChange)
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+        context.coordinator.attach(toAncestorOf: view)
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        context.coordinator.onChange = onChange
+        context.coordinator.attach(toAncestorOf: uiView)
+    }
+
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        coordinator.stopObserving()
+    }
+
+    final class Coordinator: NSObject {
+        var onChange: (_ offset: CGFloat, _ contentHeight: CGFloat, _ viewportHeight: CGFloat) -> Void
+        private weak var scrollView: UIScrollView?
+        private var observations: [NSKeyValueObservation] = []
+        private var attachmentAttempts = 0
+
+        init(onChange: @escaping (_ offset: CGFloat, _ contentHeight: CGFloat, _ viewportHeight: CGFloat) -> Void) {
+            self.onChange = onChange
+        }
+
+        func attach(toAncestorOf view: UIView) {
+            guard scrollView == nil else {
+                publishMetrics()
+                return
+            }
+
+            if let scrollView = sequence(first: view.superview, next: { $0?.superview })
+                .compactMap({ $0 as? UIScrollView })
+                .first {
+                observe(scrollView)
+                return
+            }
+
+            guard attachmentAttempts < 8 else { return }
+            attachmentAttempts += 1
+            DispatchQueue.main.async { [weak self, weak view] in
+                guard let self, let view else { return }
+                self.attach(toAncestorOf: view)
+            }
+        }
+
+        func stopObserving() {
+            observations.removeAll()
+            scrollView = nil
+        }
+
+        private func observe(_ scrollView: UIScrollView) {
+            self.scrollView = scrollView
+            observations = [
+                scrollView.observe(\.contentOffset, options: [.initial, .new]) { [weak self] _, _ in
+                    self?.publishMetrics()
+                },
+                scrollView.observe(\.contentSize, options: [.initial, .new]) { [weak self] _, _ in
+                    self?.publishMetrics()
+                },
+                scrollView.observe(\.bounds, options: [.initial, .new]) { [weak self] _, _ in
+                    self?.publishMetrics()
+                }
+            ]
+        }
+
+        private func publishMetrics() {
+            guard let scrollView else { return }
+            let offset = max(0, scrollView.contentOffset.y + scrollView.adjustedContentInset.top)
+            let contentHeight = scrollView.contentSize.height
+            let viewportHeight = scrollView.bounds.height
+            DispatchQueue.main.async { [weak self] in
+                self?.onChange(offset, contentHeight, viewportHeight)
+            }
+        }
+    }
+}
+
+private struct ArticleAIButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text("知")
+                .font(DS.songBlack(18))
+                .foregroundStyle(DS.indigo)
+                .frame(width: 50, height: 50)
+                .background(Circle().fill(DS.paperElevated))
+                .overlay(Circle().stroke(DS.indigo, lineWidth: 1))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("articleAIButton")
+        .accessibilityLabel("就当前文章询问 AI")
+        .accessibilityHint("打开带有当前文章上下文的对话")
+    }
+}
+
+private struct ReadingProgressButton: View {
+    let progress: Double
+    let action: () -> Void
+
+    private var percentage: Int {
+        Int((progress * 100).rounded())
+    }
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(DS.paperElevated)
+                Circle()
+                    .stroke(DS.inkSecondary.opacity(0.38), lineWidth: 1)
+                Circle()
+                    .trim(from: 0, to: max(progress, 0.025))
+                    .stroke(
+                        DS.indigo,
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+
+                VStack(spacing: -1) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("\(percentage)%")
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                }
+                .foregroundStyle(DS.indigo)
+            }
+            .frame(width: 54, height: 54)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("articleReadingProgressButton")
+        .accessibilityLabel("回到文章顶部")
+        .accessibilityValue("已阅读百分之\(percentage)")
+        .accessibilityHint("轻点返回文章开头")
+    }
 }
 
 struct IdentifiableImageURL: Identifiable {
@@ -234,8 +566,10 @@ struct IdentifiableImageURL: Identifiable {
 
 struct ZoomableScrollView<Content: View>: UIViewRepresentable {
     private var content: Content
+    private var onSingleTap: (() -> Void)?
 
-    init(@ViewBuilder content: () -> Content) {
+    init(onSingleTap: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
+        self.onSingleTap = onSingleTap
         self.content = content()
     }
 
@@ -252,6 +586,11 @@ struct ZoomableScrollView<Content: View>: UIViewRepresentable {
         let doubleTapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleDoubleTap(_:)))
         doubleTapGesture.numberOfTapsRequired = 2
         scrollView.addGestureRecognizer(doubleTapGesture)
+
+        let singleTapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSingleTap(_:)))
+        singleTapGesture.numberOfTapsRequired = 1
+        singleTapGesture.require(toFail: doubleTapGesture)
+        scrollView.addGestureRecognizer(singleTapGesture)
 
         let hostingController = UIHostingController(rootView: content)
         hostingController.view.backgroundColor = .clear
@@ -272,18 +611,28 @@ struct ZoomableScrollView<Content: View>: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIScrollView, context: Context) {
+        context.coordinator.onSingleTap = onSingleTap
         context.coordinator.hostingController?.rootView = content
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(onSingleTap: onSingleTap)
     }
 
     class Coordinator: NSObject, UIScrollViewDelegate {
         var hostingController: UIHostingController<Content>?
+        var onSingleTap: (() -> Void)?
+
+        init(onSingleTap: (() -> Void)? = nil) {
+            self.onSingleTap = onSingleTap
+        }
 
         func viewForZooming(in scrollView: UIScrollView) -> UIView? {
             return hostingController?.view
+        }
+
+        @objc func handleSingleTap(_ gesture: UITapGestureRecognizer) {
+            onSingleTap?()
         }
 
         @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
@@ -327,17 +676,17 @@ struct FullScreenImageViewer: View {
         ZStack(alignment: .topTrailing) {
             Color.black.ignoresSafeArea()
 
-            ZoomableScrollView {
-                AsyncImage(url: URL(string: urlString)) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    case .empty:
+            ZoomableScrollView(onSingleTap: {
+                dismiss()
+            }) {
+                RemoteImageView(
+                    urlString: urlString,
+                    contentMode: .fit,
+                    placeholder: AnyView(
                         ProgressView()
                             .tint(.white)
-                    case .failure:
+                    ),
+                    failure: AnyView(
                         VStack(spacing: 12) {
                             Image(systemName: "exclamationmark.triangle")
                                 .font(.largeTitle)
@@ -345,12 +694,11 @@ struct FullScreenImageViewer: View {
                             Text("图片加载失败")
                                 .foregroundStyle(.secondary)
                         }
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
+                    )
+                )
             }
             .ignoresSafeArea()
+            .accessibilityIdentifier("fullScreenImageViewer.background")
 
             Button(action: {
                 dismiss()
@@ -364,6 +712,7 @@ struct FullScreenImageViewer: View {
             }
             .padding(.top, 16)
             .padding(.trailing, 16)
+            .accessibilityIdentifier("fullScreenImageViewer.closeButton")
         }
     }
 }

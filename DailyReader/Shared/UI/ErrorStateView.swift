@@ -8,9 +8,10 @@ struct ErrorStateView: View {
         VStack(spacing: 14) {
             Image(systemName: "wifi.exclamationmark")
                 .font(.system(size: 36))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.inkSecondary)
             Text(message)
-                .font(.headline)
+                .font(DS.songBold(16))
+                .foregroundStyle(DS.ink)
                 .multilineTextAlignment(.center)
             Button("重试", action: retry)
                 .buttonStyle(.borderedProminent)

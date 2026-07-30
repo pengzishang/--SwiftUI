@@ -6,7 +6,44 @@ final class HomeFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars["日报阅读器"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["今天，先读一篇长一点的故事"].waitForExistence(timeout: 5))
+        let storyMetrics = app.descendants(matching: .any)["storyMetrics"].firstMatch
+        XCTAssertTrue(storyMetrics.waitForExistence(timeout: 5))
+        XCTAssertEqual(storyMetrics.label, "知乎日报热度 30，评论 10")
         attachScreenshot(named: "home-latest-success", app: app)
+    }
+
+    func testAISearchShowsProviderConfigurationPromptWhenNoProviderAvailable() {
+        let app = launchApp(scenario: "latest_success")
+
+        let aiButton = app.buttons["home.aiButton"]
+        XCTAssertTrue(aiButton.waitForExistence(timeout: 5))
+        aiButton.tap()
+
+        XCTAssertTrue(app.staticTexts["尚无可用 AI 服务"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["去设置"].exists)
+        XCTAssertFalse(app.buttons["发送"].isEnabled)
+        attachScreenshot(named: "ai-no-provider-configuration", app: app)
+    }
+
+    func testAISettingsShowsOneDefaultServiceAndHidesInternalLanes() {
+        let app = launchApp(
+            scenario: "latest_success",
+            additionalEnvironment: ["MOCK_AI_DEFAULT_SERVICE": "1"]
+        )
+
+        XCTAssertTrue(app.tabBars.buttons["我的"].waitForExistence(timeout: 5))
+        app.tabBars.buttons["我的"].tap()
+        XCTAssertTrue(app.buttons["me.settingsButton"].waitForExistence(timeout: 5))
+        app.buttons["me.settingsButton"].tap()
+        XCTAssertTrue(app.staticTexts["AI 服务设置"].waitForExistence(timeout: 5))
+        app.staticTexts["AI 服务设置"].tap()
+
+        XCTAssertTrue(app.navigationBars["AI 服务"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts.matching(identifier: "默认服务").count, 1)
+        XCTAssertFalse(app.staticTexts["ONLINE"].exists)
+        XCTAssertFalse(app.staticTexts["SENSENOVA_GOU"].exists)
+        XCTAssertFalse(app.staticTexts["ERIC"].exists)
+        XCTAssertFalse(app.staticTexts["ui-test-lane"].exists)
     }
 
     func testOpenArticleDetailAndReturnHome() {
@@ -17,12 +54,37 @@ final class HomeFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 5))
-        
+        XCTAssertTrue(app.staticTexts["枫问"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["写回答挣猫粮"].exists)
+        let dailyMetrics = app.descendants(matching: .any)["articleMetrics.daily"]
+        let originalAnswerMetrics = app.descendants(matching: .any)["articleMetrics.originalAnswer"]
+        XCTAssertTrue(dailyMetrics.waitForExistence(timeout: 5))
+        XCTAssertEqual(dailyMetrics.label, "日报数据，热度 30，评论 10")
+        XCTAssertTrue(originalAnswerMetrics.waitForExistence(timeout: 5))
+        XCTAssertEqual(originalAnswerMetrics.label, "原回答，赞同 1848，评论 179，收藏 1050")
+        let progressButton = app.descendants(matching: .any)["articleReadingProgressButton"]
+        XCTAssertFalse(progressButton.exists)
+
         XCTAssertTrue(app.buttons["操作"].exists)
         attachScreenshot(named: "detail-success", app: app)
 
         app.navigationBars.firstMatch.buttons.firstMatch.tap()
         XCTAssertTrue(app.navigationBars["日报阅读器"].waitForExistence(timeout: 5))
+    }
+
+    func testSwipeRightFromLeftEdgeReturnsToHome() {
+        let app = launchApp(scenario: "latest_success")
+
+        XCTAssertTrue(app.staticTexts["今天，先读一篇长一点的故事"].waitForExistence(timeout: 5))
+        app.staticTexts["今天，先读一篇长一点的故事"].firstMatch.tap()
+
+        XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 5))
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
+
+        XCTAssertTrue(app.navigationBars["日报阅读器"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["今天，先读一篇长一点的故事"].exists)
     }
 
     func testShareSheetCanOpenAndDismissWithoutLeavingDetail() throws {
@@ -83,7 +145,7 @@ final class HomeFlowUITests: XCTestCase {
     }
 
     func testLongBodyCanScrollToTail() {
-        let app = launchApp(scenario: "detail_long_body")
+        let app = launchApp(scenario: "detail_long_body", resetCache: true)
 
         openFirstStory(in: app)
 
@@ -92,7 +154,35 @@ final class HomeFlowUITests: XCTestCase {
             app.swipeUp()
         }
         XCTAssertTrue(app.staticTexts["长正文结尾标记"].waitForExistence(timeout: 5))
-        attachScreenshot(named: "detail-long-body-tail", app: app)
+        let progressButton = app.descendants(matching: .any)["articleReadingProgressButton"]
+        XCTAssertTrue(progressButton.waitForExistence(timeout: 2))
+        let progressValue = progressButton.value as? String
+        XCTAssertNotNil(progressValue)
+        XCTAssertNotEqual(progressValue, "已阅读百分之零")
+        progressButton.tap()
+        XCTAssertFalse(progressButton.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["长正文阅读验证"].firstMatch.waitForExistence(timeout: 2))
+        attachScreenshot(named: "detail-long-body-returned-top", app: app)
+    }
+
+    func testFullScreenImageDismissesWhenTappingBlackBackground() {
+        let app = launchApp(scenario: "detail_body_image", resetCache: true)
+
+        openFirstStory(in: app)
+
+        let title = app.staticTexts["图片预览验证"].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        let imagePreviewTrigger = app.buttons["articleImagePreviewTestTrigger"]
+        XCTAssertTrue(imagePreviewTrigger.waitForExistence(timeout: 5))
+        imagePreviewTrigger.tap()
+
+        let closeButton = app.buttons["fullScreenImageViewer.closeButton"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 5))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5)).tap()
+
+        XCTAssertFalse(closeButton.waitForExistence(timeout: 2))
+        XCTAssertTrue(title.waitForExistence(timeout: 2))
+        attachScreenshot(named: "detail-image-dismissed-by-background", app: app)
     }
 
     func testV10OutOfScopeEntriesDoNotAppear() {
@@ -107,20 +197,47 @@ final class HomeFlowUITests: XCTestCase {
         attachScreenshot(named: "scope-boundary-no-out-of-scope-entry", app: app)
     }
 
-    private func launchApp(scenario: String, resetCache: Bool = false) -> XCUIApplication {
+    private func launchApp(
+        scenario: String,
+        resetCache: Bool = false,
+        additionalEnvironment: [String: String] = [:]
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-UITestMode"]
         if resetCache {
             app.launchArguments.append("-ResetCache")
         }
-        app.launchEnvironment = ["MOCK_SCENARIO": scenario]
+        var environment = ["MOCK_SCENARIO": scenario]
+        environment.merge(additionalEnvironment) { _, newValue in newValue }
+        if resetCache {
+            environment["MOCK_KEYCHAIN_STATUS"] = "corrupted"
+        }
+        app.launchEnvironment = environment
         app.launch()
         return app
     }
 
     private func openFirstStory(in app: XCUIApplication) {
-        XCTAssertTrue(app.staticTexts["今天，先读一篇长一点的故事"].waitForExistence(timeout: 5))
-        app.staticTexts["今天，先读一篇长一点的故事"].firstMatch.tap()
+        if app.tabBars.buttons["日报"].exists {
+            app.tabBars.buttons["日报"].tap()
+        }
+
+        let firstStory = app.staticTexts["今天，先读一篇长一点的故事"]
+        if firstStory.waitForExistence(timeout: 8) {
+            firstStory.tap()
+            return
+        }
+
+        let fallbackStory = app.staticTexts["SwiftUI 里的温柔边界"]
+        if fallbackStory.waitForExistence(timeout: 2) {
+            fallbackStory.tap()
+            return
+        }
+
+        let storyRowPredicate = NSPredicate(format: "identifier BEGINSWITH %@", "storyRow-")
+        let firstStoryRow = app.descendants(matching: .any).matching(storyRowPredicate).firstMatch
+        XCTAssertTrue(firstStoryRow.waitForExistence(timeout: 5))
+        firstStoryRow.tap()
     }
 
     private func attachScreenshot(named name: String, app: XCUIApplication) {

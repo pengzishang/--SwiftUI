@@ -6,8 +6,7 @@ final class ArticleDetailViewModelTests: XCTestCase {
     func testLoadDetailUsesDetailShareURLFirst() async {
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题", url: "https://example.com/list"),
-            apiClient: MockDailyAPIClient(),
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: MockDailyService(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         await viewModel.load()
@@ -19,16 +18,15 @@ final class ArticleDetailViewModelTests: XCTestCase {
     func testShareIsUnavailableBeforeDetailFinishesLoading() {
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题", url: "https://example.com/list"),
-            apiClient: MockDailyAPIClient(),
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: MockDailyService(), cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         XCTAssertNil(viewModel.shareURL)
     }
 
     func testLoadDetailFallsBackToDetailURLBeforeListURL() async {
-        let api = MockDailyAPIClient()
-        api.detailResult = .success(
+        let service = MockDailyService()
+        service.detailResult = .success(
             ArticleDetail(
                 id: 1,
                 title: "第一篇日报",
@@ -39,8 +37,7 @@ final class ArticleDetailViewModelTests: XCTestCase {
         )
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题", url: "https://example.com/list"),
-            apiClient: api,
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         await viewModel.load()
@@ -51,12 +48,11 @@ final class ArticleDetailViewModelTests: XCTestCase {
     func testLoadDetailFallsBackToCachedDetail() async {
         let store = DiskCacheStore(rootURL: temporaryRoot())
         await store.saveDetail(.fixture)
-        let api = MockDailyAPIClient()
-        api.detailResult = .failure(APIError.transport("offline"))
+        let service = MockDailyService()
+        service.detailResult = .failure(APIError.transport("offline"))
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题"),
-            apiClient: api,
-            cacheStore: store
+            repository: makeRepository(service: service, cacheStore: store)
         )
 
         await viewModel.load()
@@ -66,12 +62,11 @@ final class ArticleDetailViewModelTests: XCTestCase {
     }
 
     func testLoadDetailFailureWithoutCacheShowsRetryableError() async {
-        let api = MockDailyAPIClient()
-        api.detailResult = .failure(APIError.transport("offline"))
+        let service = MockDailyService()
+        service.detailResult = .failure(APIError.transport("offline"))
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题"),
-            apiClient: api,
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         await viewModel.load()
@@ -81,8 +76,8 @@ final class ArticleDetailViewModelTests: XCTestCase {
     }
 
     func testMissingShareLinkDoesNotProduceFallbackGarbageURL() async {
-        let api = MockDailyAPIClient()
-        api.detailResult = .success(
+        let service = MockDailyService()
+        service.detailResult = .success(
             ArticleDetail(
                 id: 1,
                 title: "无分享链接文章",
@@ -93,8 +88,7 @@ final class ArticleDetailViewModelTests: XCTestCase {
         )
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题", url: nil),
-            apiClient: api,
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         await viewModel.load()
@@ -103,8 +97,8 @@ final class ArticleDetailViewModelTests: XCTestCase {
     }
 
     func testInvalidShareLinkIsRejected() async {
-        let api = MockDailyAPIClient()
-        api.detailResult = .success(
+        let service = MockDailyService()
+        service.detailResult = .success(
             ArticleDetail(
                 id: 1,
                 title: "无效分享链接文章",
@@ -115,8 +109,7 @@ final class ArticleDetailViewModelTests: XCTestCase {
         )
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题", url: "ftp://example.com/story"),
-            apiClient: api,
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         await viewModel.load()
@@ -125,8 +118,8 @@ final class ArticleDetailViewModelTests: XCTestCase {
     }
 
     func testShareTitleUsesDisplayedDetailTitle() async {
-        let api = MockDailyAPIClient()
-        api.detailResult = .success(
+        let service = MockDailyService()
+        service.detailResult = .success(
             ArticleDetail(
                 id: 1,
                 title: "详情标题",
@@ -136,8 +129,7 @@ final class ArticleDetailViewModelTests: XCTestCase {
         )
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题", url: "https://example.com/list-title"),
-            apiClient: api,
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         await viewModel.load()
@@ -145,9 +137,153 @@ final class ArticleDetailViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.shareTitle, "详情标题")
     }
 
+    func testLoadMetricsSeparatesDailyAndUniqueOriginalAnswerValues() async {
+        let service = MockDailyService()
+        service.detailResult = .success(
+            ArticleDetail(
+                id: 1,
+                title: "带原回答的文章",
+                body: "<a class='originUrl' href='https://www.zhihu.com/question/123/answer/456' hidden></a><p>正文</p>",
+                shareURL: "https://example.com/1"
+            )
+        )
+        let repository = makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        )
+        let viewModel = ArticleDetailViewModel(
+            story: StorySummary(id: 1, title: "列表标题"),
+            repository: repository,
+            metricsRepository: repository
+        )
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.storyMetrics, .fixture)
+        XCTAssertEqual(viewModel.originalAnswerMetrics, .fixture)
+        XCTAssertEqual(service.storyMetricsCallCount, 1)
+        XCTAssertEqual(service.answerMetricsCallCount, 1)
+    }
+
+    func testMultipleOriginalAnswersDoNotProduceMisleadingAggregateMetrics() async {
+        let service = MockDailyService()
+        service.detailResult = .success(
+            ArticleDetail(
+                id: 1,
+                title: "回答合集",
+                body: """
+                <a href='https://www.zhihu.com/question/123/answer/456'>回答一</a>
+                <a href='https://www.zhihu.com/question/789/answer/999'>回答二</a>
+                """,
+                shareURL: "https://example.com/1"
+            )
+        )
+        let repository = makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        )
+        let viewModel = ArticleDetailViewModel(
+            story: StorySummary(id: 1, title: "列表标题"),
+            repository: repository,
+            metricsRepository: repository
+        )
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.storyMetrics, .fixture)
+        XCTAssertNil(viewModel.originalAnswerMetrics)
+        XCTAssertEqual(service.answerMetricsCallCount, 0)
+    }
+
+    func testMetricsFailureDoesNotChangeLoadedArticlePhase() async {
+        let service = MockDailyService()
+        service.storyMetricsResult = .failure(APIError.transport("metrics offline"))
+        service.answerMetricsResult = .failure(APIError.transport("metrics offline"))
+        service.detailResult = .success(
+            ArticleDetail(
+                id: 1,
+                title: "正文仍可阅读",
+                body: "<a href='https://www.zhihu.com/question/123/answer/456'>原回答</a><p>正文</p>",
+                shareURL: "https://example.com/1"
+            )
+        )
+        let repository = makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        )
+        let viewModel = ArticleDetailViewModel(
+            story: StorySummary(id: 1, title: "列表标题"),
+            repository: repository,
+            metricsRepository: repository
+        )
+
+        await viewModel.load()
+
+        if case .loaded(let detail, .network) = viewModel.phase {
+            XCTAssertEqual(detail.title, "正文仍可阅读")
+        } else {
+            XCTFail("Expected article to remain loaded when optional metrics fail")
+        }
+        XCTAssertNil(viewModel.storyMetrics)
+        XCTAssertNil(viewModel.originalAnswerMetrics)
+    }
+
+    func testOriginalAnswerParserAcceptsRepeatedSameAnswerButRejectsInvalidLinks() {
+        let repeated = """
+        <a class='originUrl' href='https://www.zhihu.com/question/123/answer/456'>来源</a>
+        <a href='https://www.zhihu.com/question/123/answer/456'>再次查看</a>
+        """
+        XCTAssertEqual(OriginalAnswerReferenceParser.uniqueAnswerID(in: repeated), 456)
+        XCTAssertNil(
+            OriginalAnswerReferenceParser.uniqueAnswerID(
+                in: "<a href='https://www.zhihu.com/question/None/answer/None'>无来源</a>"
+            )
+        )
+    }
+
+    func testReadingProgressIsClampedToScrollableRange() {
+        XCTAssertEqual(
+            ArticleDetailView.progress(offset: -40, contentHeight: 1_600, viewportHeight: 800),
+            0,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            ArticleDetailView.progress(offset: 400, contentHeight: 1_600, viewportHeight: 800),
+            0.5,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            ArticleDetailView.progress(offset: 1_200, contentHeight: 1_600, viewportHeight: 800),
+            1,
+            accuracy: 0.001
+        )
+    }
+
+    func testReadingProgressHandlesContentShorterThanViewport() {
+        XCTAssertEqual(
+            ArticleDetailView.progress(offset: 0, contentHeight: 500, viewportHeight: 800),
+            0,
+            accuracy: 0.001
+        )
+    }
+
+    func testReadingControlOnlyShowsAfterVisibilityThreshold() {
+        XCTAssertFalse(ArticleDetailView.shouldShowReadingControl(offset: 0))
+        XCTAssertFalse(
+            ArticleDetailView.shouldShowReadingControl(
+                offset: ArticleDetailView.readingControlVisibilityThreshold
+            )
+        )
+        XCTAssertTrue(
+            ArticleDetailView.shouldShowReadingControl(
+                offset: ArticleDetailView.readingControlVisibilityThreshold + 1
+            )
+        )
+    }
+
     func testEmptyBodyStillLoadsDetailForUnavailableContentState() async {
-        let api = MockDailyAPIClient()
-        api.detailResult = .success(
+        let service = MockDailyService()
+        service.detailResult = .success(
             ArticleDetail(
                 id: 1,
                 title: "空正文",
@@ -157,8 +293,7 @@ final class ArticleDetailViewModelTests: XCTestCase {
         )
         let viewModel = ArticleDetailViewModel(
             story: StorySummary(id: 1, title: "列表标题"),
-            apiClient: api,
-            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+            repository: makeRepository(service: service, cacheStore: DiskCacheStore(rootURL: temporaryRoot()))
         )
 
         await viewModel.load()
