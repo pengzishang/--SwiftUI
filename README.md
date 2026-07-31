@@ -4,8 +4,6 @@
 
 当前版本：**2.0** ｜ 最低系统：**iOS 17.0** ｜ Swift：**5.9**
 
-![AI 阅读助手设计预览](docs/design/ai-reading-assistant/visual-design/ai-chat-mobile-board.png)
-
 ## 功能概览
 
 ### 日报阅读
@@ -15,6 +13,13 @@
 - 统一处理文章式正文与知乎问答式正文。
 - 支持收藏、已读记录、分享与“冷宫”隐藏管理。
 - 网络失败时优先回退到磁盘缓存，并提供清晰的空态和重试入口。
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/design/article-metrics/runtime-baseline/home-after-separate-metrics-row.png" width="360" alt="首页文章互动数据设计稿"><br><sub>首页 · 日报数据独立信息行</sub></td>
+    <td align="center"><img src="docs/design/article-metrics/runtime-baseline/detail-after.png" width="360" alt="文章详情互动数据设计稿"><br><sub>文章详情 · 日报与原回答互动数据</sub></td>
+  </tr>
+</table>
 
 ### 知乎热榜
 
@@ -27,6 +32,12 @@
 - 集中管理收藏和已读内容。
 - 支持收藏 / 已读胶囊切换与本地搜索。
 - 从页面设置入口管理阅读数据、缓存和 AI 服务。
+
+<p align="center">
+  <img src="docs/design/article-metrics/runtime-baseline/detail-dark-large-text.png" width="380" alt="深色模式与大字号阅读适配设计稿">
+  <br>
+  <sub>阅读适配 · 深色模式与大字号</sub>
+</p>
 
 ### AI 阅读助手
 
@@ -42,6 +53,12 @@
 - 内置默认服务可包含多条内部线路，请求时并发竞速，以首条有效正文选择唯一赢家并取消其余请求。
 
 > 未配置可用 AI 服务时，阅读功能仍可正常使用。快捷问题会保留在输入框中，并引导用户前往配置。
+
+<p align="center">
+  <img src="docs/design/ai-reading-assistant/visual-design/ai-chat-mobile-board.png" width="760" alt="AI 阅读助手移动端设计稿">
+  <br>
+  <sub>AI 阅读助手 · 会话、上下文与服务配置设计</sub>
+</p>
 
 ## 技术栈
 
