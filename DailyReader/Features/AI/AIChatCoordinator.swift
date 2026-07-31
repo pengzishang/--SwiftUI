@@ -253,6 +253,13 @@ final class AIChatViewModel: ObservableObject {
         coordinator.update(session)
     }
 
+    func send(prompt: String) {
+        let content = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !content.isEmpty, !isGenerating else { return }
+        updateDraft(content)
+        send()
+    }
+
     func send() {
         let content = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !content.isEmpty, !isGenerating else { return }

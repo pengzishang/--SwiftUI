@@ -25,6 +25,34 @@ final class HomeFlowUITests: XCTestCase {
         attachScreenshot(named: "ai-no-provider-configuration", app: app)
     }
 
+    func testArticleQuickPromptsKeepSelectionWhenNoProviderIsAvailable() {
+        let app = launchApp(scenario: "latest_success")
+
+        openFirstStory(in: app)
+        let articleAIButton = app.buttons["articleAIButton"]
+        XCTAssertTrue(articleAIButton.waitForExistence(timeout: 5))
+        articleAIButton.tap()
+
+        let expectedPrompts = [
+            "用三句话总结这篇文章",
+            "解释文中的核心概念",
+            "查证文章中的关键结论"
+        ]
+        for (index, prompt) in expectedPrompts.enumerated() {
+            let quickPrompt = app.buttons["ai.quickPrompt.\(index)"]
+            XCTAssertTrue(quickPrompt.waitForExistence(timeout: 5))
+            XCTAssertEqual(quickPrompt.label, prompt)
+        }
+
+        app.buttons["ai.quickPrompt.0"].tap()
+
+        let composer = app.textFields["ai.chat.composer"]
+        XCTAssertTrue(composer.waitForExistence(timeout: 5))
+        XCTAssertEqual(composer.value as? String, "用三句话总结这篇文章")
+        XCTAssertTrue(app.staticTexts["暂无可用 AI 服务，请前往设置启用或配置"].exists)
+        XCTAssertTrue(app.buttons["配置服务"].exists)
+    }
+
     func testAISettingsShowsOneDefaultServiceAndHidesInternalLanes() {
         let app = launchApp(
             scenario: "latest_success",

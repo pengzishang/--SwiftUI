@@ -250,8 +250,12 @@ struct AIChatView: View {
     private var messageContent: some View {
         if viewModel.session.messages.isEmpty {
             AIChatEmptyView(articleContext: viewModel.session.articleContext) { prompt in
-                viewModel.updateDraft(prompt)
-                composerFocused = true
+                if viewModel.session.articleContext == nil {
+                    viewModel.updateDraft(prompt)
+                    composerFocused = true
+                } else {
+                    viewModel.send(prompt: prompt)
+                }
             }
         } else {
             ScrollViewReader { proxy in
@@ -328,6 +332,7 @@ struct AIChatView: View {
                 )
                 .lineLimit(1...6)
                 .focused($composerFocused)
+                .accessibilityIdentifier("ai.chat.composer")
                 .font(.system(size: 16))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 11)
@@ -407,7 +412,7 @@ private struct AIChatEmptyView: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
                 VStack(spacing: 9) {
-                    ForEach(prompts, id: \.self) { prompt in
+                    ForEach(Array(prompts.enumerated()), id: \.offset) { index, prompt in
                         Button(prompt) { selectPrompt(prompt) }
                             .font(.system(size: 14))
                             .foregroundStyle(DS.ink)
@@ -416,6 +421,8 @@ private struct AIChatEmptyView: View {
                             .background(DS.paperElevated)
                             .overlay { RoundedRectangle(cornerRadius: 10).stroke(DS.hairline, lineWidth: 0.7) }
                             .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .accessibilityIdentifier("ai.quickPrompt.\(index)")
+                            .accessibilityHint(articleContext == nil ? "填入输入框" : "立即发送")
                     }
                 }
                 .padding(.top, 10)
