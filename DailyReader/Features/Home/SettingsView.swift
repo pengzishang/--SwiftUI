@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject private var aiCoordinator: AIChatCoordinator
     @AppStorage("DailyReader.fontSize") private var fontSize: Double = 16.0
     @AppStorage("DailyReader.listFontSize") private var listFontSize: Double = 16.0
+    @AppStorage(HomeInformationDensity.storageKey) private var storedHomeDensity = HomeInformationDensity.medium.rawValue
 
     var body: some View {
         List {
@@ -48,6 +49,26 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 4)
                 .listRowBackground(DS.paperElevated)
+
+                NavigationLink {
+                    HomeDensitySettingsView(selection: homeDensityBinding)
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("首页信息密度")
+                                .foregroundStyle(DS.ink)
+                            Text("信息密度不会改变推荐内容和字体大小")
+                                .font(.caption)
+                                .foregroundStyle(DS.inkSecondary)
+                        }
+                        Spacer(minLength: 12)
+                        Text(homeDensity.title)
+                            .font(.subheadline)
+                            .foregroundStyle(DS.indigo)
+                    }
+                }
+                .listRowBackground(DS.paperElevated)
+                .accessibilityIdentifier("settings.homeDensity")
             }
             .listRowSeparatorTint(DS.hairline)
 
@@ -113,6 +134,17 @@ struct SettingsView: View {
         label(for: listFontSize)
     }
 
+    private var homeDensity: HomeInformationDensity {
+        HomeInformationDensity(storedValue: storedHomeDensity)
+    }
+
+    private var homeDensityBinding: Binding<HomeInformationDensity> {
+        Binding(
+            get: { homeDensity },
+            set: { storedHomeDensity = $0.rawValue }
+        )
+    }
+
     private func label(for size: Double) -> String {
         switch Int(size) {
         case 14: return "较小"
@@ -122,5 +154,20 @@ struct SettingsView: View {
         case 22: return "特大"
         default: return "标准"
         }
+    }
+}
+
+private struct HomeDensitySettingsView: View {
+    @Binding var selection: HomeInformationDensity
+
+    var body: some View {
+        ScrollView {
+            HomeDensitySelectionView(selection: $selection, showsTitle: false)
+                .padding(20)
+        }
+        .background(DS.paper.ignoresSafeArea())
+        .navigationTitle("首页信息密度")
+        .navigationBarTitleDisplayMode(.inline)
+        .accessibilityIdentifier("settings.homeDensity.screen")
     }
 }

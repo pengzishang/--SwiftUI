@@ -156,6 +156,7 @@ enum AppEnvironment {
             defaults.removeObject(forKey: "DailyReader.hiddenStories")
             defaults.removeObject(forKey: "DailyReader.favoriteStories")
             defaults.removeObject(forKey: "DailyReader.readStories")
+            defaults.removeObject(forKey: HomeInformationDensity.storageKey)
 
             try? FileManager.default.removeItem(
                 at: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
