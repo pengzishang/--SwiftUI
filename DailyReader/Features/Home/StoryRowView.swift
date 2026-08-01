@@ -5,6 +5,7 @@ struct StoryRowView: View {
     let isRead: Bool
     let displaysMetrics: Bool
     let density: HomeInformationDensity
+    let immersiveImageURL: String?
 
     @StateObject private var metricsViewModel: StoryMetricsViewModel
     @AppStorage("DailyReader.listFontSize") private var listFontSize: Double = 16.0
@@ -14,12 +15,14 @@ struct StoryRowView: View {
         story: StorySummary,
         isRead: Bool,
         displaysMetrics: Bool = false,
-        density: HomeInformationDensity = .medium
+        density: HomeInformationDensity = .medium,
+        immersiveImageURL: String? = nil
     ) {
         self.story = story
         self.isRead = isRead
         self.displaysMetrics = displaysMetrics
         self.density = density
+        self.immersiveImageURL = immersiveImageURL
         _metricsViewModel = StateObject(
             wrappedValue: AppEnvironment.makeStoryMetricsViewModel(storyID: story.id)
         )
@@ -126,7 +129,14 @@ struct StoryRowView: View {
             ZStack {
                 HomeEditorialPlaceholder()
 
-                if let image = story.images.first, !image.isEmpty {
+                if density == .low,
+                   immersiveImageURL?.isEmpty == false || story.images.first?.isEmpty == false {
+                    PlaceholderImageView(
+                        urlString: immersiveImageURL ?? story.images.first,
+                        thumbnailURLString: story.images.first,
+                        targetSize: proxy.size
+                    )
+                } else if let image = story.images.first, !image.isEmpty {
                     RemoteImageView(
                         urlString: image,
                         targetSize: proxy.size,

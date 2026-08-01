@@ -31,13 +31,17 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var hiddenStories: [HiddenStory] = []
     @Published private(set) var favoriteStories: [FavoriteStory] = []
     @Published private(set) var readStories: [ReadStory] = []
+    @Published private(set) var immersiveImageURLs: [Int: String] = [:]
     @Published var bannerMessage: String?
 
     private static let maximumAutomaticHistoryBatchCount = 12
     private static let historyPrefetchRemainingStoryCount = 8
 
     private let repository: HomeRepositoryProtocol
+    private let articleRepository: ArticleRepositoryProtocol?
     private var loadedStoryIDs = Set<Int>()
+    private var immersiveImageRequestIDs = Set<Int>()
+    private var resolvedImmersiveImageIDs = Set<Int>()
     private var hasAttemptedInitialLoad = false
     private var loadingHistoryCursor: String?
     private let readStoryIDsKey = "DailyReader.readStoryIDs"
@@ -45,9 +49,13 @@ final class HomeViewModel: ObservableObject {
     private let favoriteStoriesKey = "DailyReader.favoriteStories"
     private let readStoriesKey = "DailyReader.readStories"
 
-    init(repository: HomeRepositoryProtocol) {
+    init(
+        repository: HomeRepositoryProtocol,
+        articleRepository: ArticleRepositoryProtocol? = nil
+    ) {
         self.repository = repository
-        
+        self.articleRepository = articleRepository
+
         let defaults = UserDefaults.standard
         let readIDs = defaults.array(forKey: readStoryIDsKey) as? [Int]
         let hiddenData = defaults.data(forKey: hiddenStoriesKey)
@@ -307,6 +315,41 @@ final class HomeViewModel: ObservableObject {
         } catch {
             historyLoadState = .failed("加载历史失败，已保留当前内容")
         }
+    }
+
+    func loadImmersiveImage(for story: StorySummary) async {
+        guard !resolvedImmersiveImageIDs.contains(story.id) else { return }
+
+        if let topStoryImage = topStories.first(where: { $0.id == story.id })?.image,
+           !topStoryImage.isEmpty {
+            immersiveImageURLs[story.id] = topStoryImage
+            resolvedImmersiveImageIDs.insert(story.id)
+            return
+        }
+
+        guard let articleRepository,
+              immersiveImageRequestIDs.insert(story.id).inserted
+        else {
+            return
+        }
+        defer { immersiveImageRequestIDs.remove(story.id) }
+
+        do {
+            let result = try await articleRepository.fetchDetail(id: story.id)
+            try Task.checkCancellation()
+            if let imageURL = Self.preferredImmersiveImageURL(from: result.value) {
+                immersiveImageURLs[story.id] = imageURL
+            }
+            resolvedImmersiveImageIDs.insert(story.id)
+        } catch {
+            return
+        }
+    }
+
+    static func preferredImmersiveImageURL(from detail: ArticleDetail) -> String? {
+        [detail.image, detail.images.first]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { !$0.isEmpty }
     }
 
     // MARK: - Status updates & Persistence

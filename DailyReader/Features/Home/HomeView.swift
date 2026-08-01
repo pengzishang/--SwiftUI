@@ -157,7 +157,8 @@ struct HomeView: View {
                         story: story,
                         isRead: viewModel.isStoryRead(story.id),
                         displaysMetrics: density.displaysMetrics,
-                        density: density
+                        density: density,
+                        immersiveImageURL: viewModel.immersiveImageURLs[story.id]
                     )
                 }
                 .buttonStyle(.plain)
@@ -167,6 +168,10 @@ struct HomeView: View {
                 Rectangle()
                     .fill(DS.hairline)
                     .frame(height: 0.7)
+            }
+            .task(id: density == .low ? story.id : nil) {
+                guard density == .low else { return }
+                await viewModel.loadImmersiveImage(for: story)
             }
             .onAppear {
                 if story.id == viewModel.thresholdStoryID {

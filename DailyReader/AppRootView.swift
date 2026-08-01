@@ -70,7 +70,10 @@ enum AppEnvironment {
 
     @MainActor
     static func makeHomeViewModel() -> HomeViewModel {
-        HomeViewModel(repository: repository)
+        HomeViewModel(
+            repository: repository,
+            articleRepository: repository
+        )
     }
 
     @MainActor
