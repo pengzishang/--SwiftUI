@@ -28,6 +28,7 @@
 - [`design-system.md`](design/design-system.md)：全局“今日刊”视觉系统。
 - [`article-navigation/`](design/article-navigation/)：正文导航、双正文和 WebView 设计。
 - [`article-metrics/`](design/article-metrics/)：文章互动数据设计、实现记录与运行截图。
+- [`home-density/`](design/home-density/)：首页沉浸／标准／速览三档 UI 规格与可交互原型。
 - [`ai-reading-assistant/`](design/ai-reading-assistant/)：AI 阅读助手 UI 规格和可视化设计稿。
 
 ### `testing/` — 测试规范
