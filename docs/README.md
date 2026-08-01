@@ -20,6 +20,7 @@
 ### `features/` — 功能需求与架构
 
 - [`article-detail/`](features/article-detail/)：双正文模式需求和技术架构。
+- [`home-density/`](features/home-density/)：首页高／中／低三档信息密度切换需求。
 - [`zhihu-login/`](features/zhihu-login/)：已隐藏的知乎登录实验需求和架构。
 
 ### `design/` — 设计规范与可视化产物
