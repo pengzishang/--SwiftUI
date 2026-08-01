@@ -20,6 +20,7 @@ struct HTMLWebView: UIViewRepresentable {
         controller.add(context.coordinator, name: "imageClicked")
         controller.add(context.coordinator, name: "aiSelection")
         controller.add(context.coordinator, name: "articleTextPrepared")
+        controller.add(context.coordinator, name: "contentHeightChanged")
         configuration.userContentController = controller
 
         let webView = AISelectableWebView(frame: .zero, configuration: configuration)
@@ -140,7 +141,7 @@ struct HTMLWebView: UIViewRepresentable {
               font-size: calc(\(fontSize)px * 3.35);
               font-weight: 900;
               line-height: 0.82;
-              color: \(textColor);
+              color: \(dropCapColor);
               padding: 0.10em 0.10em 0 0;
             }
             a { color: \(linkColor); }
@@ -185,7 +186,12 @@ struct HTMLWebView: UIViewRepresentable {
               return !paragraph.closest('.meta') && (paragraph.textContent || '').trim().length > 0;
             });
             if (firstParagraph) {
-              firstParagraph.classList.add('drop-cap');
+              var firstText = (firstParagraph.textContent || '').trim();
+              var firstToken = firstText.charAt(0).toUpperCase();
+              var isQuestionAnswer = firstToken === 'Q' || firstToken === '问' || firstText.indexOf('Q:') === 0 || firstText.indexOf('Q：') === 0;
+              if (!isQuestionAnswer) {
+                firstParagraph.classList.add('drop-cap');
+              }
             }
             document.querySelectorAll('img').forEach(function(img) {
               if (img.classList.contains('avatar') || img.closest('.avatar') || img.closest('.author') || img.closest('.source')) {
@@ -198,6 +204,15 @@ struct HTMLWebView: UIViewRepresentable {
             });
             var articleText = (document.body.innerText || '').replace(/\\s+/g, ' ').trim();
             window.webkit.messageHandlers.articleTextPrepared.postMessage(articleText);
+            function reportContentHeight() {
+              var height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight, document.documentElement.offsetHeight);
+              window.webkit.messageHandlers.contentHeightChanged.postMessage(height);
+            }
+            window.addEventListener('load', reportContentHeight);
+            if (window.ResizeObserver) {
+              new ResizeObserver(reportContentHeight).observe(document.body);
+            }
+            reportContentHeight();
           </script>
         </body>
         </html>
@@ -212,6 +227,11 @@ struct HTMLWebView: UIViewRepresentable {
     /// 链接靛蓝（蓝黑墨水）
     private var linkColor: String {
         DS.indigoUI.resolvedColor(with: UITraitCollection.current).hexString
+    }
+
+    /// 首字朱砂色，与「今日刊」主题的印章强调色保持一致
+    private var dropCapColor: String {
+        DS.cinnabarUI.resolvedColor(with: UITraitCollection.current).hexString
     }
 
     /// 辅助淡墨（引用、作者简介、题注）
