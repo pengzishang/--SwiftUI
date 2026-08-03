@@ -94,6 +94,7 @@ actor AISessionStore {
     private let fileURL: URL
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private var latestRevision: UInt64 = 0
 
     init(fileManager: FileManager = .default, rootURL: URL? = nil) {
         self.fileManager = fileManager
@@ -134,9 +135,16 @@ actor AISessionStore {
     }
 
     func save(_ sessions: [AIChatSession]) throws {
+        let revision = latestRevision == UInt64.max ? UInt64.max : latestRevision + 1
+        try save(sessions, revision: revision)
+    }
+
+    func save(_ sessions: [AIChatSession], revision: UInt64) throws {
+        guard revision > latestRevision else { return }
         try fileManager.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let data = try encoder.encode(Envelope(schemaVersion: 1, sessions: sessions))
         try data.write(to: fileURL, options: [.atomic])
+        latestRevision = revision
     }
 }
 
