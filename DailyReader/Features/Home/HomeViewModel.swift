@@ -66,6 +66,33 @@ final class HomeViewModel: ObservableObject {
         self.readingStateBackup = readingStateBackup
         self.keychainErrorHandler = keychainErrorHandler
 
+        let readInitialBackup: (String) -> Data? = { account in
+            do {
+                return try readingStateBackup.read(account: account)
+            } catch {
+                keychainErrorHandler(error)
+                return nil
+            }
+        }
+        let saveInitialBackup: (Data, String) -> Void = { data, account in
+            do {
+                try readingStateBackup.save(data, account: account)
+            } catch {
+                keychainErrorHandler(error)
+            }
+        }
+        let deleteInitialBackup: (String) -> Void = { account in
+            do {
+                try readingStateBackup.delete(account: account)
+            } catch {
+                keychainErrorHandler(error)
+            }
+        }
+
+        let readStoryIDsKey = "DailyReader.readStoryIDs"
+        let hiddenStoriesKey = "DailyReader.hiddenStories"
+        let favoriteStoriesKey = "DailyReader.favoriteStories"
+        let readStoriesKey = "DailyReader.readStories"
         let defaults = UserDefaults.standard
         let readIDs = defaults.array(forKey: readStoryIDsKey) as? [Int]
         let hiddenData = defaults.data(forKey: hiddenStoriesKey)
@@ -83,61 +110,61 @@ final class HomeViewModel: ObservableObject {
             var restoredFavorite: [FavoriteStory]? = nil
             var restoredRead: [ReadStory]? = nil
             
-            if let data = readBackup(for: readStoryIDsKey) {
+            if let data = readInitialBackup(readStoryIDsKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    deleteBackup(for: readStoryIDsKey)
+                    deleteInitialBackup(readStoryIDsKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([Int].self, from: data)
                         restoredReadIDs = list
                         defaults.set(list, forKey: readStoryIDsKey)
                     } catch {
-                        deleteBackup(for: readStoryIDsKey)
+                        deleteInitialBackup(readStoryIDsKey)
                         defaults.removeObject(forKey: readStoryIDsKey)
                     }
                 }
             }
             
-            if let data = readBackup(for: hiddenStoriesKey) {
+            if let data = readInitialBackup(hiddenStoriesKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    deleteBackup(for: hiddenStoriesKey)
+                    deleteInitialBackup(hiddenStoriesKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([HiddenStory].self, from: data)
                         restoredHidden = list
                         defaults.set(data, forKey: hiddenStoriesKey)
                     } catch {
-                        deleteBackup(for: hiddenStoriesKey)
+                        deleteInitialBackup(hiddenStoriesKey)
                         defaults.removeObject(forKey: hiddenStoriesKey)
                     }
                 }
             }
             
-            if let data = readBackup(for: favoriteStoriesKey) {
+            if let data = readInitialBackup(favoriteStoriesKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    deleteBackup(for: favoriteStoriesKey)
+                    deleteInitialBackup(favoriteStoriesKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([FavoriteStory].self, from: data)
                         restoredFavorite = list
                         defaults.set(data, forKey: favoriteStoriesKey)
                     } catch {
-                        deleteBackup(for: favoriteStoriesKey)
+                        deleteInitialBackup(favoriteStoriesKey)
                         defaults.removeObject(forKey: favoriteStoriesKey)
                     }
                 }
             }
             
-            if let data = readBackup(for: readStoriesKey) {
+            if let data = readInitialBackup(readStoriesKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    deleteBackup(for: readStoriesKey)
+                    deleteInitialBackup(readStoriesKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([ReadStory].self, from: data)
                         restoredRead = list
                         defaults.set(data, forKey: readStoriesKey)
                     } catch {
-                        deleteBackup(for: readStoriesKey)
+                        deleteInitialBackup(readStoriesKey)
                         defaults.removeObject(forKey: readStoriesKey)
                     }
                 }
@@ -172,21 +199,21 @@ final class HomeViewModel: ObservableObject {
             }
             
             // Check if Keychain is empty, and if so, perform reverse backup (T2-KC-04)
-            let kcReadData = readBackup(for: readStoryIDsKey)
+            let kcReadData = readInitialBackup(readStoryIDsKey)
             if kcReadData == nil {
                 if !self.readStoryIDs.isEmpty {
                     if let data = try? JSONEncoder().encode(Array(self.readStoryIDs)) {
-                        saveBackup(data, for: readStoryIDsKey)
+                        saveInitialBackup(data, readStoryIDsKey)
                     }
                 }
                 if let data = hiddenData {
-                    saveBackup(data, for: hiddenStoriesKey)
+                    saveInitialBackup(data, hiddenStoriesKey)
                 }
                 if let data = favoriteData {
-                    saveBackup(data, for: favoriteStoriesKey)
+                    saveInitialBackup(data, favoriteStoriesKey)
                 }
                 if let data = readData {
-                    saveBackup(data, for: readStoriesKey)
+                    saveInitialBackup(data, readStoriesKey)
                 }
             }
         }

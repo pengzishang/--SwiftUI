@@ -153,8 +153,8 @@ actor AISessionStore {
 
 @MainActor
 final class AIConfigurationStore: ObservableObject {
-    static let userProviderID = "user.custom"
-    static let defaultProviderID = "builtin.default"
+    nonisolated static let userProviderID = "user.custom"
+    nonisolated static let defaultProviderID = "builtin.default"
 
     private struct LegacyProviderProfile: Codable {
         let id: String
