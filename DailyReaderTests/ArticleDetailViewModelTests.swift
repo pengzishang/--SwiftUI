@@ -241,6 +241,13 @@ final class ArticleDetailViewModelTests: XCTestCase {
         )
     }
 
+    func testAutomaticReadQualificationOnlyAppliesToDailySource() {
+        XCTAssertTrue(ArticleDetailSource.daily.enablesAutomaticReadQualification)
+        XCTAssertFalse(ArticleDetailSource.favorites.enablesAutomaticReadQualification)
+        XCTAssertFalse(ArticleDetailSource.coldPalace.enablesAutomaticReadQualification)
+        XCTAssertFalse(ArticleDetailSource.read.enablesAutomaticReadQualification)
+    }
+
     func testReadQualificationRequiresTenActiveSeconds() {
         var now = ContinuousClock.now
         let timer = ReadQualificationTimer(now: { now })

@@ -1,10 +1,14 @@
 import SwiftUI
 
-enum ArticleDetailSource {
+enum ArticleDetailSource: CaseIterable {
     case daily
     case coldPalace
     case favorites
     case read
+
+    var enablesAutomaticReadQualification: Bool {
+        self == .daily
+    }
 }
 
 struct ArticleDetailView: View {
@@ -306,7 +310,8 @@ struct ArticleDetailView: View {
         }
         .markReadAfterViewing(
             storyID: viewModel.story.id,
-            isRead: homeViewModel.isStoryRead(viewModel.story.id)
+            isRead: homeViewModel.isStoryRead(viewModel.story.id),
+            isEnabled: source.enablesAutomaticReadQualification
         ) {
             homeViewModel.markStoryRead(viewModel.story, date: date)
         }
@@ -458,13 +463,21 @@ struct MarkReadAfterViewingModifier: ViewModifier {
 
     let storyID: Int
     let isRead: Bool
+    let isEnabled: Bool
     let markRead: () -> Void
 
     func body(content: Content) -> some View {
         content
-            .task(id: ReadQualificationTaskID(storyID: storyID, isRead: isRead, scenePhase: scenePhase)) {
+            .task(
+                id: ReadQualificationTaskID(
+                    storyID: storyID,
+                    isRead: isRead,
+                    isEnabled: isEnabled,
+                    scenePhase: scenePhase
+                )
+            ) {
                 timer.prepare(for: storyID)
-                guard !isRead, scenePhase == .active else {
+                guard isEnabled, !isRead, scenePhase == .active else {
                     pauseAndMarkIfQualified()
                     return
                 }
@@ -497,12 +510,25 @@ struct MarkReadAfterViewingModifier: ViewModifier {
 private struct ReadQualificationTaskID: Equatable {
     let storyID: Int
     let isRead: Bool
+    let isEnabled: Bool
     let scenePhase: ScenePhase
 }
 
 extension View {
-    func markReadAfterViewing(storyID: Int, isRead: Bool, markRead: @escaping () -> Void) -> some View {
-        modifier(MarkReadAfterViewingModifier(storyID: storyID, isRead: isRead, markRead: markRead))
+    func markReadAfterViewing(
+        storyID: Int,
+        isRead: Bool,
+        isEnabled: Bool = true,
+        markRead: @escaping () -> Void
+    ) -> some View {
+        modifier(
+            MarkReadAfterViewingModifier(
+                storyID: storyID,
+                isRead: isRead,
+                isEnabled: isEnabled,
+                markRead: markRead
+            )
+        )
     }
 }
 
