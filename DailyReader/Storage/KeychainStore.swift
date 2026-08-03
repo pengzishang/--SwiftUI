@@ -119,9 +119,14 @@ struct KeychainDataStore: @unchecked Sendable {
         } else {
             throw KeychainStoreError.corruptData
         }
-        guard items.count == 1 else { throw KeychainStoreError.ambiguousLegacyItems }
-        guard let data = items[0][kSecValueData as String] as? Data,
-              let persistentReference = items[0][kSecValuePersistentRef as String] as? Data else {
+        let legacyItems = items.filter { item in
+            guard let service = item[kSecAttrService as String] as? String else { return true }
+            return service.isEmpty
+        }
+        guard !legacyItems.isEmpty else { return nil }
+        guard legacyItems.count == 1 else { throw KeychainStoreError.ambiguousLegacyItems }
+        guard let data = legacyItems[0][kSecValueData as String] as? Data,
+              let persistentReference = legacyItems[0][kSecValuePersistentRef as String] as? Data else {
             throw KeychainStoreError.corruptData
         }
         return LegacyItem(data: data, persistentReference: persistentReference)

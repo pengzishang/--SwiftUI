@@ -56,6 +56,17 @@ final class KeychainDataStoreTests: XCTestCase {
         }
         XCTAssertNil(client.deleted)
     }
+
+    func testItemsWithAnotherServiceAreNotMigratedAsLegacy() throws {
+        let client = KeychainClientDouble()
+        client.legacyData = Data("other-service".utf8)
+        client.legacyService = "another.namespaced.service"
+        let store = KeychainDataStore(service: "test.service", client: client)
+
+        XCTAssertNil(try store.read(account: "account"))
+        XCTAssertNil(client.added)
+        XCTAssertNil(client.deleted)
+    }
 }
 
 private final class KeychainClientDouble: KeychainSecItemClient, @unchecked Sendable {
@@ -64,6 +75,7 @@ private final class KeychainClientDouble: KeychainSecItemClient, @unchecked Send
     var updateStatus: OSStatus = errSecItemNotFound
     var deleteStatus: OSStatus = errSecSuccess
     var legacyData: Data?
+    var legacyService: String?
     var persistentReference = Data("persistent-ref".utf8)
     var legacyCandidateCount = 1
     var namespacedData: Data?
@@ -79,10 +91,13 @@ private final class KeychainClientDouble: KeychainSecItemClient, @unchecked Send
             return errSecSuccess
         }
         guard let legacyData else { return errSecItemNotFound }
-        let item: [String: Any] = [
+        var item: [String: Any] = [
             kSecValueData as String: legacyData,
             kSecValuePersistentRef as String: persistentReference
         ]
+        if let legacyService {
+            item[kSecAttrService as String] = legacyService
+        }
         result?.pointee = Array(repeating: item, count: legacyCandidateCount) as CFArray
         return errSecSuccess
     }

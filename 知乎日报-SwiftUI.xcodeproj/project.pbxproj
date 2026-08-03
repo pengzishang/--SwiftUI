@@ -116,7 +116,6 @@
 		E8B785D88A657ACADC8E81DE /* MeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6DE343F94F1F12035643AA8 /* MeView.swift */; };
 		EA1CBED290992888147F0D4B /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 58A2F2DE641C49086AEF33A6 /* Kingfisher */; };
 		EB69B76BE52533387042CCBE /* DailyRepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4DBA0EF344454DCE8C46B9D /* DailyRepositoryProtocol.swift */; };
-		EBA5B08FB81CE292BC5A31A4 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD5C90D541F05E9C5BABDBC /* KeychainHelper.swift */; };
 		EF987451EBC2C7D5796CF5EA /* ArticleWebViewPrewarmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAFC1D1EF3F32C7FF480139 /* ArticleWebViewPrewarmer.swift */; };
 		F355AB137D37C617DC9F8E26 /* AIChatViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB42D08CFD4D43DE39BD205 /* AIChatViewModelTests.swift */; };
 		F69571E76F8D8A1FF8127275 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31104644F19921AD9D334A3D /* HTTPClient.swift */; };
@@ -251,7 +250,6 @@
 		D83C74D25B792FB3B3FE9B25 /* DecodingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodingHelpers.swift; sourceTree = "<group>"; };
 		DAAAF0160CD4A95503EF8655 /* EndpointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndpointTests.swift; sourceTree = "<group>"; };
 		DD4870AE7DEE976695413DF3 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
-		DDD5C90D541F05E9C5BABDBC /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		E1144DB8BC45F6146F098373 /* HomeInformationDensity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeInformationDensity.swift; sourceTree = "<group>"; };
 		E36ABC803667C652A353BE79 /* OAuthHTTPClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthHTTPClientTests.swift; sourceTree = "<group>"; };
 		E3722BE27AEA3195C38E3FB6 /* AuthorizationRequestBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationRequestBuilder.swift; sourceTree = "<group>"; };
@@ -297,7 +295,6 @@
 				9D7923D8746EDB99D00ED72A /* CachePolicy.swift */,
 				EB5068279F8BC6D5181374FE /* CacheStore.swift */,
 				90DD866C6D0EE7A7E1528A3A /* DiskCacheStore.swift */,
-				DDD5C90D541F05E9C5BABDBC /* KeychainHelper.swift */,
 				AD1D3346CC294E876A379A02 /* KeychainStore.swift */,
 				F179FA4127BE0E2259BB70A1 /* ReadingStateBackup.swift */,
 			);
@@ -805,7 +802,6 @@
 				0C2AC292565CE6672DDE769C /* HotListViewModel.swift in Sources */,
 				8CFFDCE53420BB054D438F0E /* ImageCacheService.swift in Sources */,
 				0B8262CD32BF02D347E6DE52 /* InteractiveSwipeBack.swift in Sources */,
-				EBA5B08FB81CE292BC5A31A4 /* KeychainHelper.swift in Sources */,
 				D2D6F1EBD224C58AA0FEAEEC /* KeychainStore.swift in Sources */,
 				550C088963E59E71A108F478 /* LoadingView.swift in Sources */,
 				B824CD1C3FC2FA61AB6CBA07 /* LocalFixtureDailyService.swift in Sources */,
