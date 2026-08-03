@@ -15,9 +15,6 @@ targets:
     sources:
       - path: DailyReader
         excludes:
-          - Authentication
-          - Features/Me/AccountCardView.swift
-          - Features/Me/AuthenticationViewModel.swift
           - Features/Settings/SettingsView.swift
     dependencies:
       - package: Alamofire
@@ -48,15 +45,6 @@ targets:
     platform: iOS
     sources:
       - path: DailyReaderTests
-        excludes:
-          - AuthenticationServiceTests.swift
-          - AuthenticationTestSupport.swift
-          - AuthenticationViewModelTests.swift
-          - OAuthCallbackValidatorTests.swift
-          - OAuthConfigurationTests.swift
-          - OAuthHTTPClientTests.swift
-          - OAuthSessionStoreTests.swift
-          - PKCEGeneratorTests.swift
     dependencies:
       - target: DailyReader
     settings:
@@ -68,8 +56,6 @@ targets:
     platform: iOS
     sources:
       - path: DailyReaderUITests
-        excludes:
-          - AuthenticationFlowUITests.swift
     dependencies:
       - target: DailyReader
     settings:
