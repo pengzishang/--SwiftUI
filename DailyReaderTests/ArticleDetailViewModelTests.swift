@@ -241,6 +241,75 @@ final class ArticleDetailViewModelTests: XCTestCase {
         )
     }
 
+    func testAutomaticReadQualificationOnlyAppliesToDailySource() {
+        XCTAssertTrue(ArticleDetailSource.daily.enablesAutomaticReadQualification)
+        XCTAssertFalse(ArticleDetailSource.favorites.enablesAutomaticReadQualification)
+        XCTAssertFalse(ArticleDetailSource.coldPalace.enablesAutomaticReadQualification)
+        XCTAssertFalse(ArticleDetailSource.read.enablesAutomaticReadQualification)
+    }
+
+    func testReadQualificationRequiresTenActiveSeconds() {
+        var now = ContinuousClock.now
+        let timer = ReadQualificationTimer(now: { now })
+        timer.prepare(for: 1)
+
+        timer.resume()
+        now += .seconds(9.999)
+        XCTAssertFalse(timer.qualifyIfNeeded())
+        XCTAssertFalse(timer.hasQualified)
+
+        now += .milliseconds(1)
+        XCTAssertTrue(timer.qualifyIfNeeded())
+        XCTAssertTrue(timer.hasQualified)
+    }
+
+    func testReadQualificationAccumulatesAcrossForegroundSessions() {
+        var now = ContinuousClock.now
+        let timer = ReadQualificationTimer(now: { now })
+        timer.prepare(for: 1)
+
+        timer.resume()
+        now += .seconds(6)
+        XCTAssertFalse(timer.pause())
+
+        now += .seconds(30)
+        XCTAssertFalse(timer.qualifyIfNeeded(), "后台时间不应计入阅读时长")
+
+        timer.resume()
+        now += .seconds(4)
+        XCTAssertTrue(timer.qualifyIfNeeded())
+    }
+
+    func testReadQualificationOnlyReportsOnce() {
+        var now = ContinuousClock.now
+        let timer = ReadQualificationTimer(now: { now })
+        timer.prepare(for: 1)
+
+        timer.resume()
+        now += .seconds(10)
+        XCTAssertTrue(timer.qualifyIfNeeded())
+        XCTAssertFalse(timer.qualifyIfNeeded())
+        XCTAssertFalse(timer.pause())
+    }
+
+    func testReadQualificationResetsForAnotherStory() {
+        var now = ContinuousClock.now
+        let timer = ReadQualificationTimer(now: { now })
+        timer.prepare(for: 1)
+
+        timer.resume()
+        now += .seconds(7)
+        XCTAssertFalse(timer.pause())
+
+        timer.prepare(for: 2)
+        timer.resume()
+        now += .seconds(3)
+        XCTAssertFalse(timer.qualifyIfNeeded(), "不同文章之间不应共享阅读时长")
+
+        now += .seconds(7)
+        XCTAssertTrue(timer.qualifyIfNeeded())
+    }
+
     func testReadingProgressIsClampedToScrollableRange() {
         XCTAssertEqual(
             ArticleDetailView.progress(offset: -40, contentHeight: 1_600, viewportHeight: 800),

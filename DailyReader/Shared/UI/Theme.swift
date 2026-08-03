@@ -226,15 +226,16 @@ struct RuleLine: View {
 struct DatelineHeader: View {
     let date: String
     var storyCount: Int? = nil
+    var isCompact = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: isCompact ? 5 : 7) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 if ChineseDate.isToday(date) {
                     SealChip(text: "今日")
                 }
                 Text(title)
-                    .font(DS.songBold(19))
+                    .font(DS.songBold(isCompact ? 16 : 19))
                     .foregroundStyle(DS.ink)
                 if let weekday = ChineseDate.weekday(date) {
                     Text(weekday)
@@ -250,8 +251,8 @@ struct DatelineHeader: View {
             }
             RuleLine()
         }
-        .padding(.top, 14)
-        .padding(.bottom, 2)
+        .padding(.top, isCompact ? 10 : 14)
+        .padding(.bottom, isCompact ? 0 : 2)
         .background(DS.paper)
     }
 

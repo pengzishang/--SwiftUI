@@ -32,6 +32,30 @@ final class AISessionStoreTests: XCTestCase {
         XCTAssertEqual(loaded.first?.messages.first?.content, "部分回答")
     }
 
+    func testOlderRevisionCannotOverwriteLatestSnapshot() async throws {
+        let root = temporaryRoot()
+        let store = AISessionStore(rootURL: root)
+        let latest = AIChatSession(title: "最新状态")
+        let stale = AIChatSession(title: "旧状态")
+
+        try await store.save([latest], revision: 2)
+        try await store.save([stale], revision: 1)
+
+        let loaded = try await store.load()
+        XCTAssertEqual(loaded, [latest])
+    }
+
+    func testLatestEmptySnapshotCannotBeRevertedByOlderNonemptySnapshot() async throws {
+        let root = temporaryRoot()
+        let store = AISessionStore(rootURL: root)
+        let deleted = AIChatSession(title: "已经删除")
+
+        try await store.save([], revision: 9)
+        try await store.save([deleted], revision: 8)
+
+        XCTAssertEqual(try await store.load(), [])
+    }
+
     private func temporaryRoot() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     }

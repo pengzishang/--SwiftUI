@@ -37,8 +37,15 @@ enum AICredentialStoreError: LocalizedError {
 }
 
 struct AIKeychainCredentialStore: AICredentialStoring, @unchecked Sendable {
+    static let service = "com.codex.DailyReader.ai-credentials.v1"
+
     private let prefix = "DailyReader.ai.provider."
     private let legacyKey = "DailyReader.ai.apiKey"
+    private let store: KeychainDataStore
+
+    init(client: any KeychainSecItemClient = SystemKeychainSecItemClient()) {
+        store = KeychainDataStore(service: Self.service, client: client)
+    }
 
     func loadAPIKey() throws -> String? {
         try loadAPIKey(providerID: AIConfigurationStore.userProviderID)
@@ -54,14 +61,14 @@ struct AIKeychainCredentialStore: AICredentialStoring, @unchecked Sendable {
 
     func loadAPIKey(providerID: String) throws -> String? {
         let account = prefix + providerID
-        if let data = KeychainHelper.shared.read(forKey: account) {
+        if let data = try store.read(account: account) {
             return String(data: data, encoding: .utf8)
         }
         guard providerID == AIConfigurationStore.userProviderID,
-              let legacyData = KeychainHelper.shared.read(forKey: legacyKey),
+              let legacyData = try store.read(account: legacyKey),
               let value = String(data: legacyData, encoding: .utf8) else { return nil }
         try saveAPIKey(value, providerID: providerID)
-        KeychainHelper.shared.delete(forKey: legacyKey)
+        try store.delete(account: legacyKey)
         return value
     }
 
@@ -69,17 +76,13 @@ struct AIKeychainCredentialStore: AICredentialStoring, @unchecked Sendable {
         guard let data = value.data(using: .utf8) else {
             throw AICredentialStoreError.encodingFailed
         }
-        let account = prefix + providerID
-        KeychainHelper.shared.save(data, forKey: account)
-        guard KeychainHelper.shared.read(forKey: account) == data else {
-            throw AICredentialStoreError.saveFailed
-        }
+        try store.save(data, account: prefix + providerID)
     }
 
     func deleteAPIKey(providerID: String) throws {
-        KeychainHelper.shared.delete(forKey: prefix + providerID)
+        try store.delete(account: prefix + providerID)
         if providerID == AIConfigurationStore.userProviderID {
-            KeychainHelper.shared.delete(forKey: legacyKey)
+            try store.delete(account: legacyKey)
         }
     }
 }
@@ -94,6 +97,7 @@ actor AISessionStore {
     private let fileURL: URL
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
+    private var latestRevision: UInt64 = 0
 
     init(fileManager: FileManager = .default, rootURL: URL? = nil) {
         self.fileManager = fileManager
@@ -134,16 +138,23 @@ actor AISessionStore {
     }
 
     func save(_ sessions: [AIChatSession]) throws {
+        let revision = latestRevision == UInt64.max ? UInt64.max : latestRevision + 1
+        try save(sessions, revision: revision)
+    }
+
+    func save(_ sessions: [AIChatSession], revision: UInt64) throws {
+        guard revision > latestRevision else { return }
         try fileManager.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let data = try encoder.encode(Envelope(schemaVersion: 1, sessions: sessions))
         try data.write(to: fileURL, options: [.atomic])
+        latestRevision = revision
     }
 }
 
 @MainActor
 final class AIConfigurationStore: ObservableObject {
-    static let userProviderID = "user.custom"
-    static let defaultProviderID = "builtin.default"
+    nonisolated static let userProviderID = "user.custom"
+    nonisolated static let defaultProviderID = "builtin.default"
 
     private struct LegacyProviderProfile: Codable {
         let id: String

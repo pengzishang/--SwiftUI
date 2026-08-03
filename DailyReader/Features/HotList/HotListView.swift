@@ -434,7 +434,10 @@ struct AnswerDetailView: View {
         }
         .background(DS.paper.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
+        .markReadAfterViewing(
+            storyID: questionID,
+            isRead: homeViewModel.isStoryRead(questionID)
+        ) {
             let summary = StorySummary(
                 id: questionID,
                 title: questionTitle,

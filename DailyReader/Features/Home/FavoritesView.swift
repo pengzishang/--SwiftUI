@@ -18,9 +18,6 @@ struct FavoritesView: View {
                         ForEach(section.stories) { story in
                             NavigationLink {
                                 ArticleDetailView(story: story, homeViewModel: viewModel, source: .favorites, date: section.date)
-                                    .onAppear {
-                                        viewModel.markStoryRead(story, date: section.date)
-                                    }
                             } label: {
                                 StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                             }

@@ -20,7 +20,7 @@ final class AIChatViewModelTests: XCTestCase {
         XCTAssertEqual(coordinator.sessions.count, 2)
     }
 
-    func testSendWithoutAvailableProviderKeepsDraftAndShowsConfigurationError() async throws {
+    func testQuickPromptWithoutAvailableProviderKeepsDraftAndShowsConfigurationError() async throws {
         let name = "AIChatViewModelTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
         defer { defaults.removePersistentDomain(forName: name) }
@@ -32,17 +32,60 @@ final class AIChatViewModelTests: XCTestCase {
             configurationStore: configurationStore,
             sessionStore: AISessionStore(rootURL: temporaryRoot())
         )
-        coordinator.openIndependentChat()
+        coordinator.openArticleChat(context: AIArticleContext(id: 7, title: "测试文章", text: "正文"))
         let sessionID = try XCTUnwrap(coordinator.presentation?.sessionID)
         let viewModel = coordinator.makeChatViewModel(sessionID: sessionID)
 
-        viewModel.updateDraft("保留的问题")
-        viewModel.send()
+        viewModel.send(prompt: "  保留的问题  ")
 
         XCTAssertEqual(viewModel.draft, "保留的问题")
+        XCTAssertEqual(viewModel.session.draft, "保留的问题")
         XCTAssertTrue(viewModel.session.messages.isEmpty)
         XCTAssertEqual(viewModel.errorMessage, AIChatError.noAvailableProviders.errorDescription)
         XCTAssertFalse(viewModel.canSend)
+        XCTAssertFalse(viewModel.isGenerating)
+    }
+
+    func testQuickPromptImmediatelySendsWithArticleContext() async throws {
+        let defaultsName = "AIChatViewModelTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: defaultsName))
+        defer { defaults.removePersistentDomain(forName: defaultsName) }
+        let configurationStore = AIConfigurationStore(
+            defaults: defaults,
+            credentialStore: StubCredentialStore(apiKey: "test-key")
+        )
+        try configurationStore.save(
+            configuration: AIConfiguration(
+                endpoint: "https://example.com/v1",
+                model: "test-model",
+                allowsSearchTools: false
+            ),
+            apiKey: nil
+        )
+        let recorder = MessageHistoryRecorder()
+        let context = AIArticleContext(id: 8, title: "快捷提问文章", text: "用于验证的文章正文")
+        let coordinator = AIChatCoordinator(
+            configurationStore: configurationStore,
+            sessionStore: AISessionStore(rootURL: temporaryRoot()),
+            chatService: RecordingChatService(recorder: recorder)
+        )
+        coordinator.openArticleChat(context: context)
+        let sessionID = try XCTUnwrap(coordinator.presentation?.sessionID)
+        let viewModel = coordinator.makeChatViewModel(sessionID: sessionID)
+
+        viewModel.send(prompt: "  用三句话总结这篇文章  ")
+
+        XCTAssertEqual(viewModel.session.messages.first?.role, .user)
+        XCTAssertEqual(viewModel.session.messages.first?.content, "用三句话总结这篇文章")
+        XCTAssertEqual(viewModel.draft, "")
+        XCTAssertEqual(viewModel.session.draft, "")
+        await waitForGenerationToFinish(viewModel)
+
+        let histories = await recorder.histories
+        let contexts = await recorder.articleContexts
+        XCTAssertEqual(histories.count, 1)
+        XCTAssertEqual(histories.first?.first?.content, "用三句话总结这篇文章")
+        XCTAssertEqual(contexts, [context])
     }
 
     func testRetryRegeneratesWithoutDuplicatingLastUserMessage() async throws {
@@ -170,9 +213,11 @@ private struct MappedStubCredentialStore: AICredentialStoring {
 
 private actor MessageHistoryRecorder {
     private(set) var histories: [[AIChatMessage]] = []
+    private(set) var articleContexts: [AIArticleContext?] = []
 
-    func record(_ messages: [AIChatMessage]) {
+    func record(_ messages: [AIChatMessage], articleContext: AIArticleContext?) {
         histories.append(messages)
+        articleContexts.append(articleContext)
     }
 }
 
@@ -187,7 +232,7 @@ private struct RecordingChatService: AIChatServicing {
     ) -> AsyncThrowingStream<AIStreamEvent, Error> {
         AsyncThrowingStream { continuation in
             Task {
-                await recorder.record(messages)
+                await recorder.record(messages, articleContext: articleContext)
                 continuation.yield(.text("回答"))
                 continuation.finish()
             }

@@ -56,17 +56,70 @@ final class HTTPClientTests: XCTestCase {
         }
     }
 
+    func testConcurrentRequestsCreateIndependentDecoders() async throws {
+        let tracker = DecoderFactoryTracker()
+        let client = makeClient(
+            decoderFactory: {
+                tracker.makeDecoder()
+            }
+        ) { _ in
+            MockURLProtocol.Response(
+                statusCode: 200,
+                data: self.fixtureData("latest_success")
+            )
+        }
+
+        try await withThrowingTaskGroup(of: DailyResponse.self) { group in
+            for _ in 0..<8 {
+                group.addTask {
+                    try await client.execute(ZhihuEndpoints.latest())
+                }
+            }
+            for try await response in group {
+                XCTAssertEqual(response.date, "20260621")
+            }
+        }
+
+        XCTAssertEqual(tracker.creationCount, 8)
+        XCTAssertEqual(tracker.uniqueDecoderCount, 8)
+    }
+
     private func makeClient(
+        decoderFactory: @escaping HTTPClient.DecoderFactory = { JSONDecoder() },
         handler: @escaping (URLRequest) throws -> MockURLProtocol.Response
     ) -> HTTPClient {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [MockURLProtocol.self]
         MockURLProtocol.handler = handler
-        return HTTPClient(session: URLSession(configuration: configuration))
+        return HTTPClient(
+            session: URLSession(configuration: configuration),
+            decoderFactory: decoderFactory
+        )
     }
 
     private func fixtureData(_ name: String) -> Data {
         let url = Bundle(for: Self.self).url(forResource: name, withExtension: "json")!
         return try! Data(contentsOf: url)
+    }
+}
+
+private final class DecoderFactoryTracker: @unchecked Sendable {
+    private let lock = NSLock()
+    private var decoders: [JSONDecoder] = []
+
+    var creationCount: Int {
+        lock.withLock { decoders.count }
+    }
+
+    var uniqueDecoderCount: Int {
+        lock.withLock { Set(decoders.map(ObjectIdentifier.init)).count }
+    }
+
+    func makeDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        lock.withLock {
+            decoders.append(decoder)
+        }
+        return decoder
     }
 }

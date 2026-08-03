@@ -480,6 +480,81 @@ final class HomeViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.hiddenSections.flatMap(\.stories).contains(where: { $0.id == 1 }))
     }
 
+    func testLoadImmersiveImageReusesMatchingTopStoryWithoutDetailRequest() async {
+        let service = MockDailyService()
+        service.latestResult = .success(DailyResponse(
+            date: "20260621",
+            stories: [StorySummary(id: 1, title: "顶部文章", images: ["https://example.com/thumb.jpg"])],
+            topStories: [TopStory(id: 1, title: "顶部文章", image: "https://example.com/top-hero.jpg")]
+        ))
+        let repository = makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        )
+        let viewModel = HomeViewModel(
+            repository: repository,
+            articleRepository: repository
+        )
+        await viewModel.load()
+
+        guard let story = viewModel.sections.first?.stories.first else {
+            return XCTFail("缺少测试文章")
+        }
+        await viewModel.loadImmersiveImage(for: story)
+
+        XCTAssertEqual(viewModel.immersiveImageURLs[story.id], viewModel.topStories.first?.image)
+        XCTAssertEqual(service.detailCallCount, 0)
+    }
+
+    func testLoadImmersiveImageUsesDetailImageAndDeduplicatesRequests() async {
+        let service = MockDailyService()
+        service.latestResult = .success(DailyResponse(
+            date: "20260621",
+            stories: [StorySummary(id: 7, title: "沉浸文章", images: ["https://example.com/thumb.jpg"])]
+        ))
+        service.detailResult = .success(ArticleDetail(
+            id: 7,
+            title: "沉浸文章",
+            image: "https://example.com/hero.jpg",
+            images: ["https://example.com/fallback.jpg"]
+        ))
+        let repository = makeRepository(
+            service: service,
+            cacheStore: DiskCacheStore(rootURL: temporaryRoot())
+        )
+        let viewModel = HomeViewModel(
+            repository: repository,
+            articleRepository: repository
+        )
+        let story = StorySummary(id: 7, title: "沉浸文章", images: ["https://example.com/thumb.jpg"])
+
+        await viewModel.loadImmersiveImage(for: story)
+        await viewModel.loadImmersiveImage(for: story)
+
+        XCTAssertEqual(viewModel.immersiveImageURLs[7], "https://example.com/hero.jpg")
+        XCTAssertEqual(service.detailCallCount, 1)
+    }
+
+    func testPreferredImmersiveImageFallsBackToDetailImages() {
+        let detail = ArticleDetail(
+            id: 8,
+            title: "备用封面",
+            image: "  ",
+            images: ["https://example.com/images-fallback.jpg"]
+        )
+
+        XCTAssertEqual(
+            HomeViewModel.preferredImmersiveImageURL(from: detail),
+            "https://example.com/images-fallback.jpg"
+        )
+    }
+
+    func testPreferredImmersiveImageReturnsNilWhenDetailHasNoImage() {
+        let detail = ArticleDetail(id: 9, title: "无图文章")
+
+        XCTAssertNil(HomeViewModel.preferredImmersiveImageURL(from: detail))
+    }
+
     private func temporaryRoot() -> URL {
         FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
     }

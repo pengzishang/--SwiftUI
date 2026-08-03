@@ -19,6 +19,7 @@ final class AIChatCoordinator: ObservableObject {
     private let chatService: AIChatServicing
     private let racingChatService: AIRacingChatServicing
     private var persistenceTask: Task<Void, Never>?
+    private var persistenceRevision: UInt64 = 0
 
     init(
         configurationStore: AIConfigurationStore? = nil,
@@ -185,12 +186,14 @@ final class AIChatCoordinator: ObservableObject {
 
     private func persist() {
         guard isLoaded else { return }
+        persistenceRevision = persistenceRevision == UInt64.max ? UInt64.max : persistenceRevision + 1
+        let revision = persistenceRevision
         let snapshot = sessions
         persistenceTask?.cancel()
         persistenceTask = Task { [sessionStore] in
             await Task.yield()
             guard !Task.isCancelled else { return }
-            try? await sessionStore.save(snapshot)
+            try? await sessionStore.save(snapshot, revision: revision)
         }
     }
 }
@@ -251,6 +254,13 @@ final class AIChatViewModel: ObservableObject {
         draft = value
         session.draft = value
         coordinator.update(session)
+    }
+
+    func send(prompt: String) {
+        let content = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !content.isEmpty, !isGenerating else { return }
+        updateDraft(content)
+        send()
     }
 
     func send() {

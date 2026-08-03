@@ -7,28 +7,6 @@ protocol AuthSessionStoring: Sendable {
     func delete() async throws
 }
 
-protocol KeychainSecItemClient: Sendable {
-    func copyMatching(_ query: CFDictionary, result: UnsafeMutablePointer<CFTypeRef?>?) -> OSStatus
-    func add(_ attributes: CFDictionary) -> OSStatus
-    func update(_ query: CFDictionary, attributes: CFDictionary) -> OSStatus
-    func delete(_ query: CFDictionary) -> OSStatus
-}
-
-struct SystemKeychainSecItemClient: KeychainSecItemClient {
-    func copyMatching(_ query: CFDictionary, result: UnsafeMutablePointer<CFTypeRef?>?) -> OSStatus {
-        SecItemCopyMatching(query, result)
-    }
-
-    func add(_ attributes: CFDictionary) -> OSStatus { SecItemAdd(attributes, nil) }
-    func update(_ query: CFDictionary, attributes: CFDictionary) -> OSStatus { SecItemUpdate(query, attributes) }
-    func delete(_ query: CFDictionary) -> OSStatus { SecItemDelete(query) }
-}
-
-enum KeychainStoreError: Error, Equatable {
-    case status(OSStatus)
-    case corruptData
-}
-
 actor KeychainAuthSessionStore: AuthSessionStoring {
     static let service = "com.codex.DailyReader.auth.zhihu.oauth.v1"
     static let account = "session.current"

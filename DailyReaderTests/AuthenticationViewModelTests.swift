@@ -12,6 +12,24 @@ final class AuthenticationViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.state, .unconfigured)
     }
 
+    func testAppEnvironmentIgnoresMockScenarioWithoutUITestMode() {
+        let viewModel = AppEnvironment.makeAuthenticationViewModel(
+            arguments: [],
+            environment: ["MOCK_AUTH_SCENARIO": "sign_in_success"]
+        )
+
+        XCTAssertEqual(viewModel.state, .unconfigured)
+    }
+
+    func testAppEnvironmentUsesFixtureOnlyInUITestMode() {
+        let viewModel = AppEnvironment.makeAuthenticationViewModel(
+            arguments: ["-UITestMode"],
+            environment: ["MOCK_AUTH_SCENARIO": "sign_in_success"]
+        )
+
+        XCTAssertEqual(viewModel.state, .signedOut(notice: nil))
+    }
+
     func testSignInSuccessShowsProfile() async throws {
         let profile = try AuthUserProfile(subject: "user", displayName: "Reader", avatarURL: nil)
         let service = AuthenticationServiceDouble(signInResult: .success(profile))

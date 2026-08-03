@@ -20,8 +20,11 @@ actor DailyRepository: DailyRepositoryProtocol {
 
     nonisolated func loadHomeFeed() -> AsyncThrowingStream<HomeFeedEvent, Error> {
         AsyncThrowingStream { continuation in
-            Task {
+            let producer = Task {
                 await self.streamHomeFeed(to: continuation)
+            }
+            continuation.onTermination = { @Sendable _ in
+                producer.cancel()
             }
         }
     }
@@ -131,29 +134,50 @@ actor DailyRepository: DailyRepositoryProtocol {
         to continuation: AsyncThrowingStream<HomeFeedEvent, Error>.Continuation
     ) async {
         let cachedHome = await cacheStore.loadHomeFeed()
+        guard !Task.isCancelled else {
+            continuation.finish(throwing: CancellationError())
+            return
+        }
         var current = cachedHome.map { snapshot(from: $0.value) } ?? HomeFeedSnapshot(sections: [], topStories: [])
 
         if let cachedHome {
-            continuation.yield(.cached(RepositoryValue(
+            guard case .enqueued = continuation.yield(.cached(RepositoryValue(
                 value: current,
                 source: .cache(cachedHome.cachedAt)
-            )))
+            ))) else { return }
         } else if let latest = await cacheStore.loadLatest() {
+            guard !Task.isCancelled else {
+                continuation.finish(throwing: CancellationError())
+                return
+            }
             current = snapshot(from: latest.value)
             await saveHomeFeed(current)
-            continuation.yield(.cached(RepositoryValue(
+            guard !Task.isCancelled else {
+                continuation.finish(throwing: CancellationError())
+                return
+            }
+            guard case .enqueued = continuation.yield(.cached(RepositoryValue(
                 value: current,
                 source: .cache(latest.cachedAt)
-            )))
+            ))) else { return }
         }
 
         do {
+            try Task.checkCancellation()
             let latest = try await service.fetchLatest()
+            try Task.checkCancellation()
             await cacheStore.saveLatest(latest)
+            try Task.checkCancellation()
             let refreshed = merge(latest: latest, into: current)
             await saveHomeFeed(refreshed)
-            continuation.yield(.refreshed(RepositoryValue(value: refreshed, source: .network)))
+            try Task.checkCancellation()
+            guard case .enqueued = continuation.yield(.refreshed(RepositoryValue(
+                value: refreshed,
+                source: .network
+            ))) else { return }
             continuation.finish()
+        } catch is CancellationError {
+            continuation.finish(throwing: CancellationError())
         } catch {
             if cachedHome == nil, current.sections.isEmpty, current.topStories.isEmpty {
                 continuation.finish(throwing: error)

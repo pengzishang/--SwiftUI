@@ -5,12 +5,17 @@ import SwiftUI
 
 struct MeView: View {
     @ObservedObject var viewModel: HomeViewModel
+    @ObservedObject var authenticationViewModel: AuthenticationViewModel
     @State private var selectedSubTab = 0 // 0 收藏，1 已读
     @State private var searchText = ""
     @Namespace private var animation
 
-    init(viewModel: HomeViewModel) {
+    init(
+        viewModel: HomeViewModel,
+        authenticationViewModel: AuthenticationViewModel
+    ) {
         self.viewModel = viewModel
+        self.authenticationViewModel = authenticationViewModel
     }
 
     private var trimmedSearchText: String {
@@ -53,6 +58,7 @@ struct MeView: View {
         VStack(spacing: 0) {
             VStack(spacing: 14) {
                 bookroomHeader
+                AccountCardView(viewModel: authenticationViewModel)
                 readingArchive
                 segmentControl
                 searchField
@@ -66,6 +72,9 @@ struct MeView: View {
         .frame(maxWidth: .infinity)
         .background(DS.paper.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .onDisappear {
+            authenticationViewModel.cancel()
+        }
     }
 
     // MARK: - 纸上书房首屏
@@ -316,9 +325,6 @@ struct MeView: View {
                                     source: .favorites,
                                     date: section.date
                                 )
-                                .onAppear {
-                                    viewModel.markStoryRead(story, date: section.date)
-                                }
                             } label: {
                                 StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                             }
@@ -370,9 +376,6 @@ struct MeView: View {
                             source: .read,
                             date: readStory.date
                         )
-                        .onAppear {
-                            viewModel.markStoryRead(story, date: readStory.date)
-                        }
                     } label: {
                         StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                     }

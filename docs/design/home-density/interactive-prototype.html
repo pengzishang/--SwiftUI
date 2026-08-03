@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>日报阅读器｜首页信息密度原型</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --studio-bg: #e9e5dc;
+      --studio-ink: #28241d;
+      --studio-muted: #777064;
+      --studio-line: rgba(38, 34, 27, .14);
+      --paper: #f9f6ef;
+      --paper-elevated: #fffefa;
+      --ink: #26221b;
+      --ink-secondary: #706b5e;
+      --indigo: #2c4a7c;
+      --indigo-soft: rgba(44, 74, 124, .10);
+      --cinnabar: #b73729;
+      --ochre: #b06924;
+      --gold: #967a1d;
+      --hairline: rgba(38, 34, 27, .14);
+      --overlay: rgba(28, 25, 20, .32);
+      --sheet-shadow: 0 -16px 48px rgba(38, 34, 27, .16);
+      --font-song: "Songti SC", "STSong", "Noto Serif SC", serif;
+      --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", sans-serif;
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(rgba(38, 34, 27, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(38, 34, 27, .025) 1px, transparent 1px),
+        var(--studio-bg);
+      background-size: 32px 32px;
+      color: var(--studio-ink);
+      font-family: var(--font-ui);
+    }
+
+    button { font: inherit; }
+
+    button:focus-visible {
+      outline: 3px solid #5876a6;
+      outline-offset: 3px;
+    }
+
+    .studio {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: minmax(248px, 300px) minmax(0, 1fr);
+    }
+
+    .brief {
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      padding: 40px 28px;
+      border-right: 1px solid var(--studio-line);
+      background: rgba(249, 246, 239, .72);
+      backdrop-filter: blur(16px);
+      overflow: auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--cinnabar);
+      font: 700 12px/1 var(--font-ui);
+      letter-spacing: .15em;
+    }
+
+    .brief h1 {
+      margin: 0;
+      max-width: 8ch;
+      font: 900 clamp(28px, 3vw, 42px)/1.08 var(--font-song);
+      letter-spacing: -.04em;
+    }
+
+    .brief .lede {
+      margin: 18px 0 28px;
+      color: var(--studio-muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .decision {
+      padding: 16px 0;
+      border-top: 1px solid var(--studio-line);
+    }
+
+    .decision:last-of-type { border-bottom: 1px solid var(--studio-line); }
+
+    .decision-index {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--cinnabar);
+      font: 700 11px/1 var(--font-ui);
+      letter-spacing: .12em;
+    }
+
+    .decision strong {
+      display: block;
+      font: 700 16px/1.35 var(--font-song);
+    }
+
+    .decision span:last-child {
+      display: block;
+      margin-top: 5px;
+      color: var(--studio-muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .studio-tip {
+      margin-top: 28px;
+      color: var(--studio-muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .workbench {
+      min-width: 0;
+      padding: 24px clamp(16px, 4vw, 56px) 48px;
+    }
+
+    .workbench-bar {
+      width: min(100%, 960px);
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .segmented,
+    .studio-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--studio-line);
+      background: rgba(255, 254, 250, .62);
+    }
+
+    .segmented { border-radius: 12px; }
+    .studio-actions { border-radius: 999px; }
+
+    .chrome-button {
+      min-width: 44px;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--studio-muted);
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease;
+    }
+
+    .chrome-button:hover { color: var(--studio-ink); background: rgba(38, 34, 27, .06); }
+    .chrome-button[aria-pressed="true"] { color: #fffefa; background: var(--studio-ink); }
+
+    .icon-button {
+      width: 40px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--studio-ink);
+      cursor: pointer;
+    }
+
+    .icon-button:hover { background: rgba(38, 34, 27, .06); }
+    .icon-button svg { width: 18px; height: 18px; }
+
+    .device-stage {
+      width: min(100%, 960px);
+      min-height: calc(100dvh - 112px);
+      margin: 0 auto;
+      display: grid;
+      place-items: start center;
+    }
+
+    .device {
+      position: relative;
+      width: min(402px, 100%);
+      height: min(874px, calc(100dvh - 112px));
+      min-height: 640px;
+      overflow: hidden;
+      border: 1px solid rgba(38, 34, 27, .22);
+      border-radius: 48px;
+      background: var(--paper);
+      box-shadow: 0 22px 60px rgba(38, 34, 27, .18), 0 2px 8px rgba(38, 34, 27, .08);
+      container-type: inline-size;
+      container-name: device;
+      transition: width 420ms var(--ease-out), border-radius 420ms var(--ease-out);
+    }
+
+    .device[data-device="tablet"] {
+      width: min(834px, 100%);
+      border-radius: 30px;
+    }
+
+    .app {
+      position: absolute;
+      inset: 0;
+      color: var(--ink);
+      background: var(--paper);
+      transition: background 180ms ease, color 180ms ease;
+    }
+
+    .app[data-theme="dark"] {
+      color-scheme: dark;
+      --paper: #141311;
+      --paper-elevated: #1f1d19;
+      --ink: #e8e3d8;
+      --ink-secondary: #a29c8c;
+      --indigo: #94adda;
+      --indigo-soft: rgba(148, 173, 218, .12);
+      --cinnabar: #e06c58;
+      --ochre: #d89956;
+      --gold: #cab25c;
+      --hairline: rgba(232, 227, 216, .16);
+      --overlay: rgba(0, 0, 0, .48);
+      --sheet-shadow: 0 -18px 48px rgba(0, 0, 0, .42);
+    }
+
+    .statusbar {
+      position: absolute;
+      z-index: 8;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 44px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 24px 8px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+    .status-icons svg { width: 15px; height: 15px; }
+
+    .navbar {
+      position: absolute;
+      z-index: 7;
+      top: 44px;
+      left: 0;
+      right: 0;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px 8px 20px;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--paper);
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .brand-title h2 {
+      margin: 0;
+      font: 900 clamp(25px, 6.5vw, 31px)/1 var(--font-song);
+      letter-spacing: -.04em;
+      white-space: nowrap;
+    }
+
+    .edition {
+      color: var(--ink-secondary);
+      font: 600 10px/1 var(--font-ui);
+      letter-spacing: .11em;
+      white-space: nowrap;
+    }
+
+    .nav-actions { display: flex; align-items: center; gap: 2px; }
+
+    .app-button {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--indigo);
+      cursor: pointer;
+      transition: background 150ms ease, transform 100ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-button:hover { background: var(--indigo-soft); }
+    .app-button:active { transform: scale(.96); }
+    .app-button.ai { font: 900 17px/1 var(--font-song); }
+    .app-button svg { width: 20px; height: 20px; }
+
+    .feed {
+      position: absolute;
+      top: 116px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      scroll-behavior: smooth;
+    }
+
+    .feed::-webkit-scrollbar { display: none; }
+
+    .feed-inner {
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 0 20px calc(32px + env(safe-area-inset-bottom));
+      transition: opacity 100ms ease, transform 180ms var(--ease-out);
+    }
+
+    .feed-inner.transitioning {
+      opacity: .22;
+      transform: translateY(4px);
+    }
+
+    .dateline {
+      position: sticky;
+      z-index: 3;
+      top: 0;
+      padding: 16px 0 9px;
+      background: var(--paper);
+    }
+
+    .date-row {
+      min-height: 29px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .seal {
+      flex: 0 0 auto;
+      padding: 4px 5px;
+      border-radius: 3px;
+      background: var(--cinnabar);
+      color: #fffefa;
+      font: 800 10px/1 var(--font-song);
+      letter-spacing: .08em;
+    }
+
+    .date-main { font: 800 18px/1.2 var(--font-song); letter-spacing: -.02em; }
+    .weekday, .count { color: var(--ink-secondary); font-size: 11px; }
+    .count { margin-left: auto; }
+
+    .double-rule {
+      height: 5px;
+      margin-top: 7px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .stories {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .story {
+      min-width: 0;
+      border-bottom: 1px solid var(--hairline);
+      cursor: pointer;
+    }
+
+    .story:focus-visible { outline: 3px solid var(--indigo); outline-offset: -3px; }
+
+    .story-title {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--font-song);
+      font-weight: 800;
+      letter-spacing: -.018em;
+    }
+
+    .story.is-read .story-title { color: var(--ink-secondary); }
+    .story-summary { margin: 0; color: var(--ink-secondary); }
+
+    .metrics {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+      color: var(--ink-secondary);
+      font-size: 10px;
+    }
+
+    .metric { display: inline-flex; align-items: center; gap: 3px; }
+    .metric svg { width: 12px; height: 12px; }
+
+    .editorial-image {
+      position: relative;
+      overflow: hidden;
+      background: var(--paper-elevated);
+      isolation: isolate;
+    }
+
+    .editorial-image::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1px solid var(--hairline);
+      pointer-events: none;
+    }
+
+    .editorial-image svg { display: block; width: 100%; height: 100%; }
+
+    .image-caption {
+      position: absolute;
+      z-index: 2;
+      right: 9px;
+      bottom: 8px;
+      padding: 3px 5px;
+      color: rgba(255, 254, 250, .9);
+      background: rgba(25, 23, 19, .64);
+      font-size: 8px;
+      letter-spacing: .08em;
+    }
+
+    .fallback-art {
+      background:
+        linear-gradient(90deg, transparent 49.75%, var(--hairline) 50%, transparent 50.25%),
+        repeating-linear-gradient(0deg, transparent 0 19px, var(--hairline) 20px),
+        var(--paper-elevated);
+    }
+
+    .fallback-art::before {
+      content: "拾遗";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--ink-secondary);
+      font: 900 42px/1 var(--font-song);
+      letter-spacing: .22em;
+      opacity: .22;
+      transform: translateX(.11em);
+    }
+
+    .fallback-art .marks {
+      position: absolute;
+      inset: 14px;
+      border-top: 3px double var(--hairline);
+      border-bottom: 3px double var(--hairline);
+    }
+
+    /* 沉浸 */
+    .feed[data-density="low"] .story {
+      padding: 18px 0 20px;
+    }
+
+    .feed[data-density="low"] .story-media {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      margin-bottom: 14px;
+      border-radius: 10px;
+    }
+
+    .feed[data-density="low"] .story-title {
+      font-size: 20px;
+      line-height: 1.43;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .feed[data-density="low"] .story-summary {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .feed[data-density="low"] .metrics { margin-top: 10px; }
+
+    /* 标准 */
+    .feed[data-density="medium"] .story {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 72px;
+      gap: 14px;
+      padding: 12px 0;
+    }
+
+    .feed[data-density="medium"] .story-copy { min-width: 0; }
+
+    .feed[data-density="medium"] .story-media {
+      grid-column: 2;
+      grid-row: 1;
+      width: 72px;
+      height: 72px;
+      border-radius: 9px;
+    }
+
+    .feed[data-density="medium"] .story-title {
+      font-size: 17px;
+      line-height: 1.48;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .feed[data-density="medium"] .story-summary {
+      margin-top: 7px;
+      font-size: 11px;
+      line-height: 1.45;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .feed[data-density="medium"] .metrics { margin-top: 7px; gap: 7px; }
+
+    /* 速览 */
+    .feed[data-density="high"] .dateline { padding-top: 10px; padding-bottom: 5px; }
+    .feed[data-density="high"] .date-row { min-height: 25px; }
+    .feed[data-density="high"] .date-main { font-size: 16px; }
+    .feed[data-density="high"] .story { padding: 9px 0 10px; }
+    .feed[data-density="high"] .story-media,
+    .feed[data-density="high"] .story-summary,
+    .feed[data-density="high"] .metrics { display: none; }
+
+    .feed[data-density="high"] .story-title {
+      font-size: 16px;
+      line-height: 1.42;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* iPad / 宽分栏 */
+    .device[data-device="tablet"] .navbar { padding-left: 28px; padding-right: 22px; }
+    .device[data-device="tablet"] .feed-inner { padding-left: 28px; padding-right: 28px; }
+    .device[data-device="tablet"] .brand-title h2 { font-size: 31px; }
+
+    @container device (min-width: 700px) {
+      .feed[data-density="low"] .stories {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 20px;
+        align-items: stretch;
+      }
+
+      .feed[data-density="low"] .story {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+
+      .feed[data-density="low"] .story-copy {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+
+      .feed[data-density="low"] .metrics { margin-top: auto; padding-top: 10px; }
+    }
+
+    /* 底部面板 */
+    .backdrop {
+      position: absolute;
+      z-index: 20;
+      inset: 0;
+      border: 0;
+      background: var(--overlay);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+      cursor: default;
+    }
+
+    .sheet {
+      position: absolute;
+      z-index: 21;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-height: min(78%, 612px);
+      overflow-y: auto;
+      padding: 8px 18px calc(20px + env(safe-area-inset-bottom));
+      border-radius: 24px 24px 0 0;
+      background: var(--paper-elevated);
+      box-shadow: var(--sheet-shadow);
+      transform: translateY(104%);
+      transition: transform 280ms var(--ease-out);
+      overscroll-behavior: contain;
+    }
+
+    .app.sheet-open .backdrop { opacity: 1; pointer-events: auto; }
+    .app.sheet-open .sheet { transform: translateY(0); }
+
+    .grabber {
+      width: 36px;
+      height: 5px;
+      margin: 0 auto 16px;
+      border-radius: 999px;
+      background: var(--hairline);
+    }
+
+    .sheet-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .sheet-head h3 { margin: 0; font: 900 22px/1.25 var(--font-song); }
+    .sheet-head p { margin: 5px 0 0; color: var(--ink-secondary); font-size: 11px; line-height: 1.5; }
+
+    .close-button {
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: var(--indigo-soft);
+      color: var(--indigo);
+      cursor: pointer;
+    }
+
+    .close-button svg { width: 16px; height: 16px; }
+
+    .density-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+
+    @container device (min-width: 700px) {
+      .sheet {
+        left: 50%;
+        right: auto;
+        width: min(620px, calc(100% - 48px));
+        border-radius: 24px 24px 0 0;
+        transform: translate(-50%, 104%);
+      }
+
+      .app.sheet-open .sheet { transform: translate(-50%, 0); }
+    }
+
+    .density-option {
+      min-width: 0;
+      min-height: 156px;
+      padding: 9px;
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      background: var(--paper);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 150ms ease, background 150ms ease, transform 100ms ease;
+    }
+
+    .density-option:hover { border-color: var(--indigo); }
+    .density-option:active { transform: scale(.98); }
+    .density-option[aria-checked="true"] {
+      border-color: var(--indigo);
+      background: var(--indigo-soft);
+      box-shadow: inset 0 0 0 1px var(--indigo);
+    }
+
+    .mini-layout {
+      height: 68px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      border: 1px solid var(--hairline);
+      background: var(--paper-elevated);
+    }
+
+    .mini-low { padding: 5px; }
+    .mini-low .mini-image { height: 30px; background: var(--indigo-soft); border-bottom: 1px solid var(--hairline); }
+    .mini-low .mini-line:nth-child(2) { width: 84%; }
+    .mini-low .mini-line:nth-child(3) { width: 62%; }
+
+    .mini-medium { padding: 6px; display: grid; grid-template-columns: 1fr 22px; gap: 5px; }
+    .mini-medium .mini-image { width: 22px; height: 22px; background: var(--indigo-soft); }
+
+    .mini-high { padding: 5px 6px; }
+    .mini-high .mini-row { padding: 4px 0; border-bottom: 1px solid var(--hairline); }
+
+    .mini-line { height: 3px; margin-top: 4px; background: var(--ink); opacity: .72; }
+    .mini-line.short { width: 58%; opacity: .35; }
+
+    .density-option strong { display: block; font: 800 14px/1.2 var(--font-song); }
+    .density-option small { display: block; margin-top: 4px; color: var(--ink-secondary); font-size: 9px; line-height: 1.35; }
+
+    .check {
+      float: right;
+      width: 16px;
+      height: 16px;
+      color: var(--indigo);
+      opacity: 0;
+    }
+
+    .density-option[aria-checked="true"] .check { opacity: 1; }
+
+    .sheet-note {
+      margin: 14px 2px 0;
+      padding-top: 12px;
+      border-top: 1px solid var(--hairline);
+      color: var(--ink-secondary);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .toast {
+      position: absolute;
+      z-index: 30;
+      left: 50%;
+      bottom: 20px;
+      max-width: calc(100% - 40px);
+      padding: 10px 14px;
+      border: 1px solid var(--hairline);
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms var(--ease-out);
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .mode-label {
+      width: min(100%, 960px);
+      margin: 16px auto 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      color: var(--studio-muted);
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .mode-label strong { color: var(--studio-ink); font: 800 15px/1 var(--font-song); }
+
+    @media (max-width: 760px) {
+      body { background: var(--paper); }
+      .studio { display: block; }
+      .brief, .workbench-bar, .mode-label { display: none; }
+      .workbench { padding: 0; }
+      .device-stage { min-height: 100dvh; }
+      .device,
+      .device[data-device="tablet"] {
+        width: 100%;
+        height: 100dvh;
+        min-height: 620px;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .brand-title .edition { display: none; }
+      .density-options { gap: 5px; }
+      .density-option { padding: 6px; min-height: 148px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="studio">
+    <aside class="brief" aria-label="设计说明">
+      <p class="eyebrow">HOME DENSITY / 01</p>
+      <h1>同一份日报，三种阅读节奏</h1>
+      <p class="lede">保留「今日刊」的纸、墨与版式秩序，只改变单位视口里的信息含量。不是三套皮肤，而是三种可随场景切换的编辑策略。</p>
+
+      <div class="decision">
+        <span class="decision-index">LOW / 沉浸</span>
+        <strong>先看懂，再打开</strong>
+        <span>16:9 题图、2 行摘要、完整指标。无图时使用抽象版纹。</span>
+      </div>
+      <div class="decision">
+        <span class="decision-index">MEDIUM / 标准</span>
+        <strong>内容与效率均衡</strong>
+        <span>右侧 72pt 缩略图、1 行摘要、紧凑指标。作为默认方案。</span>
+      </div>
+      <div class="decision">
+        <span class="decision-index">HIGH / 速览</span>
+        <strong>标题就是扫描路径</strong>
+        <span>纯双行标题，隐藏图片与指标。通过删减而不是缩字获得密度。</span>
+      </div>
+
+      <p class="studio-tip">操作提示：点击 App 右上角省略号打开布局面板。可切换设备与主题；选择方案后立即预览并自动保存。</p>
+    </aside>
+
+    <section class="workbench" aria-label="交互原型画布">
+      <div class="workbench-bar">
+        <div class="segmented" aria-label="设备预览">
+          <button class="chrome-button" id="phoneButton" type="button" aria-pressed="true">iPhone</button>
+          <button class="chrome-button" id="tabletButton" type="button" aria-pressed="false">iPad</button>
+        </div>
+        <div class="studio-actions">
+          <button class="icon-button" id="themeButton" type="button" aria-label="切换深色模式" title="切换主题">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M20.6 15.1A8.7 8.7 0 0 1 8.9 3.4 8.7 8.7 0 1 0 20.6 15.1Z"/>
+            </svg>
+          </button>
+          <button class="icon-button" id="resetButton" type="button" aria-label="恢复默认布局" title="恢复标准模式">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M4 4v6h6M5.5 15.5a8 8 0 1 0 .6-8.1L4 10"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="device-stage">
+        <div class="device" id="device" data-device="phone">
+          <div class="app" id="app" data-theme="light">
+            <div class="statusbar" aria-hidden="true">
+              <span>9:41</span>
+              <span class="status-icons">
+                <svg viewBox="0 0 20 14" fill="currentColor"><rect x="1" y="9" width="2.5" height="4" rx=".5"/><rect x="5.5" y="6.5" width="2.5" height="6.5" rx=".5"/><rect x="10" y="3.5" width="2.5" height="9.5" rx=".5"/><rect x="14.5" y="1" width="2.5" height="12" rx=".5"/></svg>
+                <svg viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5.5A11.5 11.5 0 0 1 18 5.5M5 8.5a7.3 7.3 0 0 1 10 0M8 11.2a3.2 3.2 0 0 1 4 0"/><circle cx="10" cy="13" r="1" fill="currentColor" stroke="none"/></svg>
+                <svg viewBox="0 0 26 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="1" width="21" height="12" rx="3"/><path d="M24 5v4"/><rect x="3" y="3" width="16" height="8" rx="1.5" fill="currentColor" stroke="none"/></svg>
+              </span>
+            </div>
+
+            <header class="navbar">
+              <div class="brand-title">
+                <h2>日报阅读器</h2>
+                <span class="edition">第 2148 期</span>
+              </div>
+              <div class="nav-actions">
+                <button class="app-button ai" type="button" aria-label="打开 AI 搜索">知</button>
+                <button class="app-button" id="moreButton" type="button" aria-label="打开首页工具" aria-haspopup="dialog" aria-expanded="false">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>
+                  </svg>
+                </button>
+              </div>
+            </header>
+
+            <div class="feed" id="feed" data-density="medium" aria-label="日报文章列表">
+              <div class="feed-inner" id="feedInner">
+                <section aria-labelledby="todayTitle">
+                  <header class="dateline">
+                    <div class="date-row">
+                      <span class="seal">今日</span>
+                      <span class="date-main" id="todayTitle">八月一日</span>
+                      <span class="weekday">星期六</span>
+                      <span class="count">8 篇</span>
+                    </div>
+                    <div class="double-rule" aria-hidden="true"></div>
+                  </header>
+                  <div class="stories" id="todayStories"></div>
+                </section>
+
+                <section aria-labelledby="yesterdayTitle">
+                  <header class="dateline">
+                    <div class="date-row">
+                      <span class="date-main" id="yesterdayTitle">七月三十一日</span>
+                      <span class="weekday">星期五</span>
+                      <span class="count">4 篇</span>
+                    </div>
+                    <div class="double-rule" aria-hidden="true"></div>
+                  </header>
+                  <div class="stories" id="yesterdayStories"></div>
+                </section>
+              </div>
+            </div>
+
+            <button class="backdrop" id="backdrop" type="button" aria-label="关闭首页布局面板"></button>
+
+            <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-describedby="sheetDescription">
+              <div class="grabber" aria-hidden="true"></div>
+              <div class="sheet-head">
+                <div>
+                  <h3 id="sheetTitle">首页布局</h3>
+                  <p id="sheetDescription">选择适合此刻的阅读节奏，内容与字号不会改变。</p>
+                </div>
+                <button class="close-button" id="closeSheet" type="button" aria-label="关闭">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                </button>
+              </div>
+
+              <div class="density-options" role="radiogroup" aria-label="首页信息密度">
+                <button class="density-option" type="button" role="radio" aria-checked="false" data-value="low">
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                  <div class="mini-layout mini-low" aria-hidden="true">
+                    <div class="mini-image"></div><div class="mini-line"></div><div class="mini-line short"></div>
+                  </div>
+                  <strong>沉浸</strong>
+                  <small>低密度<br>大图与完整预览</small>
+                </button>
+
+                <button class="density-option" type="button" role="radio" aria-checked="true" data-value="medium">
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                  <div class="mini-layout mini-medium" aria-hidden="true">
+                    <div><div class="mini-line"></div><div class="mini-line short"></div><div class="mini-line"></div></div><div class="mini-image"></div>
+                  </div>
+                  <strong>标准</strong>
+                  <small>中密度<br>信息均衡</small>
+                </button>
+
+                <button class="density-option" type="button" role="radio" aria-checked="false" data-value="high">
+                  <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                  <div class="mini-layout mini-high" aria-hidden="true">
+                    <div class="mini-row"><div class="mini-line"></div></div><div class="mini-row"><div class="mini-line short"></div></div><div class="mini-row"><div class="mini-line"></div></div>
+                  </div>
+                  <strong>速览</strong>
+                  <small>高密度<br>更多标题</small>
+                </button>
+              </div>
+
+              <p class="sheet-note">选择后立即预览并自动保存。使用大字号时优先保证可读性，因此实际单屏篇数可能减少。</p>
+            </section>
+
+            <div class="toast" id="toast" role="status" aria-live="polite">已切换为标准布局</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mode-label" aria-live="polite">
+        <strong id="currentModeLabel">标准</strong>
+        <span id="currentModeDetail">中密度 · 信息均衡</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const iconEye = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.4"/></svg>';
+    const iconLike = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7.2 10.2 10.5 3c2 0 2.9 1.4 2.4 3.3l-.7 2.6h5.3a2.5 2.5 0 0 1 2.4 3.2l-1.5 6A2.5 2.5 0 0 1 16 20H7.2M3.5 9.5h3.7v10H3.5z"/></svg>';
+    const iconComment = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2.2V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3Z"/></svg>';
+
+    const art = {
+      city: `<svg viewBox="0 0 640 360" role="img" aria-label="雨后城市与行人抽象插画"><rect width="640" height="360" fill="#a9b6bd"/><rect y="218" width="640" height="142" fill="#4c5960"/><path d="M0 248 640 194v25L0 277Z" fill="#d0c1a2" opacity=".7"/><rect x="46" y="66" width="118" height="170" fill="#d7d0c0"/><rect x="178" y="34" width="94" height="205" fill="#7e9098"/><rect x="290" y="88" width="136" height="136" fill="#c8b9a4"/><rect x="442" y="48" width="138" height="170" fill="#667982"/><g fill="#f2dfaa" opacity=".75"><rect x="64" y="86" width="18" height="28"/><rect x="104" y="86" width="18" height="28"/><rect x="199" y="58" width="15" height="24"/><rect x="232" y="58" width="15" height="24"/><rect x="464" y="75" width="20" height="32"/><rect x="512" y="75" width="20" height="32"/></g><circle cx="346" cy="238" r="21" fill="#b73729"/><path d="M346 258v72M314 286h64" stroke="#252a2d" stroke-width="10" stroke-linecap="round"/><path d="m346 329-23 27m23-27 28 27" stroke="#252a2d" stroke-width="10" stroke-linecap="round"/><g stroke="#e5e1d8" stroke-width="2" opacity=".5"><path d="M20 20 2 82M80 0 58 80M148 0l-24 92M240 0l-22 84M350 0l-26 96M480 0l-24 90M600 0l-28 98"/></g></svg>`,
+      space: `<svg viewBox="0 0 640 360" role="img" aria-label="环形空间站与地球抽象插画"><rect width="640" height="360" fill="#101b2c"/><circle cx="533" cy="70" r="2" fill="#fff"/><circle cx="92" cy="81" r="2" fill="#fff"/><circle cx="440" cy="132" r="1.5" fill="#fff"/><circle cx="170" cy="42" r="1.5" fill="#fff"/><circle cx="334" cy="62" r="1" fill="#fff"/><circle cx="302" cy="202" r="89" fill="none" stroke="#b9c7cf" stroke-width="18"/><circle cx="302" cy="202" r="49" fill="#142d4c" stroke="#6f8798" stroke-width="2"/><path d="M213 202H90M391 202h151M302 113V45M302 291v44" stroke="#c99a5e" stroke-width="8"/><path d="M0 337c92-64 198-90 310-65 104 24 183 17 330-40v128H0Z" fill="#315a77"/><path d="M0 352c145-53 257-49 360-13 87 30 175 9 280-31v52H0Z" fill="#d7e3e5" opacity=".75"/></svg>`,
+      food: `<svg viewBox="0 0 640 360" role="img" aria-label="餐桌器皿与食材抽象插画"><rect width="640" height="360" fill="#d8c9ae"/><circle cx="292" cy="182" r="121" fill="#f5efe3" stroke="#2f3e3b" stroke-width="5"/><circle cx="292" cy="182" r="76" fill="#b65a3c"/><path d="M244 174c37-66 81-41 101 10-32 39-74 47-101-10Z" fill="#e5bc57"/><path d="M72 54v252M90 54v252M108 54v252M72 102h36M72 258h36" stroke="#2f3e3b" stroke-width="5"/><path d="M518 46c-24 58-24 115 0 171M551 46c24 58 24 115 0 171M534 205v107" stroke="#2f3e3b" stroke-width="6" fill="none"/><circle cx="470" cy="95" r="25" fill="#6e8462"/><circle cx="503" cy="116" r="18" fill="#6e8462"/><circle cx="446" cy="126" r="21" fill="#6e8462"/></svg>`,
+      archive: `<svg viewBox="0 0 640 360" role="img" aria-label="旧报纸档案与红色索引签抽象插画"><rect width="640" height="360" fill="#b9ad94"/><g transform="rotate(-5 320 180)"><rect x="112" y="52" width="416" height="270" fill="#f1eadb" stroke="#514b3f" stroke-width="3"/><path d="M140 92h360M140 111h360" stroke="#514b3f" stroke-width="5"/><path d="M140 137h154M140 151h154M140 165h154M140 179h154M140 193h154M140 207h154M140 221h154M140 235h154M318 137h182M318 151h182M318 165h182M318 179h182M318 193h182M318 207h182M318 221h182M318 235h182" stroke="#8a8271" stroke-width="3"/><rect x="140" y="253" width="360" height="40" fill="#d1c4aa"/></g><rect x="459" y="33" width="78" height="106" fill="#a4352c" transform="rotate(6 498 86)"/><text x="480" y="90" fill="#fff7e8" font-size="28" font-family="serif" transform="rotate(6 498 86)">档</text></svg>`,
+      ocean: `<svg viewBox="0 0 640 360" role="img" aria-label="海面浮标与深海声波抽象插画"><rect width="640" height="360" fill="#173f51"/><path d="M0 132c89 25 152-29 242-3s154-13 236 4 109 6 162-13v240H0Z" fill="#3f7b88"/><path d="M0 176c88 20 160-22 246-3 84 19 155-17 239 4 69 18 115 7 155-9" fill="none" stroke="#bbd0cc" stroke-width="5" opacity=".7"/><path d="M0 215c88 20 160-22 246-3 84 19 155-17 239 4 69 18 115 7 155-9M0 260c88 20 160-22 246-3 84 19 155-17 239 4 69 18 115 7 155-9" fill="none" stroke="#8eb0ad" stroke-width="3" opacity=".5"/><path d="M320 70v157" stroke="#efc36f" stroke-width="8"/><path d="m278 126 42-56 42 56Z" fill="#b73729"/><circle cx="320" cy="232" r="36" fill="#efc36f"/><g fill="none" stroke="#dce8e3" opacity=".55"><circle cx="320" cy="232" r="64"/><circle cx="320" cy="232" r="91"/><circle cx="320" cy="232" r="122"/></g></svg>`,
+      museum: `<svg viewBox="0 0 640 360" role="img" aria-label="博物馆展厅与器物剪影抽象插画"><rect width="640" height="360" fill="#d9d0c1"/><path d="M84 54h472v256H84Z" fill="#eee8dc" stroke="#3f3a31" stroke-width="4"/><path d="M84 54 320 10 556 54" fill="#c4b79f" stroke="#3f3a31" stroke-width="4"/><path d="M130 102h380M130 278h380" stroke="#817766" stroke-width="3"/><rect x="145" y="124" width="112" height="130" fill="#a57e54"/><path d="M187 152c-18 36-8 68 14 87h20c21-19 31-51 13-87-15 10-32 10-47 0Z" fill="#263e3a"/><rect x="288" y="124" width="205" height="130" fill="#354b58"/><circle cx="390" cy="186" r="49" fill="#b98745"/><path d="M390 137v98M341 186h98" stroke="#e2cfaa" stroke-width="4"/></svg>`
+    };
+
+    const stories = [
+      { id: 101, title: '一场暴雨之后，城市为什么会发出与平时不同的声音？', summary: '从路面材质、建筑回声到行人的步速，雨后的声音保存着城市设计的另一份地图。', art: 'city', views: '8.7k', likes: '326', comments: '48' },
+      { id: 102, title: '如果人类真的建造环形空间站，第一批居民会如何生活？', summary: '重力、昼夜、食物与公共空间，都必须从头定义。', art: 'space', views: '12.4k', likes: '681', comments: '92' },
+      { id: 103, title: '为什么家常菜的“适量”，往往比精确克数更可靠？', summary: '一道菜的火候并不只存在于配方里，也存在于锅具、湿度和经验形成的感官判断中。', art: 'food', views: '6.2k', likes: '409', comments: '31', read: true },
+      { id: 104, title: '旧报纸正在成为研究二十世纪城市生活的重要入口', summary: '广告、启事和不起眼的边栏，记录了宏大叙事之外的日常。', art: 'archive', views: '9.1k', likes: '517', comments: '66' },
+      { id: 105, title: '深海里没有阳光，动物如何借助声音建立自己的世界？', summary: '当视觉退居次席，回声、振动与低频信号共同组成另一种空间感。', art: 'ocean', views: '10.8k', likes: '742', comments: '85' },
+      { id: 106, title: '博物馆中的一件器物，应该讲述多少故事才算合适？', summary: '展签越长不一定越完整，好的解释需要在知识密度与观看节奏之间保持克制。', art: 'museum', views: '5.9k', likes: '288', comments: '24' },
+      { id: 107, title: '我们为什么总能在陌生街道上，迅速找到一家“像样的”小店？', summary: '门头、灯光、菜单和人的停留方式，构成了一套未经书写的判断系统。', art: null, views: '7.6k', likes: '354', comments: '41' },
+      { id: 108, title: '睡前读纸质书真的比看屏幕更容易入睡吗？关键可能不只在蓝光', summary: '光线、距离、姿势和内容节奏，都会改变大脑进入休息状态的路径。', art: null, views: '11.2k', likes: '633', comments: '73' },
+      { id: 109, title: '为什么有些电影的留白，会让我们在散场后记得更久？', summary: '未被解释的部分不是缺失，而是把叙事的一部分交还给观众。', art: 'museum', views: '8.3k', likes: '492', comments: '52', read: true },
+      { id: 110, title: '城市里的树能降温，但不同的树带来的体感差异有多大？', summary: '树冠形态、蒸腾效率和街道朝向，共同决定一片树荫的质量。', art: 'city', views: '6.8k', likes: '377', comments: '29' },
+      { id: 111, title: '从一张菜单里，可以读出一家餐厅怎样理解自己的客人', summary: '分类、顺序与描述方式，比价格更早透露经营者的判断。', art: 'food', views: '4.7k', likes: '219', comments: '18' },
+      { id: 112, title: '当档案被数字化之后，我们会更接近历史，还是更依赖搜索框？', summary: '检索变得容易，也可能让不易命名的线索更难被偶然发现。', art: 'archive', views: '7.9k', likes: '446', comments: '57' }
+    ];
+
+    const today = stories.slice(0, 8);
+    const yesterday = stories.slice(8);
+
+    const app = document.getElementById('app');
+    const device = document.getElementById('device');
+    const feed = document.getElementById('feed');
+    const feedInner = document.getElementById('feedInner');
+    const moreButton = document.getElementById('moreButton');
+    const closeSheet = document.getElementById('closeSheet');
+    const backdrop = document.getElementById('backdrop');
+    const densityOptions = [...document.querySelectorAll('.density-option')];
+    const currentModeLabel = document.getElementById('currentModeLabel');
+    const currentModeDetail = document.getElementById('currentModeDetail');
+    const toast = document.getElementById('toast');
+    const modeMeta = {
+      low: { label: '沉浸', detail: '低密度 · 大图与完整预览' },
+      medium: { label: '标准', detail: '中密度 · 信息均衡' },
+      high: { label: '速览', detail: '高密度 · 更多标题' }
+    };
+
+    let currentDensity = localStorage.getItem('dailyreader-density') || 'medium';
+    if (!modeMeta[currentDensity]) currentDensity = 'medium';
+    let toastTimer;
+
+    function renderStory(story) {
+      const media = story.art
+        ? `<div class="story-media editorial-image">${art[story.art]}<span class="image-caption">日报制图</span></div>`
+        : `<div class="story-media editorial-image fallback-art" role="img" aria-label="无配图文章的抽象报刊版纹"><span class="marks" aria-hidden="true"></span></div>`;
+      return `<article class="story${story.read ? ' is-read' : ''}" data-story-id="${story.id}" tabindex="0" aria-label="${story.read ? '已读，' : '未读，'}${story.title}">
+        <div class="story-copy">
+          <h3 class="story-title">${story.title}</h3>
+          <p class="story-summary">${story.summary}</p>
+          <div class="metrics" aria-label="${story.views} 次浏览，${story.likes} 次赞同，${story.comments} 条讨论">
+            <span class="metric">${iconEye}${story.views}</span>
+            <span class="metric">${iconLike}${story.likes}</span>
+            <span class="metric">${iconComment}${story.comments}</span>
+          </div>
+        </div>
+        ${media}
+      </article>`;
+    }
+
+    document.getElementById('todayStories').innerHTML = today.map(renderStory).join('');
+    document.getElementById('yesterdayStories').innerHTML = yesterday.map(renderStory).join('');
+
+    function findAnchorStory() {
+      const feedTop = feed.getBoundingClientRect().top;
+      const candidates = [...feed.querySelectorAll('.story')];
+      return candidates.find(story => story.getBoundingClientRect().bottom > feedTop + 8) || candidates[0];
+    }
+
+    function applyDensity(value, announce = false) {
+      const anchor = findAnchorStory();
+      const anchorOffset = anchor ? anchor.getBoundingClientRect().top - feed.getBoundingClientRect().top : 0;
+      feedInner.classList.add('transitioning');
+
+      window.setTimeout(() => {
+        currentDensity = value;
+        feed.dataset.density = value;
+        localStorage.setItem('dailyreader-density', value);
+        densityOptions.forEach(option => option.setAttribute('aria-checked', String(option.dataset.value === value)));
+        currentModeLabel.textContent = modeMeta[value].label;
+        currentModeDetail.textContent = modeMeta[value].detail;
+
+        requestAnimationFrame(() => {
+          if (anchor) {
+            const nextOffset = anchor.getBoundingClientRect().top - feed.getBoundingClientRect().top;
+            feed.scrollTop += nextOffset - anchorOffset;
+          }
+          feedInner.classList.remove('transitioning');
+        });
+
+        if (announce) showToast(`已切换为${modeMeta[value].label}布局`);
+      }, 100);
+    }
+
+    function showToast(message) {
+      window.clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add('show');
+      toastTimer = window.setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    function openSheet() {
+      app.classList.add('sheet-open');
+      moreButton.setAttribute('aria-expanded', 'true');
+      window.setTimeout(() => densityOptions.find(option => option.dataset.value === currentDensity)?.focus(), 80);
+    }
+
+    function closePanel() {
+      app.classList.remove('sheet-open');
+      moreButton.setAttribute('aria-expanded', 'false');
+      moreButton.focus();
+    }
+
+    moreButton.addEventListener('click', openSheet);
+    closeSheet.addEventListener('click', closePanel);
+    backdrop.addEventListener('click', closePanel);
+    densityOptions.forEach(option => option.addEventListener('click', () => applyDensity(option.dataset.value, true)));
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && app.classList.contains('sheet-open')) closePanel();
+      if (event.key === 'Enter' && document.activeElement?.classList.contains('story')) showToast('文章详情将在产品中打开');
+    });
+
+    document.querySelectorAll('.story').forEach(story => story.addEventListener('click', () => showToast('文章详情将在产品中打开')));
+
+    const phoneButton = document.getElementById('phoneButton');
+    const tabletButton = document.getElementById('tabletButton');
+    function setDevice(value) {
+      device.dataset.device = value;
+      phoneButton.setAttribute('aria-pressed', String(value === 'phone'));
+      tabletButton.setAttribute('aria-pressed', String(value === 'tablet'));
+      showToast(value === 'tablet' ? '已切换到 iPad 预览' : '已切换到 iPhone 预览');
+    }
+    phoneButton.addEventListener('click', () => setDevice('phone'));
+    tabletButton.addEventListener('click', () => setDevice('tablet'));
+
+    document.getElementById('themeButton').addEventListener('click', event => {
+      const next = app.dataset.theme === 'light' ? 'dark' : 'light';
+      app.dataset.theme = next;
+      event.currentTarget.setAttribute('aria-label', next === 'dark' ? '切换浅色模式' : '切换深色模式');
+      showToast(next === 'dark' ? '已切换到深色模式' : '已切换到浅色模式');
+    });
+
+    document.getElementById('resetButton').addEventListener('click', () => {
+      applyDensity('medium', true);
+      feed.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    applyDensity(currentDensity, false);
+  </script>
+</body>
+</html>

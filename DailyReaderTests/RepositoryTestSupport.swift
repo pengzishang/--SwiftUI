@@ -3,6 +3,7 @@ import Foundation
 
 final class RepositoryMockDailyService: DailyServiceProtocol {
     var latestResult: Result<DailyResponse, Error> = .success(.fixture)
+    var latestDelayNanoseconds: UInt64 = 0
     var beforeResult: Result<DailyResponse, Error> = .success(.historyFixture)
     var beforeResults: [String: Result<DailyResponse, Error>] = [:]
     var beforeDelayNanoseconds: UInt64 = 0
@@ -14,6 +15,7 @@ final class RepositoryMockDailyService: DailyServiceProtocol {
 
     private let lock = NSLock()
     private var _latestCallCount = 0
+    private var _latestCancellationCount = 0
     private var _requestedBeforeDates: [String] = []
     private var _activeBeforeCallCount = 0
     private var _maximumConcurrentBeforeCallCount = 0
@@ -24,6 +26,7 @@ final class RepositoryMockDailyService: DailyServiceProtocol {
     private var _answersCallCount = 0
 
     var latestCallCount: Int { lock.withLock { _latestCallCount } }
+    var latestCancellationCount: Int { lock.withLock { _latestCancellationCount } }
     var beforeCallCount: Int { lock.withLock { _requestedBeforeDates.count } }
     var requestedBeforeDates: [String] { lock.withLock { _requestedBeforeDates } }
     var maximumConcurrentBeforeCallCount: Int { lock.withLock { _maximumConcurrentBeforeCallCount } }
@@ -35,6 +38,14 @@ final class RepositoryMockDailyService: DailyServiceProtocol {
 
     func fetchLatest() async throws -> DailyResponse {
         lock.withLock { _latestCallCount += 1 }
+        if latestDelayNanoseconds > 0 {
+            do {
+                try await Task.sleep(nanoseconds: latestDelayNanoseconds)
+            } catch is CancellationError {
+                lock.withLock { _latestCancellationCount += 1 }
+                throw CancellationError()
+            }
+        }
         return try latestResult.get()
     }
 

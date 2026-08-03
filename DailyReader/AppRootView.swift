@@ -4,6 +4,7 @@ import SwiftUI
 struct AppRootView: View {
     @StateObject private var homeViewModel = AppEnvironment.makeHomeViewModel()
     @StateObject private var aiCoordinator = AppEnvironment.makeAIChatCoordinator()
+    @StateObject private var authenticationViewModel = AppEnvironment.makeAuthenticationViewModel()
     @State private var selectedTab = 0
 
     var body: some View {
@@ -34,7 +35,10 @@ struct AppRootView: View {
 
             // 3. Me (bookroom + settings entry)
             NavigationStack {
-                MeView(viewModel: homeViewModel)
+                MeView(
+                    viewModel: homeViewModel,
+                    authenticationViewModel: authenticationViewModel
+                )
                     .enablesInteractiveSwipeBack()
             }
             .tabItem {
@@ -53,6 +57,7 @@ struct AppRootView: View {
         .task {
             ArticleWebViewPrewarmer.shared.warmUpIfNeeded()
             await aiCoordinator.loadIfNeeded()
+            authenticationViewModel.restoreIfNeeded()
         }
     }
 }
@@ -70,7 +75,10 @@ enum AppEnvironment {
 
     @MainActor
     static func makeHomeViewModel() -> HomeViewModel {
-        HomeViewModel(repository: repository)
+        HomeViewModel(
+            repository: repository,
+            articleRepository: repository
+        )
     }
 
     @MainActor
@@ -95,6 +103,21 @@ enum AppEnvironment {
     @MainActor
     static func makeAnswersViewModel(questionID: Int) -> AnswersViewModel {
         AnswersViewModel(repository: repository, questionID: questionID)
+    }
+
+    @MainActor
+    static func makeAuthenticationViewModel(
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
+    ) -> AuthenticationViewModel {
+        let service: any AuthenticationServicing
+        if arguments.contains("-UITestMode") {
+            let scenario = AuthMockScenario(value: environment["MOCK_AUTH_SCENARIO"])
+            service = FixtureAuthenticationService(scenario: scenario)
+        } else {
+            service = UnavailableAuthenticationService(reason: .missingRequiredValues)
+        }
+        return AuthenticationViewModel(service: service)
     }
 
     @MainActor
@@ -156,6 +179,7 @@ enum AppEnvironment {
             defaults.removeObject(forKey: "DailyReader.hiddenStories")
             defaults.removeObject(forKey: "DailyReader.favoriteStories")
             defaults.removeObject(forKey: "DailyReader.readStories")
+            defaults.removeObject(forKey: HomeInformationDensity.storageKey)
 
             try? FileManager.default.removeItem(
                 at: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)

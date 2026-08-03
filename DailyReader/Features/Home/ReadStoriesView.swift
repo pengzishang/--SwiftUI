@@ -31,9 +31,6 @@ struct ReadStoriesView: View {
                     let story = readStory.story
                     NavigationLink {
                         ArticleDetailView(story: story, homeViewModel: viewModel, source: .read, date: readStory.date)
-                            .onAppear {
-                                viewModel.markStoryRead(story, date: readStory.date)
-                            }
                     } label: {
                         StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                     }
