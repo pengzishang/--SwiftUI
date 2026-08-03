@@ -107,11 +107,12 @@ enum AppEnvironment {
 
     @MainActor
     static func makeAuthenticationViewModel(
-        processInfo: ProcessInfo = .processInfo
+        arguments: [String] = ProcessInfo.processInfo.arguments,
+        environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> AuthenticationViewModel {
         let service: any AuthenticationServicing
-        if processInfo.arguments.contains("-UITestMode") {
-            let scenario = AuthMockScenario(value: processInfo.environment["MOCK_AUTH_SCENARIO"])
+        if arguments.contains("-UITestMode") {
+            let scenario = AuthMockScenario(value: environment["MOCK_AUTH_SCENARIO"])
             service = FixtureAuthenticationService(scenario: scenario)
         } else {
             service = UnavailableAuthenticationService(reason: .missingRequiredValues)
