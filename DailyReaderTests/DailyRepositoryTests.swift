@@ -45,6 +45,44 @@ final class DailyRepositoryTests: XCTestCase {
         }
     }
 
+    func testStoppingHomeFeedConsumerCancelsProducerAndSkipsNetworkCacheWrites() async throws {
+        let cachedAt = Date(timeIntervalSince1970: 1_782_446_400)
+        let cachedHome = CachedValue(
+            value: CachedHomeFeed(
+                sections: [DailySection(date: "20260620", stories: [DailyResponse.historyFixture.stories[1]])],
+                topStories: []
+            ),
+            cachedAt: cachedAt
+        )
+        let service = RepositoryMockDailyService()
+        service.latestDelayNanoseconds = 5_000_000_000
+        let cache = RepositoryInMemoryCacheStore(home: cachedHome)
+        let repository = DailyRepository(service: service, cacheStore: cache)
+
+        let consumer = Task {
+            for try await _ in repository.loadHomeFeed() {}
+        }
+        for _ in 0..<100 where service.latestCallCount == 0 {
+            await Task.yield()
+        }
+        XCTAssertEqual(service.latestCallCount, 1)
+
+        consumer.cancel()
+        do {
+            try await consumer.value
+        } catch is CancellationError {
+            // Expected: consumer cancellation terminates the stream and producer.
+        }
+
+        for _ in 0..<100 where service.latestCancellationCount == 0 {
+            await Task.yield()
+        }
+
+        XCTAssertEqual(service.latestCancellationCount, 1)
+        XCTAssertNil(await cache.loadLatest())
+        XCTAssertEqual((await cache.loadHomeFeed())?.value, cachedHome.value)
+    }
+
     func testDetailUsesCacheBeforeService() async throws {
         let detail = ArticleDetail.fixture
         let cachedAt = Date(timeIntervalSince1970: 1_782_446_400)
