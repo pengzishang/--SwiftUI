@@ -2,18 +2,20 @@ import Alamofire
 import Foundation
 
 final class HTTPClient: HTTPClientProtocol {
+    typealias DecoderFactory = @Sendable () -> JSONDecoder
+
     static let browserUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
 
     private let afSession: Session
-    private let decoder: JSONDecoder
+    private let decoderFactory: DecoderFactory
     private let timeoutInterval: TimeInterval
 
     init(
         session: URLSession = .shared,
-        decoder: JSONDecoder = JSONDecoder(),
+        decoderFactory: @escaping DecoderFactory = { JSONDecoder() },
         timeoutInterval: TimeInterval = 15
     ) {
-        self.decoder = decoder
+        self.decoderFactory = decoderFactory
         self.timeoutInterval = timeoutInterval
 
         let configuration = session.configuration
@@ -28,6 +30,7 @@ final class HTTPClient: HTTPClientProtocol {
         _ endpoint: Endpoint<Response>
     ) async throws -> Response {
         let request = try endpoint.urlRequest(timeoutInterval: timeoutInterval)
+        let decoder = decoderFactory()
 
         do {
             return try await afSession.request(request)
