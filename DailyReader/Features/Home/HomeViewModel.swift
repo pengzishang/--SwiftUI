@@ -39,6 +39,8 @@ final class HomeViewModel: ObservableObject {
 
     private let repository: HomeRepositoryProtocol
     private let articleRepository: ArticleRepositoryProtocol?
+    private let readingStateBackup: any ReadingStateBackingUp
+    private let keychainErrorHandler: @Sendable (Error) -> Void
     private var loadedStoryIDs = Set<Int>()
     private var immersiveImageRequestIDs = Set<Int>()
     private var resolvedImmersiveImageIDs = Set<Int>()
@@ -51,10 +53,18 @@ final class HomeViewModel: ObservableObject {
 
     init(
         repository: HomeRepositoryProtocol,
-        articleRepository: ArticleRepositoryProtocol? = nil
+        articleRepository: ArticleRepositoryProtocol? = nil,
+        readingStateBackup: any ReadingStateBackingUp = KeychainReadingStateBackup(),
+        keychainErrorHandler: @escaping @Sendable (Error) -> Void = { error in
+            #if DEBUG
+            print("Keychain reading-state operation failed: \(String(describing: error))")
+            #endif
+        }
     ) {
         self.repository = repository
         self.articleRepository = articleRepository
+        self.readingStateBackup = readingStateBackup
+        self.keychainErrorHandler = keychainErrorHandler
 
         let defaults = UserDefaults.standard
         let readIDs = defaults.array(forKey: readStoryIDsKey) as? [Int]
@@ -73,61 +83,61 @@ final class HomeViewModel: ObservableObject {
             var restoredFavorite: [FavoriteStory]? = nil
             var restoredRead: [ReadStory]? = nil
             
-            if let data = KeychainHelper.shared.read(forKey: readStoryIDsKey) {
+            if let data = readBackup(for: readStoryIDsKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    KeychainHelper.shared.delete(forKey: readStoryIDsKey)
+                    deleteBackup(for: readStoryIDsKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([Int].self, from: data)
                         restoredReadIDs = list
                         defaults.set(list, forKey: readStoryIDsKey)
                     } catch {
-                        KeychainHelper.shared.delete(forKey: readStoryIDsKey)
+                        deleteBackup(for: readStoryIDsKey)
                         defaults.removeObject(forKey: readStoryIDsKey)
                     }
                 }
             }
             
-            if let data = KeychainHelper.shared.read(forKey: hiddenStoriesKey) {
+            if let data = readBackup(for: hiddenStoriesKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    KeychainHelper.shared.delete(forKey: hiddenStoriesKey)
+                    deleteBackup(for: hiddenStoriesKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([HiddenStory].self, from: data)
                         restoredHidden = list
                         defaults.set(data, forKey: hiddenStoriesKey)
                     } catch {
-                        KeychainHelper.shared.delete(forKey: hiddenStoriesKey)
+                        deleteBackup(for: hiddenStoriesKey)
                         defaults.removeObject(forKey: hiddenStoriesKey)
                     }
                 }
             }
             
-            if let data = KeychainHelper.shared.read(forKey: favoriteStoriesKey) {
+            if let data = readBackup(for: favoriteStoriesKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    KeychainHelper.shared.delete(forKey: favoriteStoriesKey)
+                    deleteBackup(for: favoriteStoriesKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([FavoriteStory].self, from: data)
                         restoredFavorite = list
                         defaults.set(data, forKey: favoriteStoriesKey)
                     } catch {
-                        KeychainHelper.shared.delete(forKey: favoriteStoriesKey)
+                        deleteBackup(for: favoriteStoriesKey)
                         defaults.removeObject(forKey: favoriteStoriesKey)
                     }
                 }
             }
             
-            if let data = KeychainHelper.shared.read(forKey: readStoriesKey) {
+            if let data = readBackup(for: readStoriesKey) {
                 if ProcessInfo.processInfo.environment["MOCK_KEYCHAIN_STATUS"] == "corrupted" {
-                    KeychainHelper.shared.delete(forKey: readStoriesKey)
+                    deleteBackup(for: readStoriesKey)
                 } else {
                     do {
                         let list = try JSONDecoder().decode([ReadStory].self, from: data)
                         restoredRead = list
                         defaults.set(data, forKey: readStoriesKey)
                     } catch {
-                        KeychainHelper.shared.delete(forKey: readStoriesKey)
+                        deleteBackup(for: readStoriesKey)
                         defaults.removeObject(forKey: readStoriesKey)
                     }
                 }
@@ -162,23 +172,48 @@ final class HomeViewModel: ObservableObject {
             }
             
             // Check if Keychain is empty, and if so, perform reverse backup (T2-KC-04)
-            let kcReadData = KeychainHelper.shared.read(forKey: readStoryIDsKey)
+            let kcReadData = readBackup(for: readStoryIDsKey)
             if kcReadData == nil {
                 if !self.readStoryIDs.isEmpty {
                     if let data = try? JSONEncoder().encode(Array(self.readStoryIDs)) {
-                        KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+                        saveBackup(data, for: readStoryIDsKey)
                     }
                 }
                 if let data = hiddenData {
-                    KeychainHelper.shared.save(data, forKey: hiddenStoriesKey)
+                    saveBackup(data, for: hiddenStoriesKey)
                 }
                 if let data = favoriteData {
-                    KeychainHelper.shared.save(data, forKey: favoriteStoriesKey)
+                    saveBackup(data, for: favoriteStoriesKey)
                 }
                 if let data = readData {
-                    KeychainHelper.shared.save(data, forKey: readStoriesKey)
+                    saveBackup(data, for: readStoriesKey)
                 }
             }
+        }
+    }
+
+    private func readBackup(for account: String) -> Data? {
+        do {
+            return try readingStateBackup.read(account: account)
+        } catch {
+            keychainErrorHandler(error)
+            return nil
+        }
+    }
+
+    private func saveBackup(_ data: Data, for account: String) {
+        do {
+            try readingStateBackup.save(data, account: account)
+        } catch {
+            keychainErrorHandler(error)
+        }
+    }
+
+    private func deleteBackup(for account: String) {
+        do {
+            try readingStateBackup.delete(account: account)
+        } catch {
+            keychainErrorHandler(error)
         }
     }
 
@@ -358,7 +393,7 @@ final class HomeViewModel: ObservableObject {
         let array = Array(readStoryIDs)
         UserDefaults.standard.set(array, forKey: readStoryIDsKey)
         if let data = try? JSONEncoder().encode(array) {
-            KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+            saveBackup(data, for: readStoryIDsKey)
         }
     }
 
@@ -367,7 +402,7 @@ final class HomeViewModel: ObservableObject {
         let array = Array(readStoryIDs)
         UserDefaults.standard.set(array, forKey: readStoryIDsKey)
         if let data = try? JSONEncoder().encode(array) {
-            KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+            saveBackup(data, for: readStoryIDsKey)
         }
         if let index = readStories.firstIndex(where: { $0.id == story.id }) {
             let old = readStories.remove(at: index)
@@ -423,7 +458,7 @@ final class HomeViewModel: ObservableObject {
         let array = Array(readStoryIDs)
         UserDefaults.standard.set(array, forKey: readStoryIDsKey)
         if let data = try? JSONEncoder().encode(array) {
-            KeychainHelper.shared.save(data, forKey: readStoryIDsKey)
+            saveBackup(data, for: readStoryIDsKey)
         }
         saveReadStories()
     }
@@ -431,21 +466,21 @@ final class HomeViewModel: ObservableObject {
     private func saveHiddenStories() {
         if let data = try? JSONEncoder().encode(hiddenStories) {
             UserDefaults.standard.set(data, forKey: hiddenStoriesKey)
-            KeychainHelper.shared.save(data, forKey: hiddenStoriesKey)
+            saveBackup(data, for: hiddenStoriesKey)
         }
     }
 
     private func saveFavoriteStories() {
         if let data = try? JSONEncoder().encode(favoriteStories) {
             UserDefaults.standard.set(data, forKey: favoriteStoriesKey)
-            KeychainHelper.shared.save(data, forKey: favoriteStoriesKey)
+            saveBackup(data, for: favoriteStoriesKey)
         }
     }
 
     private func saveReadStories() {
         if let data = try? JSONEncoder().encode(readStories) {
             UserDefaults.standard.set(data, forKey: readStoriesKey)
-            KeychainHelper.shared.save(data, forKey: readStoriesKey)
+            saveBackup(data, for: readStoriesKey)
         }
     }
 
