@@ -325,9 +325,6 @@ struct MeView: View {
                                     source: .favorites,
                                     date: section.date
                                 )
-                                .onAppear {
-                                    viewModel.markStoryRead(story, date: section.date)
-                                }
                             } label: {
                                 StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                             }
@@ -379,9 +376,6 @@ struct MeView: View {
                             source: .read,
                             date: readStory.date
                         )
-                        .onAppear {
-                            viewModel.markStoryRead(story, date: readStory.date)
-                        }
                     } label: {
                         StoryRowView(story: story, isRead: viewModel.isStoryRead(story.id))
                     }

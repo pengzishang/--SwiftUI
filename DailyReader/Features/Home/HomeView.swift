@@ -149,9 +149,6 @@ struct HomeView: View {
             } content: {
                 NavigationLink {
                     ArticleDetailView(story: story, homeViewModel: viewModel, source: .daily, date: section.date)
-                        .onAppear {
-                            viewModel.markStoryRead(story, date: section.date)
-                        }
                 } label: {
                     StoryRowView(
                         story: story,

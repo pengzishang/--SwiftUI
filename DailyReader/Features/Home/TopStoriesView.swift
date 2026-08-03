@@ -12,9 +12,6 @@ struct TopStoriesView: View {
                 ForEach(topStories) { story in
                     NavigationLink {
                         ArticleDetailView(story: story.summary, homeViewModel: homeViewModel, source: .daily, date: "")
-                            .onAppear {
-                                markRead(story.id)
-                            }
                     } label: {
                         VStack(alignment: .leading, spacing: 10) {
                             PlaceholderImageView(

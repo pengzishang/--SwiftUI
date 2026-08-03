@@ -262,27 +262,12 @@ struct ArticleDetailView: View {
                         }
                     }
 
-                    if source == .read {
-                        if homeViewModel.isStoryRead(viewModel.story.id) {
-                            Button(action: {
-                                homeViewModel.toggleRead(viewModel.story, date: date)
-                            }) {
-                                Label("设为未读", systemImage: "envelope.badge")
-                            }
-                        } else {
-                            Button(action: {
-                                homeViewModel.toggleRead(viewModel.story, date: date)
-                            }) {
-                                Label("设为已读", systemImage: "checkmark.circle")
-                            }
-                        }
-                    } else {
-                        Button(action: {
-                            homeViewModel.markStoryRead(viewModel.story, date: date)
-                        }) {
-                            Label("设为已读", systemImage: "checkmark.circle")
-                        }
+                    Button(action: {
+                        homeViewModel.toggleRead(viewModel.story, date: date)
+                    }) {
+                        Label("设为未读", systemImage: "envelope.badge")
                     }
+                    .disabled(!homeViewModel.isStoryRead(viewModel.story.id))
 
                     if source == .coldPalace {
                         Button(action: {
@@ -318,6 +303,12 @@ struct ArticleDetailView: View {
             htmlContentHeight = 520
             htmlErrorMessage = nil
             isWebViewLoading = true
+        }
+        .markReadAfterViewing(
+            storyID: viewModel.story.id,
+            isRead: homeViewModel.isStoryRead(viewModel.story.id)
+        ) {
+            homeViewModel.markStoryRead(viewModel.story, date: date)
         }
     }
 
@@ -407,6 +398,111 @@ struct ArticleDetailView: View {
     static func progress(offset: CGFloat, contentHeight: CGFloat, viewportHeight: CGFloat) -> Double {
         let scrollableDistance = max(contentHeight - viewportHeight, 1)
         return min(max(Double(offset / scrollableDistance), 0), 1)
+    }
+}
+
+@MainActor
+final class ReadQualificationTimer: ObservableObject {
+    static let requiredViewingDuration: TimeInterval = 10
+
+    private let requiredDuration: TimeInterval
+    private let now: () -> ContinuousClock.Instant
+    private var accumulatedDuration: Duration = .zero
+    private var activeSince: ContinuousClock.Instant?
+    private var storyID: Int?
+    private(set) var hasQualified = false
+
+    init(
+        requiredDuration: TimeInterval = requiredViewingDuration,
+        now: @escaping () -> ContinuousClock.Instant = { ContinuousClock.now }
+    ) {
+        self.requiredDuration = requiredDuration
+        self.now = now
+    }
+
+    func resume() {
+        guard !hasQualified, activeSince == nil else { return }
+        activeSince = now()
+    }
+
+    func prepare(for storyID: Int) {
+        guard self.storyID != storyID else { return }
+        self.storyID = storyID
+        accumulatedDuration = .zero
+        activeSince = nil
+        hasQualified = false
+    }
+
+    @discardableResult
+    func pause() -> Bool {
+        guard !hasQualified, let activeSince else { return false }
+        accumulatedDuration += activeSince.duration(to: now())
+        self.activeSince = nil
+        return qualifyIfNeeded()
+    }
+
+    @discardableResult
+    func qualifyIfNeeded() -> Bool {
+        guard !hasQualified else { return false }
+        let activeDuration = activeSince.map { $0.duration(to: now()) } ?? .zero
+        guard accumulatedDuration + activeDuration >= .seconds(requiredDuration) else { return false }
+        hasQualified = true
+        activeSince = nil
+        return true
+    }
+}
+
+struct MarkReadAfterViewingModifier: ViewModifier {
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var timer = ReadQualificationTimer()
+
+    let storyID: Int
+    let isRead: Bool
+    let markRead: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .task(id: ReadQualificationTaskID(storyID: storyID, isRead: isRead, scenePhase: scenePhase)) {
+                timer.prepare(for: storyID)
+                guard !isRead, scenePhase == .active else {
+                    pauseAndMarkIfQualified()
+                    return
+                }
+
+                timer.resume()
+                do {
+                    while !Task.isCancelled {
+                        if timer.qualifyIfNeeded() {
+                            markRead()
+                            return
+                        }
+                        try await Task.sleep(for: .milliseconds(100))
+                    }
+                } catch {
+                    pauseAndMarkIfQualified()
+                }
+            }
+            .onDisappear {
+                pauseAndMarkIfQualified()
+            }
+    }
+
+    private func pauseAndMarkIfQualified() {
+        if timer.pause() {
+            markRead()
+        }
+    }
+}
+
+private struct ReadQualificationTaskID: Equatable {
+    let storyID: Int
+    let isRead: Bool
+    let scenePhase: ScenePhase
+}
+
+extension View {
+    func markReadAfterViewing(storyID: Int, isRead: Bool, markRead: @escaping () -> Void) -> some View {
+        modifier(MarkReadAfterViewingModifier(storyID: storyID, isRead: isRead, markRead: markRead))
     }
 }
 
