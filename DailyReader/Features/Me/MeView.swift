@@ -18,6 +18,11 @@ struct MeView: View {
         self.authenticationViewModel = authenticationViewModel
     }
 
+    // 正式界面暂时隐藏登录卡片；专用认证 UI 测试仍可通过 Mock 场景验证登录能力。
+    private static var showsAuthenticationCard: Bool {
+        ProcessInfo.processInfo.environment["MOCK_AUTH_SCENARIO"] != nil
+    }
+
     private var trimmedSearchText: String {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -58,7 +63,10 @@ struct MeView: View {
         VStack(spacing: 0) {
             VStack(spacing: 14) {
                 bookroomHeader
-                AccountCardView(viewModel: authenticationViewModel)
+                // 暂时隐藏知乎账号登录入口，保留登录能力以便后续恢复。
+                if Self.showsAuthenticationCard {
+                    AccountCardView(viewModel: authenticationViewModel)
+                }
                 readingArchive
                 segmentControl
                 searchField
