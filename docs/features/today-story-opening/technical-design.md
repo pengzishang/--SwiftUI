@@ -9,7 +9,7 @@
 | 技术栈 | SwiftUI + Swift Concurrency + Kingfisher |
 | 适用分支 | `version/2.1` |
 | 关联 PRD | `docs/features/today-story-opening/product-requirements.md` |
-| 当前状态 | 技术方案，未修改源码 |
+| 当前状态 | 已完成源码实现；静态验证通过，完整构建与测试受 Xcode 27 Beta SwiftPM 沙箱问题阻断 |
 
 **实现目标：**在现有日报首页的滚动内容中恢复一条顶部故事开场，复用现有 `topStories` 和文章详情导航，不新增接口、不修改数据模型、不扩展文章详情功能。
 

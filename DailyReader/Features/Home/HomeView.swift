@@ -94,6 +94,17 @@ struct HomeView: View {
                         .padding(.vertical, 8)
                 }
 
+                if let openingStory = viewModel.topStories.first {
+                    TodayStoryOpeningView(
+                        story: openingStory,
+                        density: density,
+                        homeViewModel: viewModel
+                    )
+                    .padding(.horizontal, horizontalPadding(for: availableWidth))
+                    .padding(.top, density == .high ? 4 : 8)
+                    .padding(.bottom, density == .high ? 10 : 16)
+                }
+
                 ForEach(viewModel.visibleSections) { section in
                     Section {
                         if usesImmersiveColumns {

@@ -94,6 +94,7 @@
 		BB11A9AA1312C316A4DDE54E /* DailyRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431CDBFAAB38E929539A1B89 /* DailyRepositoryTests.swift */; };
 		BE5FF1A5A52153D911DB065F /* AIRacingChatServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAFC81A450C837CC81510C0A /* AIRacingChatServiceTests.swift */; };
 		BF530E3CAE607D2B4C6B1DCE /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADBAFBFE993C1024774F5F1 /* HomeView.swift */; };
+		C3C9245B94DABA76E77E1151 /* TodayStoryOpeningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA03A61336891475079E22B1 /* TodayStoryOpeningTests.swift */; };
 		C3FACA645DBBF2603108228B /* latest_success.json in Resources */ = {isa = PBXBuildFile; fileRef = E567D095F98259490F560650 /* latest_success.json */; };
 		C805932874F3948CC6639537 /* PKCEGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E09DC34AF31E0C1560A89E8 /* PKCEGenerator.swift */; };
 		C8B7D6E09A6F73ABAA7886D9 /* ArticleDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCF475A067D61BD86CFAD26 /* ArticleDetailViewModelTests.swift */; };
@@ -105,6 +106,7 @@
 		D2D6F1EBD224C58AA0FEAEEC /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1D3346CC294E876A379A02 /* KeychainStore.swift */; };
 		D35894849CB2E37FD540AE09 /* AIChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C1A3B1E23BE774AB3CBA52 /* AIChatService.swift */; };
 		D4CA31095BCFB56A9C1913EC /* ArticleDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7C79607306E50ACE6C0DFC /* ArticleDetailView.swift */; };
+		D53CD5FBC4CCA4FBE4AE320E /* TodayStoryOpeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 843960A6DDDFFBFFEEA57905 /* TodayStoryOpeningView.swift */; };
 		D6B115840D746CCD238A64ED /* HomeInformationDensity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1144DB8BC45F6146F098373 /* HomeInformationDensity.swift */; };
 		DC55001051A83D52DAAC098A /* KeychainDataStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 995E6CC9D87D5D0B0F4A14D2 /* KeychainDataStoreTests.swift */; };
 		DE27713BCEFB254327F260A4 /* KeychainFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AAC6BA3A22EE663173BC48 /* KeychainFlowUITests.swift */; };
@@ -202,6 +204,7 @@
 		767BC6C127BCACF9D238B911 /* DailyServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyServiceProtocol.swift; sourceTree = "<group>"; };
 		78AAC6BA3A22EE663173BC48 /* KeychainFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainFlowUITests.swift; sourceTree = "<group>"; };
 		79707C307289A8C9771F10F0 /* ArticleDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleDetailViewModel.swift; sourceTree = "<group>"; };
+		843960A6DDDFFBFFEEA57905 /* TodayStoryOpeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayStoryOpeningView.swift; sourceTree = "<group>"; };
 		8A77438BD62E5F8B37D4AD22 /* ImageCacheServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheServiceTests.swift; sourceTree = "<group>"; };
 		8CE6C7ACB7A81A9C255BF3CF /* DailyReader.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DailyReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F1331C82786EF3BF467029C /* DailyResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyResponse.swift; sourceTree = "<group>"; };
@@ -239,6 +242,7 @@
 		C0233E5BB3EC64B092E8C623 /* AIStores.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIStores.swift; sourceTree = "<group>"; };
 		C52F85EA4DBCD8A4907CBC09 /* AIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModels.swift; sourceTree = "<group>"; };
 		C7DBABB79F5B0BEF8E1A0BEF /* AIChatServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatServiceTests.swift; sourceTree = "<group>"; };
+		CA03A61336891475079E22B1 /* TodayStoryOpeningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayStoryOpeningTests.swift; sourceTree = "<group>"; };
 		CA8AC2D3DFC16A3A662FAB2E /* StoryMetricsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMetricsViewModel.swift; sourceTree = "<group>"; };
 		CCED78BEA777D98103872E68 /* RemoteImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteImageView.swift; sourceTree = "<group>"; };
 		CCF0212B5030F41A9F851FD0 /* LocalFixtureDailyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFixtureDailyService.swift; sourceTree = "<group>"; };
@@ -368,6 +372,7 @@
 				2C0608E686DB3D314734545A /* SettingsView.swift */,
 				CA8AC2D3DFC16A3A662FAB2E /* StoryMetricsViewModel.swift */,
 				40D6D44F133F24B1158C644D /* StoryRowView.swift */,
+				843960A6DDDFFBFFEEA57905 /* TodayStoryOpeningView.swift */,
 				2858DCC9283E6D495E2F81E6 /* TopStoriesView.swift */,
 			);
 			path = Home;
@@ -442,6 +447,7 @@
 				EBD162F1B8DCB6C9BAB25451 /* RemoteImageSourceTests.swift */,
 				17E91A17DD23D97AB6DB73BB /* RepositoryTestSupport.swift */,
 				6D7FBD69C7FA65459B907E95 /* SettingsTests.swift */,
+				CA03A61336891475079E22B1 /* TodayStoryOpeningTests.swift */,
 				43F919FAFE25F0FDF04638A0 /* ZhihuDailyServiceTests.swift */,
 				D9B2EFBF5968C769C2CFF0D6 /* TestFixtures */,
 			);
@@ -825,6 +831,7 @@
 				20398182DE55D2C574950A92 /* StorySummary.swift in Sources */,
 				8871C2E03EFFD27E937ED7E0 /* SystemWebAuthenticationSession.swift in Sources */,
 				1B9D4B4953972D21CAB3C046 /* Theme.swift in Sources */,
+				D53CD5FBC4CCA4FBE4AE320E /* TodayStoryOpeningView.swift in Sources */,
 				85E0957366C5BEAF7F4753AA /* TopStoriesView.swift in Sources */,
 				4115B5EBC3DC142148C48402 /* TopStory.swift in Sources */,
 				682E70B86A21E745203E9C11 /* ZhihuDailyService.swift in Sources */,
@@ -866,6 +873,7 @@
 				6EE37B3591D86F35D7B265FB /* RemoteImageSourceTests.swift in Sources */,
 				A1307C6C3773346ABBC0EDAE /* RepositoryTestSupport.swift in Sources */,
 				8899418B089D925831A87E04 /* SettingsTests.swift in Sources */,
+				C3C9245B94DABA76E77E1151 /* TodayStoryOpeningTests.swift in Sources */,
 				929958327838B4A067938FF5 /* ZhihuDailyServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
