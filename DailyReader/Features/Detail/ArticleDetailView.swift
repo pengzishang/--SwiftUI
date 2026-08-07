@@ -31,6 +31,9 @@ struct ArticleDetailView: View {
     @State private var scrollContentHeight: CGFloat = 0
     @State private var scrollOffset: CGFloat = 0
     @State private var preparedArticleText = ""
+    @State private var maxReadingProgress: Double = 0
+    @State private var sessionRecorder = ReadingSessionRecorder()
+    @Environment(\.scenePhase) private var scenePhase
 
     private static let topAnchorID = "article-detail-top"
     static let readingControlVisibilityThreshold: CGFloat = 200
@@ -307,6 +310,20 @@ struct ArticleDetailView: View {
             htmlContentHeight = 520
             htmlErrorMessage = nil
             isWebViewLoading = true
+            Task { await viewModel.classifyCurrentArticle() }
+        }
+        .onAppear {
+            sessionRecorder.resume()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                sessionRecorder.resume()
+            } else {
+                commitSession()
+            }
+        }
+        .onDisappear {
+            commitSession()
         }
         .markReadAfterViewing(
             storyID: viewModel.story.id,
@@ -398,6 +415,27 @@ struct ArticleDetailView: View {
             contentHeight: contentHeight,
             viewportHeight: viewportHeight
         )
+        maxReadingProgress = max(maxReadingProgress, readingProgress)
+    }
+
+    /// 提交一次阅读会话信号并重置累计器，避免重复计数。
+    private func commitSession() {
+        sessionRecorder.pause()
+        let dwell = sessionRecorder.elapsedActiveTime
+        guard dwell > 0 || maxReadingProgress > 0 else {
+            sessionRecorder.reset()
+            return
+        }
+        let isFavorited = homeViewModel.isStoryFavorited(viewModel.story.id)
+        let isHidden = homeViewModel.isStoryHidden(viewModel.story.id)
+        viewModel.recordReadingSession(
+            maxScrollPercent: maxReadingProgress,
+            dwellSeconds: dwell,
+            isFavorited: isFavorited,
+            isHidden: isHidden
+        )
+        sessionRecorder.reset()
+        maxReadingProgress = 0
     }
 
     static func progress(offset: CGFloat, contentHeight: CGFloat, viewportHeight: CGFloat) -> Double {
