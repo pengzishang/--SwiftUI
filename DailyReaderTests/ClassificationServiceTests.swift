@@ -82,4 +82,45 @@ final class ClassificationServiceTests: XCTestCase {
         )
         XCTAssertEqual(result.categoryID, ArticleCategory.other.id)
     }
+
+    // MARK: - 边界用例补充
+
+    /// (i) 置信度恰好等于阈值 0.5（不小于 0.5）时，应保留命中类目而非归「其他」。
+    func testParseKeepsCategoryAtExactConfidenceThreshold() {
+        let service = makeService()
+        let parsed = service.parse(
+            "{\"category\":\"科技\",\"confidence\":0.5}",
+            taxonomy: taxonomy(),
+            articleID: 1
+        )
+        XCTAssertEqual(parsed?.categoryID, "tech")
+    }
+
+    /// (i) 置信度低于阈值归「其他」的边界（0.49 < 0.5）。
+    func testParseReturnsOtherForJustBelowThreshold() {
+        let service = makeService()
+        let parsed = service.parse(
+            "{\"category\":\"科技\",\"confidence\":0.49}",
+            taxonomy: taxonomy(),
+            articleID: 1
+        )
+        XCTAssertEqual(parsed?.categoryID, ArticleCategory.other.id)
+    }
+
+    /// (j) 关键词兜底在离线时给出可预期类别（明确命中词）。
+    func testLocalFallbackPredictableForKnownKeyword() {
+        let service = makeService()
+        let result = service.localFallback(
+            articleID: 2,
+            title: "股票市场今日大跌",
+            text: "投资者担忧经济与金融风险"
+        )
+        XCTAssertEqual(result.categoryID, "business")
+        XCTAssertEqual(result.source, .local)
+    }
+
+    /// 置信度阈值常量须为 0.5（规格要求 static let）。
+    func testConfidenceThresholdConstantIsPointFive() {
+        XCTAssertEqual(ArticleClassificationService.confidenceThreshold, 0.5, accuracy: 0.0001)
+    }
 }
