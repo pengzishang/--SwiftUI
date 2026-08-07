@@ -218,6 +218,7 @@ private struct SwipeToHideContainer<Content: View>: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var offset: CGFloat = 0
+    @State private var dragging: Bool = false
 
     init(hide: @escaping () -> Void, @ViewBuilder content: () -> Content) {
         self.hide = hide
@@ -241,23 +242,27 @@ private struct SwipeToHideContainer<Content: View>: View {
                 .background(DS.paper)
                 .offset(x: offset)
                 .contentShape(Rectangle())
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 18)
-                        .onChanged { value in
-                            guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                            offset = min(0, max(-132, value.translation.width))
-                        }
-                        .onEnded { value in
-                            guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                            if value.translation.width < -118 {
-                                performHide()
-                            } else {
-                                setOffset(value.translation.width < -48 ? -92 : 0)
-                            }
-                        }
-                )
+                .allowsHitTesting(!dragging)
         }
         .clipped()
+        .contentShape(Rectangle())
+        .highPriorityGesture(
+            DragGesture(minimumDistance: 18)
+                .onChanged { value in
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    dragging = true
+                    offset = min(0, max(-132, value.translation.width))
+                }
+                .onEnded { value in
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    dragging = false
+                    if value.translation.width < -118 {
+                        performHide()
+                    } else {
+                        setOffset(value.translation.width < -48 ? -92 : 0)
+                    }
+                }
+        )
     }
 
     private func performHide() {
