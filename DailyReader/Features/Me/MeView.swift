@@ -6,16 +6,23 @@ import SwiftUI
 struct MeView: View {
     @ObservedObject var viewModel: HomeViewModel
     @ObservedObject var authenticationViewModel: AuthenticationViewModel
+    @StateObject private var interestProfileViewModel: InterestProfileViewModel
     @State private var selectedSubTab = 0 // 0 收藏，1 已读
     @State private var searchText = ""
     @Namespace private var animation
 
     init(
         viewModel: HomeViewModel,
-        authenticationViewModel: AuthenticationViewModel
+        authenticationViewModel: AuthenticationViewModel,
+        interestProfileViewModel: InterestProfileViewModel = InterestProfileViewModel(
+            classificationStore: ArticleClassificationStore(),
+            interestStore: ReadingInterestStore(),
+            taxonomyStore: CategoryTaxonomyStore()
+        )
     ) {
         self.viewModel = viewModel
         self.authenticationViewModel = authenticationViewModel
+        _interestProfileViewModel = StateObject(wrappedValue: interestProfileViewModel)
     }
 
     // 正式界面暂时隐藏登录卡片；专用认证 UI 测试仍可通过 Mock 场景验证登录能力。
@@ -68,6 +75,10 @@ struct MeView: View {
                     AccountCardView(viewModel: authenticationViewModel)
                 }
                 readingArchive
+                InterestProfileCard(viewModel: interestProfileViewModel)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: 720)
                 segmentControl
                 searchField
             }
@@ -82,6 +93,9 @@ struct MeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .onDisappear {
             authenticationViewModel.cancel()
+        }
+        .onAppear {
+            Task { await interestProfileViewModel.load() }
         }
     }
 
