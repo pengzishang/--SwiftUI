@@ -318,8 +318,8 @@ struct CategoryInterestIndex: Identifiable, Sendable {
 final class ArticleClassificationService {
     private let chatService: AIChatServicing
     private let configurationStore: AIConfigurationStore
-    /// 低置信度阈值（推荐 0.5）
-    var confidenceThreshold: Double = 0.5
+    /// 低置信度阈值（规格要求为 static let，固定 0.5）
+    static let confidenceThreshold: Double = 0.5
 
     init(chatService: AIChatServicing = OpenAICompatibleChatService(),
          configurationStore: AIConfigurationStore) {
@@ -381,7 +381,7 @@ final class ArticleClassificationService {
                 .caseInsensitiveCompare(name.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame
         }
         let categoryID = matched?.id ?? ArticleCategory.other.id
-        if categoryID == ArticleCategory.other.id || confidence < confidenceThreshold {
+        if categoryID == ArticleCategory.other.id || confidence < Self.confidenceThreshold {
             return ArticleClassification(articleID: 0, categoryID: ArticleCategory.other.id,
                                          confidence: confidence, source: .remote)
         }
