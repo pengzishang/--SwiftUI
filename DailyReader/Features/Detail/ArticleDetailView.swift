@@ -494,7 +494,7 @@ struct ArticleDetailView: View {
 
 @MainActor
 final class ReadQualificationTimer: ObservableObject {
-    static let requiredViewingDuration: TimeInterval = 10
+    nonisolated static let requiredViewingDuration: TimeInterval = 10
 
     private let requiredDuration: TimeInterval
     private let now: () -> ContinuousClock.Instant

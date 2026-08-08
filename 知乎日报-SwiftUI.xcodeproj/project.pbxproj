@@ -64,6 +64,7 @@
 		5BD275536EDEEB968A3FD5B4 /* AuthenticationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F75EEBECBEC88E9DA8948F62 /* AuthenticationServiceTests.swift */; };
 		5D18255F1B7A637552A512F0 /* DailyResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1331C82786EF3BF467029C /* DailyResponse.swift */; };
 		6082B4DD3E0C5528A5739246 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 0C42426F0196933CC4B224CA /* Alamofire */; };
+		6558345DD6EDA4E6C87E7AE4 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6C14333906C5506A9FA55840 /* AppIntents.framework */; };
 		60D879E7D5ABA7C4CF985619 /* AnswersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B005E06667CFE9D76DD6165 /* AnswersViewModel.swift */; };
 		60E3AC5BE86B06BB4A717732 /* DailyRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48BA2DBC3F43B69DFBF9559E /* DailyRepository.swift */; };
 		68273CCF89851F655BB056D6 /* EndpointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAAF0160CD4A95503EF8655 /* EndpointTests.swift */; };
@@ -348,6 +349,7 @@
 		F75EEBECBEC88E9DA8948F62 /* AuthenticationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationServiceTests.swift; sourceTree = "<group>"; };
 		FA2243B541BF526DDBD055C9 /* HotListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotListView.swift; sourceTree = "<group>"; };
 		FCB912BAE2456A72522FCC6B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6C14333906C5506A9FA55840 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -357,6 +359,7 @@
 			files = (
 				6082B4DD3E0C5528A5739246 /* Alamofire in Frameworks */,
 				EA1CBED290992888147F0D4B /* Kingfisher in Frameworks */,
+				6558345DD6EDA4E6C87E7AE4 /* AppIntents.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
