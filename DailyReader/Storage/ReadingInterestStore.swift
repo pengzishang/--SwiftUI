@@ -51,7 +51,7 @@ actor ReadingInterestStore {
 
     private func persist() {
         let encoder = JSONEncoder()
-        encoder.dateDecodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .iso8601
         guard let data = try? encoder.encode(cache) else { return }
         try? FileManager.default.createDirectory(
             at: fileURL.deletingLastPathComponent(),

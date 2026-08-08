@@ -11,18 +11,20 @@ struct MeView: View {
     @State private var searchText = ""
     @Namespace private var animation
 
+    @MainActor
     init(
         viewModel: HomeViewModel,
         authenticationViewModel: AuthenticationViewModel,
-        interestProfileViewModel: InterestProfileViewModel = InterestProfileViewModel(
+        interestProfileViewModel: InterestProfileViewModel? = nil
+    ) {
+        self.viewModel = viewModel
+        self.authenticationViewModel = authenticationViewModel
+        let resolved = interestProfileViewModel ?? InterestProfileViewModel(
             classificationStore: ArticleClassificationStore(),
             interestStore: ReadingInterestStore(),
             taxonomyStore: CategoryTaxonomyStore()
         )
-    ) {
-        self.viewModel = viewModel
-        self.authenticationViewModel = authenticationViewModel
-        _interestProfileViewModel = StateObject(wrappedValue: interestProfileViewModel)
+        _interestProfileViewModel = StateObject(wrappedValue: resolved)
     }
 
     // 正式界面暂时隐藏登录卡片；专用认证 UI 测试仍可通过 Mock 场景验证登录能力。
