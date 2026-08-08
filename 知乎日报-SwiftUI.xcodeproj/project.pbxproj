@@ -8,20 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		03EF50E0592257E9C901FE0A /* CachePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D7923D8746EDB99D00ED72A /* CachePolicy.swift */; };
-<<<<<<< HEAD
+		05274D09FE18FCCD925CB402 /* NativeBodyRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52FEAD444C4D558039C47A4B /* NativeBodyRenderer.swift */; };
 		07B385B9A00BC61889E24B7A /* InterestIndexEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4CE3E18D052E544A648631 /* InterestIndexEngineTests.swift */; };
 		09FF7E73BAF3A14F59731008 /* AIBuiltInProviderLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9210F58DB0B1E02CAF5B8753 /* AIBuiltInProviderLoader.swift */; };
 		0B8262CD32BF02D347E6DE52 /* InteractiveSwipeBack.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92B7015E74F65044F217706 /* InteractiveSwipeBack.swift */; };
 		0C2AC292565CE6672DDE769C /* HotListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB58C3A3E6D205B92840B36 /* HotListViewModel.swift */; };
 		0E616E46A468F791C35DD663 /* StoryCategoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0408A5B2DA28F5D471F6BC95 /* StoryCategoryViewModel.swift */; };
 		0ED64EFD4896E5AE9C6AE352 /* CategoryTaxonomyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BDE36955FEF54C0FF475ED /* CategoryTaxonomyStore.swift */; };
-=======
-		05274D09FE18FCCD925CB402 /* NativeBodyRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52FEAD444C4D558039C47A4B /* NativeBodyRenderer.swift */; };
-		09FF7E73BAF3A14F59731008 /* AIBuiltInProviderLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9210F58DB0B1E02CAF5B8753 /* AIBuiltInProviderLoader.swift */; };
-		0B8262CD32BF02D347E6DE52 /* InteractiveSwipeBack.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92B7015E74F65044F217706 /* InteractiveSwipeBack.swift */; };
-		0C2AC292565CE6672DDE769C /* HotListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB58C3A3E6D205B92840B36 /* HotListViewModel.swift */; };
 		1211294636D23A7AA98AE31B /* ArticleBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6CF6284CC002F1CF339367A /* ArticleBlock.swift */; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 		13AD55CBEFB24317E6BE7EE1 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F51C97D085E13AC30E08F74 /* HomeViewModel.swift */; };
 		1459D4ECEBC9AA2F9886F71C /* HTTPClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67605DFE38D21958E82F762C /* HTTPClientTests.swift */; };
 		161FAE68A5F65C00EB211DB9 /* NativeBodyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEEF43A5A9CF6D885343F19 /* NativeBodyView.swift */; };
@@ -41,11 +35,8 @@
 		261C7F51ADF7412DDA4E8BEC /* AIChatCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61465FC207F6E55045D6D5C /* AIChatCoordinator.swift */; };
 		2A8719CCCBAA4D57933B7F85 /* ArticleMetricsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 315EAD5F60BC98B284E67EBC /* ArticleMetricsViews.swift */; };
 		2F95467040D684BCF377C6A4 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2821E890DC7C8A545130F /* ShareSheet.swift */; };
-<<<<<<< HEAD
 		317D6468E2FDC2D47B125333 /* InterestIndexEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898E7B7F81CE0C49921BE29F /* InterestIndexEngine.swift */; };
-=======
 		326EEA8115AA4F794D236DC7 /* NativeBodyParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E66485A5B3601A4299B9CED8 /* NativeBodyParserTests.swift */; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 		346F38F7CEB12886FE6020E5 /* FavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF0DEF90931194B63842FB5 /* FavoritesView.swift */; };
 		3CBE8486F9C052886C1C8385 /* PKCEGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E2E8FEF5219732F0752173 /* PKCEGeneratorTests.swift */; };
 		3D0F7080E6A46796A7CD8F26 /* CacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5068279F8BC6D5181374FE /* CacheStore.swift */; };
@@ -77,12 +68,9 @@
 		60E3AC5BE86B06BB4A717732 /* DailyRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48BA2DBC3F43B69DFBF9559E /* DailyRepository.swift */; };
 		68273CCF89851F655BB056D6 /* EndpointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAAF0160CD4A95503EF8655 /* EndpointTests.swift */; };
 		682E70B86A21E745203E9C11 /* ZhihuDailyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F61D0FC288D87694DAC950 /* ZhihuDailyService.swift */; };
-<<<<<<< HEAD
 		69088FA18519CDFBF27D448F /* ArticleClassificationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7C1B4E83C7E4B2688DAB97 /* ArticleClassificationStore.swift */; };
-		6A82D55E2D8AF712529D0939 /* ReadingSessionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77958E7F8B6351CE58878D22 /* ReadingSessionRecorder.swift */; };
-=======
 		69607A03C13F0A2EB96F5A2E /* HTMLEntityDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBE62613F59D55B94C3A1F4F /* HTMLEntityDecoder.swift */; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
+		6A82D55E2D8AF712529D0939 /* ReadingSessionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77958E7F8B6351CE58878D22 /* ReadingSessionRecorder.swift */; };
 		6C495ADA14F4B23FA4210733 /* StoryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6D44F133F24B1158C644D /* StoryRowView.swift */; };
 		6DCCDF92424E161E202811F5 /* HotListModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD37CD00403F865F6DD522D3 /* HotListModels.swift */; };
 		6EE37B3591D86F35D7B265FB /* RemoteImageSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD162F1B8DCB6C9BAB25451 /* RemoteImageSourceTests.swift */; };
@@ -132,11 +120,8 @@
 		C20AA62A5EB28D21228C04CB /* LinkCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF21D059660731A02CDC429 /* LinkCardView.swift */; };
 		C3C9245B94DABA76E77E1151 /* TodayStoryOpeningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA03A61336891475079E22B1 /* TodayStoryOpeningTests.swift */; };
 		C3FACA645DBBF2603108228B /* latest_success.json in Resources */ = {isa = PBXBuildFile; fileRef = E567D095F98259490F560650 /* latest_success.json */; };
-<<<<<<< HEAD
-		C54807ABA30326DDA26CFBB2 /* ClassificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B0ED755F6F90261660026B /* ClassificationServiceTests.swift */; };
-=======
 		C4B9157F905FBCBE38D98DDF /* CodeBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8FB9989DE2E0E45AE2E244 /* CodeBlockView.swift */; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
+		C54807ABA30326DDA26CFBB2 /* ClassificationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B0ED755F6F90261660026B /* ClassificationServiceTests.swift */; };
 		C805932874F3948CC6639537 /* PKCEGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E09DC34AF31E0C1560A89E8 /* PKCEGenerator.swift */; };
 		C8A6ED2C5DA59C15A636F824 /* HTMLTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60FAF7F5F0261362B789A4B3 /* HTMLTokenizer.swift */; };
 		C8B7D6E09A6F73ABAA7886D9 /* ArticleDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCF475A067D61BD86CFAD26 /* ArticleDetailViewModelTests.swift */; };
@@ -250,11 +235,8 @@
 		4BF21D059660731A02CDC429 /* LinkCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkCardView.swift; sourceTree = "<group>"; };
 		4C48C3EAFA8E3707718D1FFF /* ArticleMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleMetrics.swift; sourceTree = "<group>"; };
 		4CAFC1D1EF3F32C7FF480139 /* ArticleWebViewPrewarmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleWebViewPrewarmer.swift; sourceTree = "<group>"; };
-<<<<<<< HEAD
 		4E7C1B4E83C7E4B2688DAB97 /* ArticleClassificationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleClassificationStore.swift; sourceTree = "<group>"; };
-=======
 		52FEAD444C4D558039C47A4B /* NativeBodyRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBodyRenderer.swift; sourceTree = "<group>"; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 		53099D9E95A0255755C33942 /* OAuthHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthHTTPClient.swift; sourceTree = "<group>"; };
 		5B20404EE030DD7E3941FE57 /* AIBuiltInProviderLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIBuiltInProviderLoaderTests.swift; sourceTree = "<group>"; };
 		5B41CD581F4376F62AF24214 /* detail_success.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = detail_success.json; sourceTree = "<group>"; };
@@ -263,11 +245,8 @@
 		5DB06500E59B8FD1FCAEA77B /* StoryCategoryTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCategoryTag.swift; sourceTree = "<group>"; };
 		5E10C1C2655E965B58B3085E /* OAuthConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthConfiguration.swift; sourceTree = "<group>"; };
 		5EE4749CF00FE9356E2F8CE2 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
-<<<<<<< HEAD
-		64A07EEA0A8C4F1F5332028F /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
-=======
 		60FAF7F5F0261362B789A4B3 /* HTMLTokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLTokenizer.swift; sourceTree = "<group>"; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
+		64A07EEA0A8C4F1F5332028F /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
 		67605DFE38D21958E82F762C /* HTTPClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClientTests.swift; sourceTree = "<group>"; };
 		69EBE0960B02382A4C7AD585 /* FeatureFlag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlag.swift; sourceTree = "<group>"; };
 		6AE8E793386C57D1A25199F9 /* AuthenticationViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationViewModelTests.swift; sourceTree = "<group>"; };
@@ -278,12 +257,9 @@
 		77958E7F8B6351CE58878D22 /* ReadingSessionRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSessionRecorder.swift; sourceTree = "<group>"; };
 		78AAC6BA3A22EE663173BC48 /* KeychainFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainFlowUITests.swift; sourceTree = "<group>"; };
 		79707C307289A8C9771F10F0 /* ArticleDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleDetailViewModel.swift; sourceTree = "<group>"; };
-<<<<<<< HEAD
 		79FD81C01A558188650CB706 /* CategoryInductionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryInductionService.swift; sourceTree = "<group>"; };
-=======
 		7A8FB9989DE2E0E45AE2E244 /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
 		7F58314FAE481E5EC17DB8AB /* AuthorMetaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorMetaView.swift; sourceTree = "<group>"; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 		843960A6DDDFFBFFEEA57905 /* TodayStoryOpeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayStoryOpeningView.swift; sourceTree = "<group>"; };
 		898E7B7F81CE0C49921BE29F /* InterestIndexEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterestIndexEngine.swift; sourceTree = "<group>"; };
 		8A77438BD62E5F8B37D4AD22 /* ImageCacheServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheServiceTests.swift; sourceTree = "<group>"; };
@@ -319,11 +295,8 @@
 		B6197EFE25ACC179E897B7EB /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		B62C01EBB28542A6DA66FB9B /* ReadingInterestStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingInterestStore.swift; sourceTree = "<group>"; };
 		B65317BE4E3282F378F95156 /* AIConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIConfigurationView.swift; sourceTree = "<group>"; };
-<<<<<<< HEAD
 		B6B0ED755F6F90261660026B /* ClassificationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassificationServiceTests.swift; sourceTree = "<group>"; };
-=======
 		B6CF6284CC002F1CF339367A /* ArticleBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleBlock.swift; sourceTree = "<group>"; };
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 		B87063000D01712143141675 /* AIArticleContextBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIArticleContextBuilder.swift; sourceTree = "<group>"; };
 		B8F61D0FC288D87694DAC950 /* ZhihuDailyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZhihuDailyService.swift; sourceTree = "<group>"; };
 		BAB2BA59A5FC94AC5721BA4B /* HomeInformationDensityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeInformationDensityTests.swift; sourceTree = "<group>"; };
@@ -772,14 +745,14 @@
 			path = Detail;
 			sourceTree = "<group>";
 		};
-<<<<<<< HEAD
 		E5BF466C44E34C35C4753585 /* Interest */ = {
 			isa = PBXGroup;
 			children = (
 				A0100191EA51F655DF68BCBE /* CategoryOnboardingView.swift */,
 			);
 			path = Interest;
-=======
+			sourceTree = "<group>";
+		};
 		FE642277849BA5B622EA0368 /* Parser */ = {
 			isa = PBXGroup;
 			children = (
@@ -788,7 +761,6 @@
 				60FAF7F5F0261362B789A4B3 /* HTMLTokenizer.swift */,
 			);
 			path = Parser;
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -951,14 +923,11 @@
 				F80E66326AC1DEC1AF89B281 /* AccountCardView.swift in Sources */,
 				60D879E7D5ABA7C4CF985619 /* AnswersViewModel.swift in Sources */,
 				B81FD6B1C840F9D731269807 /* AppRootView.swift in Sources */,
-<<<<<<< HEAD
+				1211294636D23A7AA98AE31B /* ArticleBlock.swift in Sources */,
 				F91125B5CF62D0B8F5780B53 /* ArticleCategory.swift in Sources */,
 				CDB816E8D088924240E2569A /* ArticleClassification.swift in Sources */,
 				92CBF1B2AD2EE05FCAC21452 /* ArticleClassificationService.swift in Sources */,
 				69088FA18519CDFBF27D448F /* ArticleClassificationStore.swift in Sources */,
-=======
-				1211294636D23A7AA98AE31B /* ArticleBlock.swift in Sources */,
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 				4D885658892A2B14051B571E /* ArticleDetail.swift in Sources */,
 				D4CA31095BCFB56A9C1913EC /* ArticleDetailView.swift in Sources */,
 				AAED840CBAF46B162265A75E /* ArticleDetailViewModel.swift in Sources */,
@@ -973,13 +942,10 @@
 				F4676F93866A85DB8CE6ABC4 /* BlockquoteView.swift in Sources */,
 				03EF50E0592257E9C901FE0A /* CachePolicy.swift in Sources */,
 				3D0F7080E6A46796A7CD8F26 /* CacheStore.swift in Sources */,
-<<<<<<< HEAD
 				CEA32A60B3D3D5CCB7E8B77F /* CategoryInductionService.swift in Sources */,
 				AAB28CD060A9C68BA4BCD6D5 /* CategoryOnboardingView.swift in Sources */,
 				0ED64EFD4896E5AE9C6AE352 /* CategoryTaxonomyStore.swift in Sources */,
-=======
 				C4B9157F905FBCBE38D98DDF /* CodeBlockView.swift in Sources */,
->>>>>>> 7ff7177 (feat(native-body): 路线B 原生正文渲染 + 修复两个解析器回归)
 				241ABAB57E9B390A584C804C /* ColdPalaceView.swift in Sources */,
 				43F830C58F613EE0CBD5C9F8 /* ContentSource.swift in Sources */,
 				8E243FCB52E50D1CAE5F6FC1 /* DailyReaderApp.swift in Sources */,
