@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum ArticleDetailSource: CaseIterable {
     case daily
@@ -137,9 +138,56 @@ struct ArticleDetailView: View {
                                     isWebViewLoading = true
                                 }
                                 .frame(maxWidth: .infinity, minHeight: 240)
-                            } else {
-                                ZStack {
-                                    HTMLWebView(
+                        } else if FeatureFlag.useNativeBody {
+                            NativeBodyRenderer.bodyView(
+                                html: body,
+                                cssLinks: detail.css,
+                                fontSize: fontSize,
+                                onImageTap: { url in
+                                    selectedImage = IdentifiableImageURL(url: url)
+                                },
+                                onLinkTap: { url in
+                                    UIApplication.shared.open(url)
+                                },
+                                fallback: {
+                                    AnyView(
+                                        HTMLWebView(
+                                            htmlBody: body,
+                                            cssLinks: detail.css,
+                                            reloadToken: htmlReloadToken,
+                                            fontSize: fontSize,
+                                            contentHeight: $htmlContentHeight,
+                                            isLoading: $isWebViewLoading,
+                                            onImageTap: { url in
+                                                selectedImage = IdentifiableImageURL(url: url)
+                                            },
+                                            enablesAISearch: true,
+                                            onAISelection: { selection in
+                                                openAIChat(selectedText: selection)
+                                            },
+                                            onArticleTextPrepared: { text in
+                                                preparedArticleText = text
+                                            },
+                                            onError: { message in
+                                                htmlErrorMessage = message
+                                                isWebViewLoading = false
+                                            }
+                                        )
+                                        .frame(minHeight: htmlContentHeight)
+                                        .accessibilityIdentifier("articleHTMLContent")
+                                        .opacity(isWebViewLoading ? 0 : 1)
+                                    )
+                                }
+                            )
+                            .onAppear {
+                                if preparedArticleText.isEmpty {
+                                    preparedArticleText = NativeBodyRenderer.parsedBlocks(html: body)
+                                        .map { NativeBodyRenderer.plainText(from: $0) } ?? ""
+                                }
+                            }
+                        } else {
+                            ZStack {
+                                HTMLWebView(
                                         htmlBody: body,
                                         cssLinks: detail.css,
                                         reloadToken: htmlReloadToken,
