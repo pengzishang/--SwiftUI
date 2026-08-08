@@ -76,7 +76,7 @@ struct CategoryOnboardingView: View {
 
     private func editableRow(_ category: Binding<ArticleCategory>) -> some View {
         HStack(spacing: 10) {
-            TextField("类目名", text: $category.name)
+            TextField("类目名", text: category.name)
                 .font(DS.songBold(15))
                 .foregroundStyle(DS.ink)
             Spacer(minLength: 8)
